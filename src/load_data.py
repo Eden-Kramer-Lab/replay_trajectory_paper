@@ -28,7 +28,7 @@ def get_ripple_times(epoch_key, sampling_frequency=1500):
         epoch_key, drop_level=False)
     tetrode_keys = tetrode_info.loc[
         (tetrode_info.validripple == 1)].index
-    lfps = get_LFPs(tetrode_keys, ANIMALS)
+    lfps = get_LFPs(tetrode_keys, ANIMALS).reindex(time)
     return Kay_ripple_detector(
         time, lfps.values, speed.values, sampling_frequency,
         zscore_threshold=2.0, close_ripple_threshold=np.timedelta64(0, 'ms'),
