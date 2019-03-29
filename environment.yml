@@ -9,7 +9,7 @@ dependencies:
 - numpy
 - "pandas >= 0.21.0"
 - scipy
-- matplotlib
+- "matplotlib >= 3.0"
 - seaborn
 - tqdm
 - xarray
