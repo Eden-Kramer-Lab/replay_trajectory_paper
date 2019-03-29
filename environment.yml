@@ -3,13 +3,12 @@ channels:
 - defaults
 - conda-forge
 - edeno
-- anaconda
 dependencies:
 - "python >= 3.6"
 - numpy
 - "pandas >= 0.21.0"
 - scipy
-- "matplotlib >= 3.0"
+- matplotlib
 - seaborn
 - tqdm
 - xarray
