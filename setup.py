@@ -2,10 +2,7 @@
 
 from setuptools import find_packages, setup
 
-INSTALL_REQUIRES = ['numpy >= 1.15', 'matplotlib >= 3.0', 'pandas >= 0.21',
-                    'xarray', 'scipy', 'seaborn', 'ripple_detection',
-                    'loren_frank_data_processing',
-                    'replay_trajectory_classification']
+INSTALL_REQUIRES = []
 TESTS_REQUIRE = ['pytest >= 2.7.1']
 
 setup(
