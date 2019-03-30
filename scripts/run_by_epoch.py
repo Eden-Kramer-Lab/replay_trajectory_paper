@@ -9,7 +9,6 @@ import dask
 import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
-from dask.distributed import Client, LocalCluster
 from loren_frank_data_processing import reshape_to_segments, save_xarray
 from replay_trajectory_classification import SortedSpikesClassifier
 
@@ -37,11 +36,6 @@ PROBABILITY_THRESHOLD = 0.8
 
 
 def run_analysis(epoch_key, make_movies=False):
-    cluster = LocalCluster(n_workers=4, threads_per_worker=1,
-                           memory_limit=30E9)
-    client = Client(cluster)
-    logging.info(client)
-
     animal, day, epoch = epoch_key
 
     logging.info('Loading data...')
