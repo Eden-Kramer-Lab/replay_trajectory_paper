@@ -4,15 +4,15 @@ import numpy as np
 import seaborn as sns
 from matplotlib.collections import LineCollection
 from matplotlib.colorbar import ColorbarBase, make_axes
+from replay_trajectory_classification import SortedSpikesClassifier
+
+from .analysis import maximum_a_posteriori_estimate
 
 try:
     from upsetplot import UpSet
 except ImportError:
     class Upset:
         pass
-
-from .analysis import maximum_a_posteriori_estimate
-from replay_trajectory_classification import SortedSpikesClassifier
 
 
 def plot_2D_position_with_color_time(time, position, ax=None, cmap='plasma',
@@ -126,20 +126,23 @@ def make_movie(position, posterior_density, position_info, map_position,
 
 def plot_ripple_decode(ripple_number, results, ripple_position,
                        ripple_spikes, position, linear_position_order):
-    result = results.sel(ripple_number=ripple_number).assign_coords(
-        time=lambda ds: ds.time / np.timedelta64(1, 's'),
-    )
-    time = result.time.values
+    posterior = (results
+                 .sel(ripple_number=ripple_number)
+                 .acausal_posterior
+                 .dropna('time')
+                 .assign_coords(
+                     time=lambda ds: ds.time / np.timedelta64(1, 's'),))
+    time = posterior.time.values
     map_estimate = maximum_a_posteriori_estimate(
-        result.acausal_posterior.sum('state'))
+        posterior.sum('state'))
     spike_time_ind, neuron_ind = np.nonzero(
         ripple_spikes.loc[ripple_number].values[:, linear_position_order])
     n_neurons = ripple_spikes.shape[1]
 
     fig, axes = plt.subplots(1, 2, figsize=(12, 6), constrained_layout=True)
 
-    g = SortedSpikesClassifier.predict_proba(result).acausal_posterior.plot(
-        hue='state', ax=axes[0], linewidth=2)
+    g = SortedSpikesClassifier.predict_proba(posterior).plot(
+        hue='state', ax=axes[0], linewidth=4)
     axes[0].set_ylim((0, 1))
 
     twin_ax = axes[0].twinx()
@@ -152,7 +155,7 @@ def plot_ripple_decode(ripple_number, results, ripple_position,
     axes[0].set_position([box.x0, box.y0 + box.height * 0.1,
                           box.width, box.height * 0.9])
 
-    axes[0].legend(g, result.state.values, loc='upper right',
+    axes[0].legend(g, posterior.state.values, loc='upper right',
                    bbox_to_anchor=(1.0, -0.05), fancybox=False, shadow=False,
                    ncol=1, frameon=False)
 
@@ -163,7 +166,7 @@ def plot_ripple_decode(ripple_number, results, ripple_position,
     axes[1].scatter(ripple_position.loc[ripple_number].values[:, 0],
                     ripple_position.loc[ripple_number].values[:, 1],
                     color='black', s=100, label='actual position')
-    result.sum(['state', 'time']).acausal_posterior.plot(
+    posterior.sum(['state', 'time']).plot(
         x='x_position', y='y_position', robust=True, cmap='Purples', alpha=0.3,
         ax=axes[1], add_colorbar=False, zorder=0)
 
