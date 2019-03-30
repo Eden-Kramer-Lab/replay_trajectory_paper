@@ -5,8 +5,10 @@ from argparse import ArgumentParser
 from signal import SIGUSR1, SIGUSR2, signal
 from subprocess import PIPE, run
 
+import dask
 import matplotlib.pyplot as plt
 import xarray as xr
+from dask.distributed import Client, LocalCluster
 from loren_frank_data_processing import reshape_to_segments, save_xarray
 from replay_trajectory_classification import SortedSpikesClassifier
 
@@ -34,6 +36,11 @@ PROBABILITY_THRESHOLD = 0.8
 
 
 def run_analysis(epoch_key, make_movies=False):
+    cluster = LocalCluster(n_workers=4, threads_per_worker=1,
+                           memory_limit=30E9)
+    client = Client(cluster)
+    logging.info(client)
+
     animal, day, epoch = epoch_key
 
     logging.info('Loading data...')
@@ -69,14 +76,20 @@ def run_analysis(epoch_key, make_movies=False):
     ripple_spikes = reshape_to_segments(
         data['spikes'], ripple_times, sampling_frequency=SAMPLING_FREQUENCY)
 
-    results = xr.concat(
-        [classifier.predict(ripple_spikes.loc[ripple_number],
-                            time=(ripple_spikes.loc[ripple_number].index -
-                                  ripple_spikes.loc[ripple_number].index[0]))
-         for ripple_number in data['ripple_times'].index],
-        dim=data['ripple_times'].index).assign_coords(
+    results = []
+    for ripple_number in data['ripple_times'].index:
+        results.append(
+            dask.delayed(classifier.predict)(
+                ripple_spikes.loc[ripple_number],
+                time=(ripple_spikes.loc[ripple_number].index -
+                      ripple_spikes.loc[ripple_number].index[0]))
+        )
+
+    results = (
+        xr.concat(dask.compute(*results), dim=data['ripple_times'].index)
+        .assign_coords(
             state=lambda ds: ds.state.to_index().map(TRANSITION_TO_CATEGORY)
-    )
+        ))
 
     logging.info('Saving results...')
     save_xarray(PROCESSED_DATA_DIR, epoch_key,
