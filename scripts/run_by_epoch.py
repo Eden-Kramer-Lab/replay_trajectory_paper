@@ -10,6 +10,8 @@ import numpy as np
 import xarray as xr
 from loren_frank_data_processing import reshape_to_segments, save_xarray
 from replay_trajectory_classification import SortedSpikesClassifier
+from replay_trajectory_classification.state_transition import \
+    _normalize_row_probability
 
 from src.analysis import (get_linear_position_order, get_place_field_max,
                           get_replay_info)
@@ -57,9 +59,9 @@ def run_analysis(epoch_key, make_movies=False):
         classifier = SortedSpikesClassifier.load_model(classifier_filename)
 
     # Hacky thing to test if eliminating the diagonal on random_walk works
-    random_walk = classifier.continuous_state_transition_[0]
+    random_walk = classifier.continuous_state_transition_[0].copy()
     random_walk[np.diag_indices_from(random_walk)] = 0.0
-    random_walk /= random_walk.sum(axis=1, keepdims=True)
+    random_walk = _normalize_row_probability(random_walk)
     classifier.continuous_state_transition_[0] = random_walk
 
     logging.info('Plotting place fields...')
