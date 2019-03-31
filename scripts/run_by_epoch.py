@@ -58,6 +58,8 @@ def run_analysis(epoch_key, make_movies=False):
         logging.info('Loading encoding model...')
         classifier = SortedSpikesClassifier.load_model(classifier_filename)
 
+    logging.info(classifier)
+
     # Hacky thing to test if eliminating the diagonal on random_walk works
     random_walk = classifier.continuous_state_transition_[0].copy()
     random_walk[np.diag_indices_from(random_walk)] = 0.0
