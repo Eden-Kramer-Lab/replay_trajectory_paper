@@ -6,7 +6,6 @@ from signal import SIGUSR1, SIGUSR2, signal
 from subprocess import PIPE, run
 
 import matplotlib.pyplot as plt
-import numpy as np
 import xarray as xr
 from loren_frank_data_processing import reshape_to_segments, save_xarray
 from replay_trajectory_classification import SortedSpikesClassifier
@@ -55,12 +54,6 @@ def run_analysis(epoch_key, make_movies=False):
     else:
         logging.info('Loading encoding model...')
         classifier = SortedSpikesClassifier.load_model(classifier_filename)
-
-    # Hacky thing to test if eliminating the diagonal on random_walk works
-    random_walk = classifier.continuous_state_transition_[0]
-    random_walk[np.diag_indices_from(random_walk)] = 0.0
-    random_walk /= random_walk.sum(axis=1, keepdims=True)
-    classifier.continuous_state_transition_[0] = random_walk
 
     logging.info('Plotting place fields...')
     g = classifier.plot_place_fields(
