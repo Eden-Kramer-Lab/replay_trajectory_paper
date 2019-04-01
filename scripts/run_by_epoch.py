@@ -50,7 +50,7 @@ def run_analysis(epoch_key, make_movies=False):
                              'sorted_spikes_classifier_replay_model.pkl'))
     if not os.path.isfile(classifier_filename):
         logging.info('Fitting classifier...')
-        classifier = SortedSpikesClassifier(discrete_transition_diag=1 - 1E-2).fit(
+        classifier = SortedSpikesClassifier().fit(
             position, data['spikes'], is_training=is_training)
         logging.info('Saving fitted classifier...')
         classifier.save_model(classifier_filename)
