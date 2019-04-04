@@ -131,8 +131,15 @@ def run_analysis(epoch_key, make_movies=False):
     plt.close(plt.gcf())
 
     for ripple_number in ripple_times.index:
-        plot_ripple_decode(ripple_number, results, ripple_position,
-                           ripple_spikes, position, linear_position_order)
+        posterior = (results
+                     .acausal_posterior
+                     .sel(ripple_number=ripple_number)
+                     .dropna('time')
+                     .assign_coords(
+                         time=lambda ds: ds.time / np.timedelta64(1, 's'),))
+        plot_ripple_decode(posterior, ripple_position.loc[ripple_number],
+                           ripple_spikes.loc[ripple_number], position,
+                           linear_position_order)
         plt.suptitle(
             f'ripple number = {animal}_{day:02d}_{epoch:02d}_'
             f'{ripple_number:04d}')
