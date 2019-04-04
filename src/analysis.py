@@ -61,7 +61,7 @@ def get_linear_position_order(position_info, place_field_max):
 
     for place_max in place_field_max:
         min_ind = np.sqrt(
-            np.sum(np.abs(place_max - position) ** 2, axis=1)).argmin()
+            np.sum(np.abs(place_max - position) ** 2, axis=1)).idxmin()
         linear_place_field_max.append(
             position_info.loc[min_ind, 'linear_position2'])
 
