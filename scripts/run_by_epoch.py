@@ -29,8 +29,8 @@ plt.switch_backend('agg')
 
 TRANSITION_TO_CATEGORY = {
     'identity': 'hover',
-    'uniform': 'fragmented',
-    'random_walk_with_absorbing_boundaries': 'continuous',
+    'inverse_random_walk': 'fragmented',
+    'random_walk_minus_identity': 'continuous',
 }
 
 PROBABILITY_THRESHOLD = 0.8
