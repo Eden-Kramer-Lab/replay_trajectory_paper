@@ -10,8 +10,8 @@ import numpy as np
 import xarray as xr
 from loren_frank_data_processing import reshape_to_segments, save_xarray
 from replay_trajectory_classification import SortedSpikesClassifier
-from replay_trajectory_classification.state_transition import \
-    _normalize_row_probability
+from replay_trajectory_classification.state_transition import (
+    estimate_movement_var)
 
 from src.analysis import (get_linear_position_order, get_place_field_max,
                           get_replay_info)
@@ -50,7 +50,9 @@ def run_analysis(epoch_key, make_movies=False):
                              'sorted_spikes_classifier_replay_model.pkl'))
     if not os.path.isfile(classifier_filename):
         logging.info('Fitting classifier...')
-        classifier = SortedSpikesClassifier().fit(
+        movement_var = np.diag(
+            estimate_movement_var(position, SAMPLING_FREQUENCY)).max()
+        classifier = SortedSpikesClassifier(movement_var=movement_var).fit(
             position, data['spikes'], is_training=is_training)
         logging.info('Saving fitted classifier...')
         classifier.save_model(classifier_filename)
