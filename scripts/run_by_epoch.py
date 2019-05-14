@@ -60,12 +60,6 @@ def run_analysis(epoch_key, make_movies=False):
 
     logging.info(classifier)
 
-    # Hacky thing to test if eliminating the diagonal on random_walk works
-    random_walk = classifier.continuous_state_transition_[0].copy()
-    random_walk[np.diag_indices_from(random_walk)] = 0.0
-    random_walk = _normalize_row_probability(random_walk)
-    classifier.continuous_state_transition_[0] = random_walk
-
     logging.info('Plotting place fields...')
     g = classifier.plot_place_fields(
         data['spikes'], position, SAMPLING_FREQUENCY)
