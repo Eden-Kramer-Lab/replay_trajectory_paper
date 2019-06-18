@@ -8,6 +8,7 @@ from sys import exit
 
 from loren_frank_data_processing import (make_epochs_dataframe,
                                          make_neuron_dataframe)
+
 from src.parameters import ANIMALS
 
 
@@ -38,7 +39,7 @@ def main():
 
     python_function = 'run_by_epoch.py'
     directives = ' '.join(
-        ['-l h_rt=12:00:00', f'-pe omp {NUM_THREADS}',
+        ['-l h_rt=24:00:00', f'-pe omp {NUM_THREADS}',
          '-P braincom', '-notify', '-l mem_total=125G',
          '-v OPENBLAS_NUM_THREADS', '-v NUMBA_NUM_THREADS',
          '-v OMP_NUM_THREADS'])
