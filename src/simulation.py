@@ -64,7 +64,7 @@ def load_simulated_spikes_with_real_position():
     is_training = position_info.speed > 4
     spikes = np.stack(
         [simulate_neuron_with_place_field(
-            center, position, max_rate=15, sigma=100,
+            center, position, max_rate=15, variance=25,
             sampling_frequency=SAMPLING_FREQUENCY)
          for center in place_field_centers], axis=1)
 
@@ -95,10 +95,14 @@ def continuous_replay(place_field_centers, replay_speed=1200.0):
     return test_spikes, time
 
 
-def hover_replay(place_field_centers):
-    neuron_ind = np.zeros((6,), dtype=np.int)
+def hover_replay(place_field_centers, replay_speed=1200.0):
+    neuron_ind = np.asarray([0, 9, 8, 1, 13, 4, 10, 11, 5])
+    dist = _get_euclidean_dist(place_field_centers[neuron_ind])
 
-    spike_time_ind = np.arange(0, neuron_ind.size * 5, 5)
+    spike_time_ind = np.cumsum(
+        np.insert(np.ceil(SAMPLING_FREQUENCY * dist / replay_speed), 0, 2)
+    ).astype(np.int)
+    neuron_ind = np.asarray([0] * spike_time_ind.size)
 
     n_neurons = place_field_centers.shape[0]
     n_time = int(spike_time_ind.max() + 1)
@@ -111,7 +115,7 @@ def hover_replay(place_field_centers):
 
 def fragmented_replay(place_field_centers):
     neuron_ind = np.asarray([0, 11, 8, 4, 2, 10, 9, 5, 3])
-    spike_time_ind = np.arange(0, neuron_ind.size * 5, 5)
+    spike_time_ind = 1 + np.arange(0, neuron_ind.size * 5, 5)
     n_neurons = place_field_centers.shape[0]
     n_time = int(spike_time_ind.max() + 1)
     time = np.arange(n_time) / SAMPLING_FREQUENCY
@@ -122,12 +126,10 @@ def fragmented_replay(place_field_centers):
 
 
 def hover_continuous_hover_replay(place_field_centers):
-    neuron_ind = np.asarray([0, 0, 0, 0, 0, 0,
+    neuron_ind = np.asarray([0, 0, 0, 0,
                              0, 9, 8, 1,
-                             1, 1, 1, 1, 1, 1])
-    spike_time_ind = np.asarray([0, 5, 10, 15, 20, 25,
-                                 30, 51, 72, 93,
-                                 98, 102, 107, 112, 117, 123])
+                             1, 1, 1, 1])
+    spike_time_ind = 1 + np.arange(neuron_ind.size) * 17
     n_neurons = place_field_centers.shape[0]
     n_time = int(spike_time_ind.max() + 1)
     time = np.arange(n_time) / SAMPLING_FREQUENCY
@@ -139,11 +141,9 @@ def hover_continuous_hover_replay(place_field_centers):
 
 def continuous_fragmented_continuous_replay(place_field_centers):
     neuron_ind = np.asarray([3, 7, 6, 2,
-                             5, 0, 6, 4,
-                             0, 9, 8, 1])
-    spike_time_ind = np.asarray([0, 21, 42, 63,
-                                 68, 72, 77, 82,
-                                 85, 106, 127, 148])
+                             4, 9, 1, 3,
+                             5, 11, 10, 4])
+    spike_time_ind = 1 + np.arange(neuron_ind.size) * 22
     n_neurons = place_field_centers.shape[0]
     n_time = int(spike_time_ind.max() + 1)
     time = np.arange(n_time) / SAMPLING_FREQUENCY
@@ -154,12 +154,10 @@ def continuous_fragmented_continuous_replay(place_field_centers):
 
 
 def hover_fragmented_hover_replay(place_field_centers):
-    neuron_ind = np.asarray([0, 0, 0, 0, 0, 0,
-                             4, 9, 10, 2,
-                             3, 3, 3, 3, 3, 3])
-    spike_time_ind = np.asarray([5, 10, 15, 20, 25, 30,
-                                 35, 40, 45, 50,
-                                 55, 60, 65, 70, 75, 80])
+    neuron_ind = np.asarray([3, 3, 3, 3, 3, 3,
+                             0, 6, 10, 8,
+                             5, 5, 5, 5, 5, 5])
+    spike_time_ind = 1 + np.arange(neuron_ind.size) * 3
     n_neurons = place_field_centers.shape[0]
     n_time = int(spike_time_ind.max() + 1)
     time = np.arange(n_time) / SAMPLING_FREQUENCY
