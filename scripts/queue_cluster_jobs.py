@@ -30,7 +30,8 @@ def queue_job(python_cmd, directives=None, log_file='log.log',
 
 def main():
     # Set the maximum number of threads for openBLAS to use.
-    NUM_THREADS = 16
+    NUM_CORES = 16
+    NUM_THREADS = int(4 * NUM_CORES)
     environ['OPENBLAS_NUM_THREADS'] = str(NUM_THREADS)
     environ['NUMBA_NUM_THREADS'] = str(NUM_THREADS)
     environ['OMP_NUM_THREADS'] = str(NUM_THREADS)
@@ -39,8 +40,8 @@ def main():
 
     python_function = 'run_by_epoch.py'
     directives = ' '.join(
-        ['-l h_rt=24:00:00', f'-pe omp {NUM_THREADS}',
-         '-P braincom', '-notify', '-l mem_total=125G',
+        ['-l h_rt=24:00:00', f'-pe omp {NUM_CORES}',
+         '-P braincom', '-notify', '-l mem_per_core=8G',
          '-v OPENBLAS_NUM_THREADS', '-v NUMBA_NUM_THREADS',
          '-v OMP_NUM_THREADS'])
 
