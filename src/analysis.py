@@ -50,9 +50,14 @@ def maximum_a_posteriori_estimate(posterior_density):
 
 
 def get_place_field_max(classifier):
-    max_ind = classifier.place_fields_.argmax('position')
-    return np.asarray(
-        classifier.place_fields_.position[max_ind].values.tolist())
+    try:
+        max_ind = classifier.place_fields_.argmax('position')
+        return np.asarray(
+            classifier.place_fields_.position[max_ind].values.tolist())
+    except AttributeError:
+        return np.asarray(
+            [classifier.place_bin_centers_[gpi.result().argmax(axis=1)]
+             for gpi in classifier.ground_process_intensities_])
 
 
 def get_linear_position_order(position_info, place_field_max):
