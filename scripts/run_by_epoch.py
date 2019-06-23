@@ -40,6 +40,8 @@ PROBABILITY_THRESHOLD = 0.8
 
 def run_analysis(epoch_key, make_movies=False, data_type='sorted_spikes'):
     client = Client(processes=False)
+    logging.info(client)
+
     animal, day, epoch = epoch_key
 
     logging.info('Loading data...')
