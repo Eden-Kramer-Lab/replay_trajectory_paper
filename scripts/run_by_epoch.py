@@ -12,7 +12,6 @@ from dask.distributed import Client
 from loren_frank_data_processing import reshape_to_segments, save_xarray
 from replay_trajectory_classification import (ClusterlessClassifier,
                                               SortedSpikesClassifier)
-from replay_trajectory_classification.misc import NumbaKDE
 from replay_trajectory_classification.state_transition import \
     estimate_movement_var
 
@@ -60,13 +59,9 @@ def run_analysis(epoch_key, make_movies=False, data_type='sorted_spikes'):
             classifier = SortedSpikesClassifier(movement_var=movement_var).fit(
                 position, data['spikes'], is_training=is_training)
         elif data_type == 'clusterless':
-            model_kwargs = {
-                'bandwidth': np.array([20.0, 20.0, 20.0, 20.0, 4.0, 4.0])}
             classifier = ClusterlessClassifier(
                 place_bin_size=2.0,
-                movement_var=movement_var,
-                model=NumbaKDE,
-                model_kwargs=model_kwargs).fit(
+                movement_var=movement_var).fit(
                 position, data['multiunit'], is_training=is_training)
         logging.info('Saving fitted classifier...')
         classifier.save_model(classifier_filename)
