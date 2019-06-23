@@ -39,9 +39,6 @@ PROBABILITY_THRESHOLD = 0.8
 
 
 def run_analysis(epoch_key, make_movies=False, data_type='sorted_spikes'):
-    client = Client(processes=False)
-    logging.info(client)
-
     animal, day, epoch = epoch_key
 
     logging.info('Loading data...')
@@ -228,6 +225,9 @@ def main():
                    stdout=PIPE, universal_newlines=True).stdout
     logging.info('Git Hash: {git_hash}'.format(git_hash=git_hash.rstrip()))
 
+    client = Client(processes=False, n_workers=16, threads_per_worker=4,
+                    memory_limit='8GB')
+    logging.info(client)
     # Analysis Code
     run_analysis(epoch_key, data_type='clusterless')
     run_analysis(epoch_key, data_type='sorted_spikes')
