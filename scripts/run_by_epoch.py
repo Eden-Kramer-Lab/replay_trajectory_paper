@@ -225,7 +225,7 @@ def main():
                    stdout=PIPE, universal_newlines=True).stdout
     logging.info('Git Hash: {git_hash}'.format(git_hash=git_hash.rstrip()))
 
-    client = Client(processes=False, n_workers=16, threads_per_worker=4,
+    client = Client(processes=True, n_workers=4, threads_per_worker=4,
                     memory_limit='8GB')
     logging.info(client)
     # Analysis Code
