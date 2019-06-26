@@ -22,3 +22,5 @@ dependencies:
 - pytest
 - pytest-cov
 - coveralls
+- pip:
+  - UpSetPlot
