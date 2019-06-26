@@ -56,7 +56,7 @@ def get_place_field_max(classifier):
             classifier.place_fields_.position[max_ind].values.tolist())
     except AttributeError:
         return np.asarray(
-            [classifier.place_bin_centers_[gpi.result().argmax(axis=1)]
+            [classifier.place_bin_centers_[gpi.result().argmax()]
              for gpi in classifier.ground_process_intensities_])
 
 
