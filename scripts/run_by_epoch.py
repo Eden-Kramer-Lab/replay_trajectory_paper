@@ -22,6 +22,7 @@ from src.parameters import FIGURE_DIR, PROCESSED_DATA_DIR, SAMPLING_FREQUENCY
 from src.visualization import (plot_category_counts, plot_category_duration,
                                plot_neuron_place_field_2D_1D_position,
                                plot_ripple_decode)
+from tqdm.auto import tqdm
 
 FORMAT = '%(asctime)s %(message)s'
 
@@ -110,7 +111,7 @@ def run_analysis(epoch_key, make_movies=False, data_type='sorted_spikes'):
             sampling_frequency=SAMPLING_FREQUENCY)
 
         results = []
-        for ripple_number in data['ripple_times'].index:
+        for ripple_number in tqdm(data['ripple_times'].index, desc='ripple'):
             time_slice = slice(*data['ripple_times'].loc[
                 ripple_number, ['start_time', 'end_time']])
             m = data['multiunit'].sel(time=time_slice)
@@ -165,7 +166,7 @@ def run_analysis(epoch_key, make_movies=False, data_type='sorted_spikes'):
     plt.savefig(fig_name, bbox_inches='tight')
     plt.close(plt.gcf())
 
-    for ripple_number in ripple_times.index:
+    for ripple_number in tqdm(ripple_times.index, desc='ripple figures'):
         posterior = (results
                      .acausal_posterior
                      .sel(ripple_number=ripple_number)
