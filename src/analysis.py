@@ -72,3 +72,13 @@ def get_linear_position_order(position_info, place_field_max):
 
     linear_place_field_max = np.asarray(linear_place_field_max)
     return np.argsort(linear_place_field_max), linear_place_field_max
+
+
+def reshape_to_segments(time_series, segments):
+    df = []
+    for row in segments.itertuples():
+        row_series = time_series.loc[row.start_time:row.end_time]
+        row_series.index = row_series.index - row_series.index[0]
+        df.append(row_series)
+
+    return pd.concat(df, axis=0, keys=segments.index).sort_index()

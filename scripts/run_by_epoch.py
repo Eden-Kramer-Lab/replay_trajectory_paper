@@ -9,20 +9,20 @@ import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
 from dask.distributed import Client
-from loren_frank_data_processing import reshape_to_segments, save_xarray
 from replay_trajectory_classification import (ClusterlessClassifier,
                                               SortedSpikesClassifier)
 from replay_trajectory_classification.state_transition import \
     estimate_movement_var
+from tqdm.auto import tqdm
 
+from loren_frank_data_processing import save_xarray
 from src.analysis import (get_linear_position_order, get_place_field_max,
-                          get_replay_info)
+                          get_replay_info, reshape_to_segments)
 from src.load_data import load_data
 from src.parameters import FIGURE_DIR, PROCESSED_DATA_DIR, SAMPLING_FREQUENCY
 from src.visualization import (plot_category_counts, plot_category_duration,
                                plot_neuron_place_field_2D_1D_position,
                                plot_ripple_decode)
-from tqdm.auto import tqdm
 
 FORMAT = '%(asctime)s %(message)s'
 
@@ -88,9 +88,7 @@ def run_analysis(epoch_key, make_movies=False, data_type='sorted_spikes'):
 
     logging.info('Decoding ripples...')
     if data_type == 'sorted_spikes':
-        ripple_spikes = reshape_to_segments(
-            data['spikes'], ripple_times,
-            sampling_frequency=SAMPLING_FREQUENCY)
+        ripple_spikes = reshape_to_segments(data['spikes'], ripple_times)
 
         results = xr.concat(
             [classifier.predict(
@@ -106,9 +104,7 @@ def run_analysis(epoch_key, make_movies=False, data_type='sorted_spikes'):
         spikes = (((data['multiunit'].sum('features') > 0) * 1.0)
                   .to_dataframe(name='spikes').unstack())
         spikes.columns = data['tetrode_info'].tetrode_id
-        ripple_spikes = reshape_to_segments(
-            spikes, ripple_times,
-            sampling_frequency=SAMPLING_FREQUENCY)
+        ripple_spikes = reshape_to_segments(spikes, ripple_times)
 
         results = []
         for ripple_number in tqdm(data['ripple_times'].index, desc='ripple'):
@@ -127,8 +123,7 @@ def run_analysis(epoch_key, make_movies=False, data_type='sorted_spikes'):
                 group=f'/{data_type}/classifier/ripples/')
 
     logging.info('Saving replay_info...')
-    ripple_position = reshape_to_segments(
-        position, ripple_times, sampling_frequency=SAMPLING_FREQUENCY)
+    ripple_position = reshape_to_segments(position, ripple_times)
     replay_info = get_replay_info(
         results, ripple_spikes, ripple_position, data['ripple_times'],
         SAMPLING_FREQUENCY, PROBABILITY_THRESHOLD)
