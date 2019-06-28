@@ -53,15 +53,14 @@ def run_analysis(epoch_key, make_movies=False, data_type='sorted_spikes'):
                              f'{data_type}_classifier_replay_model.pkl'))
     if not os.path.isfile(classifier_filename):
         logging.info('Fitting classifier...')
-        movement_var = np.diag(
-            estimate_movement_var(position, SAMPLING_FREQUENCY)).max()
         if data_type == 'sorted_spikes':
-            classifier = SortedSpikesClassifier(movement_var=movement_var).fit(
+            classifier = SortedSpikesClassifier(
+                place_bin_size=2.0,
+                movement_var=2.0, replay_speed=1).fit(
                 position, data['spikes'], is_training=is_training)
         elif data_type == 'clusterless':
             classifier = ClusterlessClassifier(
-                place_bin_size=2.0,
-                movement_var=movement_var).fit(
+                place_bin_size=2.0, movement_var=2.0, replay_speed=1).fit(
                 position, data['multiunit'], is_training=is_training)
         logging.info('Saving fitted classifier...')
         classifier.save_model(classifier_filename)
