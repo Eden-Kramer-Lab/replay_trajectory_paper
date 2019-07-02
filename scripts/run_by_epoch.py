@@ -20,8 +20,8 @@ from src.analysis import (get_linear_position_order, get_place_field_max,
                           get_replay_info, reshape_to_segments)
 from src.load_data import load_data
 from src.parameters import (FIGURE_DIR, PROCESSED_DATA_DIR, SAMPLING_FREQUENCY,
-                            model, model_kwargs, movement_var, place_bin_size,
-                            replay_speed)
+                            discrete_diag, model, model_kwargs, movement_var,
+                            place_bin_size, replay_speed)
 from src.visualization import (plot_category_counts, plot_category_duration,
                                plot_neuron_place_field_2D_1D_position,
                                plot_ripple_decode)
@@ -58,13 +58,15 @@ def run_analysis(epoch_key, make_movies=False, data_type='sorted_spikes'):
         if data_type == 'sorted_spikes':
             classifier = SortedSpikesClassifier(
                 place_bin_size=place_bin_size, movement_var=movement_var,
-                replay_speed=replay_speed).fit(
+                replay_speed=replay_speed,
+                discrete_transition_diag=discrete_diag).fit(
                 position, data['spikes'], is_training=is_training)
         elif data_type == 'clusterless':
             classifier = ClusterlessClassifier(
                 place_bin_size=place_bin_size, movement_var=movement_var,
                 replay_speed=replay_speed, model=model,
-                model_kwargs=model_kwargs).fit(
+                model_kwargs=model_kwargs,
+                discrete_transition_diag=discrete_diag).fit(
                 position, data['multiunit'], is_training=is_training)
         logging.info('Saving fitted classifier...')
         classifier.save_model(classifier_filename)

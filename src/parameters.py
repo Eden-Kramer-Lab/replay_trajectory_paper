@@ -29,3 +29,4 @@ model = NumbaKDE
 model_kwargs = {
     'bandwidth': np.array([24.0, 24.0, 24.0, 24.0, 6.0, 6.0])
     }
+discrete_diag = 1 - 1E-3
