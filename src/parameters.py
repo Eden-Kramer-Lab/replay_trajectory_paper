@@ -23,7 +23,7 @@ _BRAIN_AREAS = ['CA1', 'CA3']
 
 
 place_bin_size = 2.0
-movement_var = 1.0
+movement_var = 2.0
 replay_speed = 1
 model = NumbaKDE
 model_kwargs = {
