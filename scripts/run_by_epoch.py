@@ -226,8 +226,7 @@ def main():
                    stdout=PIPE, universal_newlines=True).stdout
     logging.info('Git Hash: {git_hash}'.format(git_hash=git_hash.rstrip()))
 
-    client = Client(processes=True, n_workers=8, threads_per_worker=7,
-                    memory_limit='25GB')
+    client = Client(processes=True, memory_limit='25GB')
     logging.info(client)
     # Analysis Code
     run_analysis(epoch_key, data_type='clusterless')
