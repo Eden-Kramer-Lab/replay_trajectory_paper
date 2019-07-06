@@ -98,7 +98,8 @@ def run_analysis(epoch_key, make_movies=False, data_type='sorted_spikes'):
                 ripple_spikes.loc[ripple_number],
                 time=(ripple_spikes.loc[ripple_number].index -
                       ripple_spikes.loc[ripple_number].index[0]))
-             for ripple_number in data['ripple_times'].index],
+             for ripple_number in tqdm(data['ripple_times'].index,
+                                       desc='ripple')],
             dim=data['ripple_times'].index)
         results = results.assign_coords(
             state=lambda ds: ds.state.to_index()
