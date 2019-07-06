@@ -11,8 +11,6 @@ import xarray as xr
 from dask.distributed import Client
 from replay_trajectory_classification import (ClusterlessClassifier,
                                               SortedSpikesClassifier)
-from replay_trajectory_classification.state_transition import \
-    estimate_movement_var
 from tqdm.auto import tqdm
 
 from loren_frank_data_processing import save_xarray
