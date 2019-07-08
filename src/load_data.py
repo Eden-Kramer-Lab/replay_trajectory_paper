@@ -42,7 +42,7 @@ def load_data(epoch_key, brain_areas=None):
 
     time = get_trial_time(epoch_key, ANIMALS)
     time = (pd.Series(np.ones_like(time, dtype=np.float), index=time)
-            .resample('1ms').mean()
+            .resample('2ms').mean()
             .index)
 
     def _time_function(*args, **kwargs):
@@ -59,7 +59,7 @@ def load_data(epoch_key, brain_areas=None):
     is_brain_areas = tetrode_info.area.isin(brain_areas)
     tetrode_keys = tetrode_info.loc[is_brain_areas].index
     lfps = get_LFPs(tetrode_keys, ANIMALS)
-    lfps = lfps.resample('1ms').mean().fillna(method='pad').reindex(time)
+    lfps = lfps.resample('2ms').mean().fillna(method='pad').reindex(time)
 
     neuron_info = make_neuron_dataframe(ANIMALS).xs(
         epoch_key, drop_level=False)
