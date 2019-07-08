@@ -1,18 +1,26 @@
+import os
 import subprocess
 import sys
+
+from tqdm.auto import tqdm
 
 from loren_frank_data_processing import (make_epochs_dataframe,
                                          make_neuron_dataframe)
 from src.parameters import ANIMALS
 
 
-def run_bash(epoch_keys):
-    bash_cmd = [f'python run_by_epoch.py {animal} {day} {epoch}'
-                for animal, day, epoch in epoch_keys]
-    bash_cmd = '; '.join(bash_cmd)
-    with open('logs/log.log', 'w') as f:
-        subprocess.run(bash_cmd, shell=True, check=True,
-                       stderr=subprocess.STDOUT, stdout=f)
+def run_bash(epoch_key, log_directory):
+    animal, day, epoch = epoch_key
+    print(f'Animal: {animal}, Day: {day}, Epoch: {epoch}')
+    bash_cmd = f'python run_by_epoch.py {animal} {day} {epoch}'
+    log_file = os.path.join(
+        log_directory, f'{animal}_{day:02d}_{epoch:02d}.log')
+    with open(log_file, 'w') as f:
+        try:
+            subprocess.run(bash_cmd, shell=True, check=True,
+                           stderr=subprocess.STDOUT, stdout=f)
+        except subprocess.CalledProcessError:
+            print(f'Error in {epoch_key}')
 
 
 def main():
@@ -35,7 +43,11 @@ def main():
                     (epoch_info.exposure < 4) &
                     is_animal
                     )
-    run_bash(epoch_info[valid_epochs].index)
+    log_directory = os.path.join(os.getcwd(), 'logs')
+    os.makedirs(log_directory,  exist_ok=True)
+
+    for epoch_key in tqdm(epoch_info[valid_epochs].index, desc='epochs'):
+        run_bash(epoch_key, log_directory)
 
 
 if __name__ == '__main__':
