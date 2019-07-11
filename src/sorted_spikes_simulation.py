@@ -90,12 +90,13 @@ def make_hover_replay(hover_neuron_ind=None,
     if hover_neuron_ind is None:
         hover_neuron_ind = n_neurons // 2
 
-    N_TIME = 30
+    N_TIME = 50
     replay_time = np.arange(N_TIME) / sampling_frequency
 
+    spike_time_ind = np.arange(0, N_TIME, 2)
+
     test_spikes = np.zeros((N_TIME, n_neurons))
-    spike_time_ind = np.arange(0, N_TIME, 3)
-    neuron_ind = np.ones((N_TIME // 3,), dtype=np.int) * hover_neuron_ind
+    neuron_ind = np.ones((N_TIME // 2,), dtype=np.int) * hover_neuron_ind
 
     test_spikes[(spike_time_ind, neuron_ind)] = 1.0
 
@@ -128,7 +129,7 @@ def make_hover_continuous_hover_replay(sampling_frequency=SAMPLING_FREQUENCY):
 def make_fragmented_hover_fragmented_replay(
         sampling_frequency=SAMPLING_FREQUENCY):
     _, test_spikes1 = make_fragmented_replay()
-    _, test_spikes2 = make_hover_replay()
+    _, test_spikes2 = make_hover_replay(hover_neuron_ind=6)
     _, test_spikes3 = make_fragmented_replay()
 
     test_spikes = np.concatenate((test_spikes1, test_spikes2, test_spikes3))
