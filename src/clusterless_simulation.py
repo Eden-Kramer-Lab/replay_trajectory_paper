@@ -112,7 +112,7 @@ def make_hover_replay(hover_neuron_ind=None,
     tetrode_ind, neuron_ind = np.unravel_index(
         hover_neuron_ind, place_field_means.shape)
 
-    N_TIME = 40
+    N_TIME = 50
     replay_time = np.arange(N_TIME) / sampling_frequency
 
     spike_time_ind = np.arange(0, N_TIME, 2)
@@ -146,5 +146,45 @@ def make_fragmented_replay(place_field_means=PLACE_FIELD_MEANS,
 
     for t_ind, tetrode_ind, neuron_ind in zip(spike_time_ind, *neuron_inds):
         test_multiunits[t_ind, :, tetrode_ind] = mark_centers[neuron_ind]
+
+    return replay_time, test_multiunits
+
+
+def make_hover_continuous_hover_replay(sampling_frequency=SAMPLING_FREQUENCY,
+                                       place_field_means=PLACE_FIELD_MEANS):
+    _, test_multiunits1 = make_hover_replay(hover_neuron_ind=0)
+    _, test_multiunits2 = make_continuous_replay()
+    n_total_neurons = place_field_means.size
+    _, test_multiunits3 = make_hover_replay(hover_neuron_ind=n_total_neurons-1)
+
+    test_multiunits = np.concatenate(
+        (test_multiunits1, test_multiunits2, test_multiunits3))
+    replay_time = np.arange(test_multiunits.shape[0]) / sampling_frequency
+
+    return replay_time, test_multiunits
+
+
+def make_fragmented_hover_fragmented_replay(
+        sampling_frequency=SAMPLING_FREQUENCY):
+    _, test_multiunits1 = make_fragmented_replay()
+    _, test_multiunits2 = make_hover_replay(hover_neuron_ind=6)
+    _, test_multiunits3 = make_fragmented_replay()
+
+    test_multiunits = np.concatenate(
+        (test_multiunits1, test_multiunits2, test_multiunits3))
+    replay_time = np.arange(test_multiunits.shape[0]) / sampling_frequency
+
+    return replay_time, test_multiunits
+
+
+def make_fragmented_continuous_fragmented_replay(
+        sampling_frequency=SAMPLING_FREQUENCY):
+    _, test_multiunits1 = make_fragmented_replay()
+    _, test_multiunits2 = make_continuous_replay()
+    _, test_multiunits3 = make_fragmented_replay()
+
+    test_multiunits = np.concatenate(
+        (test_multiunits1, test_multiunits2, test_multiunits3))
+    replay_time = np.arange(test_multiunits.shape[0]) / sampling_frequency
 
     return replay_time, test_multiunits
