@@ -6,7 +6,8 @@ from tqdm.auto import tqdm
 
 from loren_frank_data_processing import (make_epochs_dataframe,
                                          make_neuron_dataframe)
-from src.parameters import ANIMALS
+from src.parameters import (ANIMALS, MIN_N_NEURONS, MAX_N_EXPOSURES,
+                            PROCESSED_DATA_DIR)
 
 
 def run_bash(epoch_key, log_directory):
@@ -39,8 +40,8 @@ def main():
     is_animal = epoch_info.index.isin(
         ['bon', 'fra', 'gov', 'dud', 'con'], level='animal')
     valid_epochs = (is_w_track &
-                    (epoch_info.n_neurons > 20) &
-                    (epoch_info.exposure < 4) &
+                    (epoch_info.n_neurons > MIN_N_NEURONS) &
+                    (epoch_info.exposure <= MAX_N_EXPOSURES) &
                     is_animal
                     )
     log_directory = os.path.join(os.getcwd(), 'logs')
