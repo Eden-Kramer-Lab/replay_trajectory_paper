@@ -32,7 +32,7 @@ ANIMALS = {
 _MARKS = ['channel_1_max', 'channel_2_max', 'channel_3_max', 'channel_4_max']
 _BRAIN_AREAS = ['CA1', 'CA3']
 
-
+# Classifier Parameters
 place_bin_size = 2.0
 movement_var = 2.0
 replay_speed = 1
