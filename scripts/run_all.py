@@ -48,7 +48,12 @@ def main():
     os.makedirs(log_directory,  exist_ok=True)
 
     for epoch_key in tqdm(epoch_info[valid_epochs].index, desc='epochs'):
-        run_bash(epoch_key, log_directory)
+        animal, day, epoch = epoch_key
+        replay_info_filename = os.path.join(
+            PROCESSED_DATA_DIR,
+            f'{animal}_{day:02d}_{epoch:02d}_sorted_spikes_replay_info.csv')
+        if ~os.path.isfile(replay_info_filename):
+            run_bash(epoch_key, log_directory)
 
 
 if __name__ == '__main__':
