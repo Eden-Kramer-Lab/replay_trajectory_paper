@@ -28,14 +28,14 @@
 \begin{abstract}
 During sleep and immobility, hippocampal place cells fire in sequences consistent with temporally compressed versions of trajectories previously run by the animal. These replayed sequences are hypothesized to be an important mechanism for the retrieval of spatial memory in service of consolidation and decision-making. Replay events are typically evaluated based on whether they activate sequences of place cells that represent spatially continuous trajectories through the environment, but recent work has shown that these events can have more complex dynamics. For example, sequences can alternate between hovering on a particular spatial location and continuous movement or can represent continuous trajectories in other spatial environments, which may appear spatially incoherent in the context of the current environment.
  
-To quantify the structure of replay events, we develop a state space model that uses a combination of discrete and continuous latent states to decompose place cell sequences into categories based on their latent dynamics. Each discrete latent “category” is associated with a type of continuous latent dynamic—such as hovering, spatially fragmented or spatially continuous. This allows for (1) direct comparison between different categories of sequence dynamics, (2) expression of our confidence in one or more categories explaining the data, and (3) characterization of the transitions between categories. In addition, the model can function in 2D, avoiding linearization errors on more complicated environments. We demonstrate the utility of this model on simulated and real data of an animal performing a spatial memory task.
+To quantify the structure of replay events, we develop a state space model that uses a combination of discrete and continuous latent states to decompose place cell sequences into categories based on their latent dynamics. Each discrete latent “category” is associated with a type of continuous latent dynamic—hovering in place, spatially fragmented or spatially continuous. This allows for (1) direct comparison between different categories of sequence dynamics, (2) expression of our confidence in one or more categories explaining the data, and (3) characterization of the transitions between categories. In addition, the model can function in 2D, avoiding linearization errors on more complicated environments. We demonstrate the utility of this model on simulated and real data of an animal performing a spatial memory task.
 
 \end {abstract}
 %TC:break main
 %the command above serves to have a word count for the abstract
 
 \begin{keywords}
-Hippocampus | Replay | State Space | Point Process | Switching
+Hippocampus | Replay | State Space
 \end{keywords}
 
 \begin{corrauthor}
@@ -53,7 +53,7 @@ Just for kicks here's a citation \cite{Gustafsson2016}. And a reference to a sup
 
 \begin{figure}%[tbhp]
 \centering
-\includegraphics[width=.8\linewidth]{Figures/Figure_1}
+\includegraphics[width=.8\linewidth]{figures/Figure_1}
 \caption{Placeholder image of Iris with a long example caption to show justification setting.}
 \label{fig:computerNo}
 \end{figure}
@@ -62,7 +62,7 @@ Just for kicks here's a citation \cite{Gustafsson2016}. And a reference to a sup
 
 Figure \ref{fig:computerNo} shows an example of how to insert a column-wide figure. To insert a figure wider than one column, please use the \verb|\begin{figure*}...\end{figure*}| environment. Figures wider than one column should be sized to 11.4 cm or 17.8 cm wide. Use \verb|\begin{SCfigure*}...\end{SCfigure*}| for a wide figure with side captions.
 
-\section*{Conclusions}
+\section*{Discussion}
 
 blablaba \ref{fig:computerNo} 
 \blindtext
@@ -70,7 +70,6 @@ blablaba \ref{fig:computerNo}
 \subsection*{Blabla} 
 \blindtext
 
-\section*{Conclusions}
 
 blablaba \ref{fig:computerNo}
 \blindtext
@@ -82,22 +81,64 @@ blablaba \ref{fig:computerNo}
 \section*{Bibliography}
 \bibliography{zHenriquesLab-Mendeley}
 
-%% You can use these special %TC: tags to ignore certain parts of the text.
-%TC:ignore
-%the command above ignores this section for word count
 \onecolumn
 \newpage
 
-\section*{Word Counts}
-This section is \textit{not} included in the word count. 
-\subsection*{Notes on Nature Methods Brief Communication}
-\begin{itemize}
-\item Abstract: 3 sentences, 70 words.
-\item Main text: 3 pages, 2 figures, 1000-1500 words, more figures possible if under 3 pages
-\end{itemize}
+\section*{Materials and Methods}
 
-\subsection*{Statistics on word count}
-\detailtexcount
+\subsection*{Filter Derivation}
+\begin{enumerate}
+\item Use Bayes theorem to define the posterior in terms of a data-derived likelihood and a prior ($ posterior \propto likelihood * prior $)
+$$
+p(x_{k}, I_{k} \mid y_{1:k}) \propto p(y_{k} \mid x_{k}, I_{k}) * p(x_{k}, I_{k} \mid y_{1:k-1})
+$$
+
+\item Use Chapman-Kolmogorov to define prior in terms of previous time step's posterior and state transitions
+$$
+\begin{align*}
+p(x_{k}, I_{k} \mid y_{1:k-1}) &= \sum_{I_{k-1}} \int p(x_{k}, x_{k-1}, I_{k}, I_{k-1} \mid y_{1:k-1}) * dx_{k-1}
+\\ &= \sum_{I_{k-1}} \int p(x_{k}, I_{k} \mid x_{k-1}, I_{k-1}, y_{k-1}) * p(x_{k-1}, I_{k-1} \mid y_{1:k-1}) * dx_{k-1}
+\\ &= \sum_{I_{k-1}} \int p(x_{k}, I_{k} \mid x_{k-1}, I_{k-1}) * p(x_{k-1}, I_{k-1} \mid y_{1:k-1}) * dx_{k-1}
+\\ &= \sum_{I_{k-1}} \int p(x_{k} \mid x_{k-1}, I_{k}, I_{k-1}) * Pr(I_{k} \mid I_{k-1}, x_{k-1}) * p(x_{k-1}, I_{k-1} \mid y_{1:k-1}) * dx_{k-1}
+\end{align*}$$
+
+where:
+$p(x_{k-1}, I_{k-1} \mid y_{1:k-1})$ is the previous posterior,
+$Pr(I_{k} \mid I_{k-1}, x_{k-1})$ is the discrete state transition, and $p(x_{k} \mid x_{k-1}, I_{k}, I_{k-1})$ is the continuous state transition
+
+\item Final Filter
+$$
+p(x_{k}, I_{k} \mid y_{1:k}) \propto p(y_{k} \mid x_{k}, I_{k}) * \sum_{I_{k-1}} \int p(x_{k} \mid x_{k-1}, I_{k}, I_{k-1}) * Pr(I_{k} \mid I_{k-1}, x_{k-1}) * p(x_{k-1}, I_{k-1} \mid y_{1:k-1}) * dx_{k-1}
+$$
+\end{enumerate}
+
+\subsection*{Smoother Derivation}
+
+\begin{enumerate}
+\item
+$$
+\begin{align*}
+p(x_{k}, I_{k} \mid y_{1:T}) &= \sum_{I_{k+1}} \int p(x_{k}, x_{k+1}, I_{k}, I_{k+1} \mid y_{1:T}) * dx_{k+1}
+\\ &= \sum_{I_{k+1}} \int p(x_{k}, I_{k} \mid x_{k+1}, I_{k+1}, y_{1:T}) * p(x_{k+1}, I_{k+1} \mid y_{1:T}) * dx_{k+1}
+\\ &= \sum_{I_{k+1}} \int p(x_{k}, I_{k} \mid x_{k+1}, I_{k+1}, y_{1:k}) * p(x_{k+1}, I_{k+1} \mid y_{1:T}) * dx_{k+1}
+\\ &= \sum_{I_{k+1}} \int \frac{p(x_{k}, I_{k}, x_{k+1}, I_{k+1} \mid y_{1:k})}{p(x_{k+1}, I_{k+1} \mid y_{1:k})} * p(x_{k+1}, I_{k+1} \mid y_{1:T}) * dx_{k+1}
+\\ &= \sum_{I_{k+1}} \int \frac{p(x_{k+1}, I_{k+1} \mid x_{k}, I_{k}, y_{1:k}) * p(x_{k}, I_{k} \mid y_{1:k})}{p(x_{k+1}, I_{k+1} \mid y_{1:k})} * p(x_{k+1}, I_{k+1} \mid y_{1:T}) * dx_{k+1} 
+\\ &= \sum_{I_{k+1}} \int \frac{p(x_{k+1}, I_{k+1} \mid x_{k}, I_{k}) * p(x_{k}, I_{k} \mid y_{1:k})}{p(x_{k+1}, I_{k+1} \mid y_{1:k})} * p(x_{k+1}, I_{k+1} \mid y_{1:T}) * dx_{k+1}
+\\ &= p(x_{k}, I_{k} \mid y_{1:k}) * \sum_{I_{k+1}} \int \frac{p(x_{k+1}, I_{k+1} \mid x_{k}, I_{k})}{p(x_{k+1}, I_{k+1} \mid y_{1:k})} * p(x_{k+1}, I_{k+1} \mid y_{1:T}) * dx_{k+1} 
+\\ &= p(x_{k}, I_{k} \mid y_{1:k}) * \sum_{I_{k+1}} \int \frac{p(x_{k+1} \mid x_{k}, I_{k+1}, I_{k}) * Pr(I_{k+1} \mid I_{k}, x_{k})}{p(x_{k+1}, I_{k+1} \mid y_{1:k})} * p(x_{k+1}, I_{k+1} \mid y_{1:T}) * dx_{k+1}
+\end{align*}$$
+
+\item
+$$
+\begin{align*}
+p(x_{k+1}, I_{k+1} \mid y_{1:k}) &= \sum_{I_{k}} \int p(x_{k+1}, I_{k+1}, x_{k}, I_{k} \mid y_{1:k}) * dx_{k}
+\\ &= \sum_{I_{k}} \int p(x_{k+1}, I_{k+1} \mid x_{k}, I_{k}, y_{1:k}) * p(x_{k}, I_{k} \mid y_{1:k}) * dx_{k}
+\\ &= \sum_{I_{k}} \int p(x_{k+1}, I_{k+1} \mid x_{k}, I_{k}) * p(x_{k}, I_{k} \mid y_{1:k}) * dx_{k}
+\\ &= \sum_{I_{k}} \int p(x_{k+1} \mid x_{k}, I_{k+1}, I_{k}) * Pr(I_{k+1} \mid I_{k}, x_{k}) * p(x_{k}, I_{k} \mid y_{1:k}) * dx_{k}
+\end{align*}$$
+
+\end{enumerate}
+
 \newpage
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
