@@ -17,9 +17,11 @@ from loren_frank_data_processing import save_xarray
 from src.analysis import (get_linear_position_order, get_place_field_max,
                           get_replay_info, reshape_to_segments)
 from src.load_data import load_data
-from src.parameters import (FIGURE_DIR, PROCESSED_DATA_DIR, SAMPLING_FREQUENCY,
-                            discrete_diag, model, model_kwargs, movement_var,
-                            place_bin_size, replay_speed)
+from src.parameters import (FIGURE_DIR, PROBABILITY_THRESHOLD,
+                            PROCESSED_DATA_DIR, SAMPLING_FREQUENCY,
+                            TRANSITION_TO_CATEGORY, discrete_diag, model,
+                            model_kwargs, movement_var, place_bin_size,
+                            replay_speed)
 from src.visualization import (plot_category_counts, plot_category_duration,
                                plot_neuron_place_field_2D_1D_position,
                                plot_ripple_decode)
@@ -28,15 +30,6 @@ FORMAT = '%(asctime)s %(message)s'
 
 logging.basicConfig(level='INFO', format=FORMAT, datefmt='%d-%b-%y %H:%M:%S')
 plt.switch_backend('agg')
-
-
-TRANSITION_TO_CATEGORY = {
-    'identity': 'hover',
-    'uniform': 'fragmented',
-    'random_walk': 'continuous',
-}
-
-PROBABILITY_THRESHOLD = 0.8
 
 
 def run_analysis(epoch_key, make_movies=False, data_type='sorted_spikes'):
@@ -225,12 +218,13 @@ def main():
                    stdout=PIPE, universal_newlines=True).stdout
     logging.info('Git Hash: {git_hash}'.format(git_hash=git_hash.rstrip()))
 
-    client = Client(n_workers=14, threads_per_worker=4,
-                    processes=True, memory_limit='25GB')
-    logging.info(client)
-    # Analysis Code
-    run_analysis(epoch_key, data_type='clusterless')
-    run_analysis(epoch_key, data_type='sorted_spikes')
+    client_params = dict(n_workers=14, threads_per_worker=4, processes=True,
+                         memory_limit='25GB')
+    with Client(**client_params) as client:
+        logging.info(client)
+        # Analysis Code
+        run_analysis(epoch_key, data_type='clusterless')
+        run_analysis(epoch_key, data_type='sorted_spikes')
 
 
 if __name__ == '__main__':
