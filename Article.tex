@@ -1,5 +1,6 @@
 \documentclass[times, twoside, watermark]{zHenriquesLab-StyleBioRxiv}
 \usepackage{blindtext}
+\usepackage{amsmath}
 
 % Please give the surname of the lead author for the running footer
 \leadauthor{Denovellis} 
@@ -99,16 +100,16 @@ $$
 p(x_{k}, I_{k} \mid y_{1:k-1}) &= \sum_{I_{k-1}} \int p(x_{k}, x_{k-1}, I_{k}, I_{k-1} \mid y_{1:k-1}) * dx_{k-1}
 \\ &= \sum_{I_{k-1}} \int p(x_{k}, I_{k} \mid x_{k-1}, I_{k-1}, y_{k-1}) * p(x_{k-1}, I_{k-1} \mid y_{1:k-1}) * dx_{k-1}
 \\ &= \sum_{I_{k-1}} \int p(x_{k}, I_{k} \mid x_{k-1}, I_{k-1}) * p(x_{k-1}, I_{k-1} \mid y_{1:k-1}) * dx_{k-1}
-\\ &= \sum_{I_{k-1}} \int p(x_{k} \mid x_{k-1}, I_{k}, I_{k-1}) * Pr(I_{k} \mid I_{k-1}, x_{k-1}) * p(x_{k-1}, I_{k-1} \mid y_{1:k-1}) * dx_{k-1}
+\\ &= \sum_{I_{k-1}} \int p(x_{k} \mid x_{k-1}, I_{k}, I_{k-1}) * Pr(I_{k} \mid I_{k-1}) * p(x_{k-1}, I_{k-1} \mid y_{1:k-1}) * dx_{k-1}
 \end{align*}$$
 
 where:
 $p(x_{k-1}, I_{k-1} \mid y_{1:k-1})$ is the previous posterior,
-$Pr(I_{k} \mid I_{k-1}, x_{k-1})$ is the discrete state transition, and $p(x_{k} \mid x_{k-1}, I_{k}, I_{k-1})$ is the continuous state transition
+$Pr(I_{k} \mid I_{k-1})$ is the discrete state transition, and $p(x_{k} \mid x_{k-1}, I_{k}, I_{k-1})$ is the continuous state transition
 
 \item Final Filter
 $$
-p(x_{k}, I_{k} \mid y_{1:k}) \propto p(y_{k} \mid x_{k}, I_{k}) * \sum_{I_{k-1}} \int p(x_{k} \mid x_{k-1}, I_{k}, I_{k-1}) * Pr(I_{k} \mid I_{k-1}, x_{k-1}) * p(x_{k-1}, I_{k-1} \mid y_{1:k-1}) * dx_{k-1}
+p(x_{k}, I_{k} \mid y_{1:k}) \propto p(y_{k} \mid x_{k}, I_{k}) * \sum_{I_{k-1}} \int p(x_{k} \mid x_{k-1}, I_{k}, I_{k-1}) * Pr(I_{k} \mid I_{k-1}) * p(x_{k-1}, I_{k-1} \mid y_{1:k-1}) * dx_{k-1}
 $$
 \end{enumerate}
 
@@ -134,7 +135,7 @@ $$
 p(x_{k+1}, I_{k+1} \mid y_{1:k}) &= \sum_{I_{k}} \int p(x_{k+1}, I_{k+1}, x_{k}, I_{k} \mid y_{1:k}) * dx_{k}
 \\ &= \sum_{I_{k}} \int p(x_{k+1}, I_{k+1} \mid x_{k}, I_{k}, y_{1:k}) * p(x_{k}, I_{k} \mid y_{1:k}) * dx_{k}
 \\ &= \sum_{I_{k}} \int p(x_{k+1}, I_{k+1} \mid x_{k}, I_{k}) * p(x_{k}, I_{k} \mid y_{1:k}) * dx_{k}
-\\ &= \sum_{I_{k}} \int p(x_{k+1} \mid x_{k}, I_{k+1}, I_{k}) * Pr(I_{k+1} \mid I_{k}, x_{k}) * p(x_{k}, I_{k} \mid y_{1:k}) * dx_{k}
+\\ &= \sum_{I_{k}} \int p(x_{k+1} \mid x_{k}, I_{k+1}, I_{k}) * Pr(I_{k+1} \mid I_{k}) * p(x_{k}, I_{k} \mid y_{1:k}) * dx_{k}
 \end{align*}$$
 
 \end{enumerate}
