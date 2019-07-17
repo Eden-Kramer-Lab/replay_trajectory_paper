@@ -28,9 +28,9 @@
 %TC:break Abstract
 %the command above serves to have a word count for the abstract
 \begin{abstract}
-During sleep and immobility, hippocampal place cells fire in sequences consistent with temporally compressed versions of trajectories previously run by the animal. These replayed sequences are hypothesized to be an important mechanism for the retrieval of spatial memory in service of consolidation and decision-making. Replay events are typically evaluated based on whether they activate sequences of place cells that represent spatially continuous trajectories through the environment, but recent work has shown that these events can have more complex dynamics. For example, sequences can alternate between hovering on a particular spatial location and continuous movement or can represent continuous trajectories in other spatial environments, which may appear spatially incoherent in the context of the current environment.
- 
-To quantify the structure of replay events, we develop a state space model that uses a combination of discrete and continuous latent states to decompose place cell sequences into categories based on their latent dynamics. Each discrete latent “category” is associated with a type of continuous latent dynamic—hovering in place, spatially fragmented or spatially continuous. This allows for (1) direct comparison between different categories of sequence dynamics, (2) expression of our confidence in one or more categories explaining the data, and (3) characterization of the transitions between categories. In addition, the model can function in 2D, avoiding linearization errors on more complicated environments. We demonstrate the utility of this model on simulated and real data of an animal performing a spatial memory task.
+During sleep and immobility, hippocampal place cells fire in sequences consistent with temporally compressed versions of trajectories previously run by the animal. These replayed sequences are hypothesized to be an important mechanism for the retrieval of spatial memory in service of consolidation and decision-making. Replay events are typically evaluated based on whether they activate sequences of place cells that represent spatially continuous trajectories through the environment, but recent work has shown that these events can have more complex dynamics. For example, sequences can alternate between hovering on a particular spatial location and continuous movement or can represent continuous trajectories in other spatial environments, which may appear spatially incoherent in the context of the current environment.\newline
+
+To quantify the structure of replay events, we develop a state space model that uses a combination of discrete and continuous latent state to decompose place cell sequences into categories based on their latent dynamics. Each discrete latent “category” is associated with a type of continuous latent dynamic—hovering in place, spatially fragmented or spatially continuous. This allows for (1) direct comparison between different categories of sequence dynamics, (2) expression of our confidence in one or more categories explaining the data, and (3) characterization of the transitions between categories. In addition, the model can function in 2D, avoiding linearization errors on more complicated environments. We demonstrate the utility of this model on simulated and real data of an animal performing a spatial memory task.
 
 \end {abstract}
 %TC:break main
@@ -53,12 +53,12 @@ edeno\at bu.edu
 Just for kicks here's a citation \cite{Gustafsson2016}. And a reference to a supplement \cref{note:Note1}. And \nameref{note:Note1}.
 \Blindtext
 
-\begin{figure*}%[tbhp]
+\begin{figure}%[tbhp]
 \centering
-\includegraphics[width=.8\linewidth]{figures/Figure2.pdf}
-\caption{Placeholder image of Iris with a long example caption to show justification setting.}
+\includegraphics[width=1.0\linewidth]{figures/Figure2.pdf}
+\caption{Simulated data used to fit the encoding model. \textbf{a.} Place fields for each simulated neuron are evenly spaced Gaussians with a maximum firing rate of 15 spikes / s. \textbf{b.} Linear position is simulated as a sinusoid to mimic an animal moving back and forth on a linear track. Each neuron spikes according to its place field rate and Poisson distribution.}
 \label{fig:computerNo}
-\end{figure*}
+\end{figure}
 
 \Blindtext
 
