@@ -24,7 +24,7 @@ def generate_figure():
     axes[0].set_title('Simulated Neuron Place Fields')
     axes[0].set_xlim((linear_distance.min(), linear_distance.max()))
     axes[0].set_yticks([0, np.round(place_fields.max())])
-    axes[0].text(-0.16, 1.1, 'a', transform=axes[0].transAxes,
+    axes[0].text(-0.16, 1.0, 'a', transform=axes[0].transAxes,
                  size=20, weight='bold')
 
     axes[1].plot(time, linear_distance, linewidth=3)
@@ -33,7 +33,7 @@ def generate_figure():
     axes[1].set_yticks([0, np.round(linear_distance.max())])
     axes[1].set_xticks([])
     axes[1].set_xlim((0.0, 90.0))
-    axes[1].text(-0.16, 1.1, 'b', transform=axes[1].transAxes,
+    axes[1].text(-0.16, 1.0, 'b', transform=axes[1].transAxes,
                  size=20, weight='bold')
 
     c = [cmap.colors[ind] for ind in neuron_ind]
