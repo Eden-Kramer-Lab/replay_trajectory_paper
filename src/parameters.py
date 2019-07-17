@@ -52,9 +52,9 @@ PROBABILITY_THRESHOLD = 0.8
 
 # Plotting Colors
 STATE_COLORS = {
-    'hover': '#ff6944',
-    'fragmented': '#ffe027',
-    'continuous': '#9f043a',
+    'hover': '#9f043a',
+    'fragmented': '#ff6944',
+    'continuous': '#521b65',
     '': '#c7c7c7',
 }
 
