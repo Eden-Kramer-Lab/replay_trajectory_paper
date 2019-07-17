@@ -59,3 +59,4 @@ coverage.xml
 *.log
 *.lock
 *.dirlock
+*.ai
