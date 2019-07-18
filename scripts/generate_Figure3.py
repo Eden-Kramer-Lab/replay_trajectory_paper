@@ -1,6 +1,6 @@
-import sys
 import logging
 import string
+import sys
 
 import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
@@ -109,9 +109,9 @@ def generate_figure():
 
     # Make Figure
     logging.info('Making figure...')
-    fig = plt.figure(figsize=(TWO_COLUMN, TWO_COLUMN * 1.4),
+    fig = plt.figure(figsize=(TWO_COLUMN, TWO_COLUMN * 1.1),
                      constrained_layout=True)
-    outer_grid = fig.add_gridspec(nrows=3, ncols=3, height_ratios=[10, 10, 1])
+    outer_grid = fig.add_gridspec(nrows=3, ncols=3, height_ratios=[1, 1, 0.13])
     for replay_ind, (replay_name, make_replay) in enumerate(replay_types):
         replay_time, test_spikes = make_replay()
         results = classifier.predict(test_spikes, time=replay_time)
@@ -122,13 +122,14 @@ def generate_figure():
     legend_ax = fig.add_subplot(outer_grid[-1, :2])
     legend_ax.axis('off')
     legend_ax.legend(legend_handle, legend_labels, loc='upper center',
-                     fancybox=False, shadow=False, ncol=3, frameon=False)
+                     fancybox=False, shadow=False, ncol=3, frameon=False,
+                     bbox_to_anchor=(0.1, 0, 1, 1))
 
     colorbar_ax = fig.add_subplot(outer_grid[-1, -1])
     colorbar_ax.axis('off')
     axins = inset_axes(colorbar_ax, width='50%', height='50%',
                        bbox_transform=colorbar_ax.transAxes, borderpad=0,
-                       loc='lower center')
+                       loc='center', bbox_to_anchor=(0.1, 0, 1, 1))
     cbar = plt.colorbar(quad_mesh, cax=axins, orientation='horizontal',
                         extend='max', label='posterior', ticks=[0.0, 0.035])
     cbar.ax.set_xticklabels(['0', 'max'])
