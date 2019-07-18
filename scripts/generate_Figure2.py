@@ -1,3 +1,5 @@
+import sys
+
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
@@ -51,4 +53,4 @@ def generate_figure():
 
 
 if __name__ == '__main__':
-    generate_figure()
+    sys.exit(generate_figure())
