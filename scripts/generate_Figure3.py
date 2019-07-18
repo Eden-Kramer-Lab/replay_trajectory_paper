@@ -115,7 +115,7 @@ def generate_figure():
         legend_handle, legend_labels, quad_mesh = plot_classification(
             test_spikes, results, outer_grid[replay_ind], fig, replay_name,
             letter)
-    legend_ax = fig.add_subplot(outer_grid[-1, :])
+    legend_ax = fig.add_subplot(outer_grid[-1, :2])
     legend_ax.axis('off')
     legend_ax.legend(legend_handle, legend_labels, loc='upper center',
                      fancybox=False, shadow=False, ncol=3, frameon=False)
