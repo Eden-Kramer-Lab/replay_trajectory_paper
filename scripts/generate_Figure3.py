@@ -74,7 +74,7 @@ def plot_classification(test_spikes, results, subplot_spec, fig, replay_name,
     ax = plt.Subplot(fig, inner_grid[2])
     quad_mesh = results.acausal_posterior.sum('state').plot(
         x='time', y='position', robust=True, vmin=0.0, ax=ax,
-        add_colorbar=False)
+        add_colorbar=False, rasterized=True)
     ax.set_ylabel('Position [cm]')
     ax.set_xlim((replay_time.min(), replay_time.max()))
     ax.set_xticks((replay_time.min(), replay_time.max()))
