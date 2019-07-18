@@ -5,6 +5,7 @@ import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
+from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 from replay_trajectory_classification import SortedSpikesClassifier
 from replay_trajectory_classification.state_transition import \
     estimate_movement_var
@@ -71,7 +72,7 @@ def plot_classification(test_spikes, results, subplot_spec, fig, replay_name,
 
     # Posterior
     ax = plt.Subplot(fig, inner_grid[2])
-    results.acausal_posterior.sum('state').plot(
+    quad_mesh = results.acausal_posterior.sum('state').plot(
         x='time', y='position', robust=True, vmin=0.0, ax=ax,
         add_colorbar=False)
     ax.set_ylabel('Position [cm]')
@@ -83,7 +84,7 @@ def plot_classification(test_spikes, results, subplot_spec, fig, replay_name,
 
     sns.despine()
 
-    return legend_handle, legend_labels
+    return legend_handle, legend_labels, quad_mesh
 
 
 def generate_figure():
@@ -111,13 +112,23 @@ def generate_figure():
         replay_time, test_spikes = make_replay()
         results = classifier.predict(test_spikes, time=replay_time)
         letter = string.ascii_lowercase[replay_ind]
-        legend_handle, legend_labels = plot_classification(
+        legend_handle, legend_labels, quad_mesh = plot_classification(
             test_spikes, results, outer_grid[replay_ind], fig, replay_name,
             letter)
     legend_ax = fig.add_subplot(outer_grid[-1, :])
     legend_ax.axis('off')
     legend_ax.legend(legend_handle, legend_labels, loc='upper center',
                      fancybox=False, shadow=False, ncol=3, frameon=False)
+
+    colorbar_ax = fig.add_subplot(outer_grid[-1, -1])
+    colorbar_ax.axis('off')
+    axins = inset_axes(colorbar_ax, width='50%', height='50%',
+                       bbox_transform=colorbar_ax.transAxes, borderpad=0,
+                       loc='lower center')
+    cbar = plt.colorbar(quad_mesh, cax=axins, orientation='horizontal',
+                        extend='max', label='posterior', ticks=[0.0, 0.035])
+    cbar.ax.set_xticklabels(['0', 'max'])
+    cbar.ax.tick_params(labelsize=10, width=0, length=0)
     sns.despine()
 
     save_figure('Figure3', figure_format='pdf')
