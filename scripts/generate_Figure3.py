@@ -6,6 +6,7 @@ import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
+from dask.distributed import Client
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 from replay_trajectory_classification import SortedSpikesClassifier
 from replay_trajectory_classification.state_transition import \
@@ -90,6 +91,8 @@ def plot_classification(test_spikes, results, subplot_spec, fig, replay_name,
 
 def generate_figure():
     logging.basicConfig(level=logging.INFO)
+    client = Client()
+    logging.info(client)
     set_figure_defaults()
 
     logging.info('Simulating data...')
@@ -134,6 +137,7 @@ def generate_figure():
 
     save_figure('Figure3', figure_format='pdf')
     save_figure('Figure3', figure_format='png')
+    client.close()
 
 
 if __name__ == '__main__':
