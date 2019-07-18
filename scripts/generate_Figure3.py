@@ -1,6 +1,6 @@
-import sys
 import logging
 import string
+import sys
 
 import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
@@ -12,7 +12,8 @@ from replay_trajectory_classification import SortedSpikesClassifier
 from replay_trajectory_classification.state_transition import \
     estimate_movement_var
 
-from src.figure_utilities import TWO_COLUMN, save_figure, set_figure_defaults
+from src.figure_utilities import (PAGE_HEIGHT, TWO_COLUMN, save_figure,
+                                  set_figure_defaults)
 from src.parameters import STATE_COLORS, TRANSITION_TO_CATEGORY
 from src.sorted_spikes_simulation import (make_continuous_replay,
                                           make_fragmented_continuous_fragmented_replay,
@@ -43,18 +44,18 @@ def plot_classification(test_spikes, results, subplot_spec, fig, replay_name,
     replay_time = results.time.values
 
     inner_grid = gridspec.GridSpecFromSubplotSpec(
-        nrows=3, ncols=1, subplot_spec=subplot_spec)
+        nrows=3, ncols=1, subplot_spec=subplot_spec, hspace=0.3)
 
     # Spikes
     ax = plt.Subplot(fig, inner_grid[0])
     ax.scatter(replay_time[spike_time_ind], neuron_ind, color='black',
                zorder=1, marker='|', s=10, linewidth=1)
-    ax.set_yticks((0, test_spikes.shape[1]))
+    ax.set_yticks((1, test_spikes.shape[1]))
     ax.set_xticks([])
     ax.set_xlim((replay_time.min(), replay_time.max()))
-    ax.set_ylabel('Neuron Index')
-    ax.text(-0.6, 1.0, letter, transform=ax.transAxes,
-            size=20, weight='bold')
+    ax.set_ylabel('Cells')
+    ax.text(-0.3, 1.0, letter, transform=ax.transAxes,
+            size=15, weight='bold')
     ax.set_title(replay_name)
     fig.add_subplot(ax)
 
@@ -62,8 +63,8 @@ def plot_classification(test_spikes, results, subplot_spec, fig, replay_name,
     ax = plt.Subplot(fig, inner_grid[1])
     replay_probability = results.acausal_posterior.sum('position')
     for state, prob in replay_probability.groupby('state'):
-        ax.plot(prob.time, prob.values, linewidth=2,
-                label=state, color=STATE_COLORS[state])
+        ax.plot(prob.time, prob.values, linewidth=2, label=state,
+                color=STATE_COLORS[state])
     ax.set_ylabel('Probability')
     ax.set_yticks([0, 1])
     ax.set_xticks([])
@@ -77,7 +78,7 @@ def plot_classification(test_spikes, results, subplot_spec, fig, replay_name,
     quad_mesh = results.acausal_posterior.sum('state').plot(
         x='time', y='position', robust=True, vmin=0.0, ax=ax,
         add_colorbar=False, rasterized=True)
-    ax.set_ylabel('Position [cm]')
+    ax.set_ylabel('Pos. [cm]')
     ax.set_xlim((replay_time.min(), replay_time.max()))
     ax.set_xticks((replay_time.min(), replay_time.max()))
     ax.set_yticks((0.0, 180.0))
@@ -109,9 +110,10 @@ def generate_figure():
 
     # Make Figure
     logging.info('Making figure...')
-    fig = plt.figure(figsize=(TWO_COLUMN, TWO_COLUMN * 1.4),
+    fig = plt.figure(figsize=(TWO_COLUMN, PAGE_HEIGHT * 0.8),
                      constrained_layout=True)
-    outer_grid = fig.add_gridspec(nrows=3, ncols=3, height_ratios=[10, 10, 1])
+    outer_grid = fig.add_gridspec(
+        nrows=3, ncols=3, height_ratios=[1, 1, 0.025], wspace=0.5, hspace=0.3)
     for replay_ind, (replay_name, make_replay) in enumerate(replay_types):
         replay_time, test_spikes = make_replay()
         results = classifier.predict(test_spikes, time=replay_time)
@@ -119,20 +121,23 @@ def generate_figure():
         legend_handle, legend_labels, quad_mesh = plot_classification(
             test_spikes, results, outer_grid[replay_ind], fig, replay_name,
             letter)
+
     legend_ax = fig.add_subplot(outer_grid[-1, :2])
     legend_ax.axis('off')
     legend_ax.legend(legend_handle, legend_labels, loc='upper center',
-                     fancybox=False, shadow=False, ncol=3, frameon=False)
+                     fancybox=False, shadow=False, ncol=3, frameon=False,
+                     bbox_to_anchor=(0.1, 0, 1, 1))
 
     colorbar_ax = fig.add_subplot(outer_grid[-1, -1])
     colorbar_ax.axis('off')
     axins = inset_axes(colorbar_ax, width='50%', height='50%',
                        bbox_transform=colorbar_ax.transAxes, borderpad=0,
-                       loc='lower center')
+                       loc='center', bbox_to_anchor=(0.1, 0, 1, 1))
     cbar = plt.colorbar(quad_mesh, cax=axins, orientation='horizontal',
-                        extend='max', label='posterior', ticks=[0.0, 0.035])
+                        extend='max', label='posterior',
+                        ticks=[0.0, 0.035])
     cbar.ax.set_xticklabels(['0', 'max'])
-    cbar.ax.tick_params(labelsize=10, width=0, length=0)
+    cbar.ax.tick_params(width=0, length=0)
     sns.despine()
 
     save_figure('Figure3', figure_format='pdf')
