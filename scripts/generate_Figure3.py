@@ -1,5 +1,5 @@
-import string
 import logging
+import string
 
 import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
@@ -67,6 +67,7 @@ def plot_classification(test_spikes, results, subplot_spec, fig, replay_name,
     ax.set_xlim((replay_time.min(), replay_time.max()))
     ax.set_ylim((-0.01, 1.05))
     fig.add_subplot(ax)
+    legend_handle, legend_labels = ax.get_legend_handles_labels()
 
     # Posterior
     ax = plt.Subplot(fig, inner_grid[2])
@@ -81,6 +82,8 @@ def plot_classification(test_spikes, results, subplot_spec, fig, replay_name,
     fig.add_subplot(ax)
 
     sns.despine()
+
+    return legend_handle, legend_labels
 
 
 def generate_figure():
@@ -101,15 +104,20 @@ def generate_figure():
 
     # Make Figure
     logging.info('Making figure...')
-    fig = plt.figure(figsize=(TWO_COLUMN, TWO_COLUMN * 1.1),
+    fig = plt.figure(figsize=(TWO_COLUMN, TWO_COLUMN * 1.4),
                      constrained_layout=True)
-    outer_grid = fig.add_gridspec(nrows=2, ncols=3)
+    outer_grid = fig.add_gridspec(nrows=3, ncols=3, height_ratios=[10, 10, 1])
     for replay_ind, (replay_name, make_replay) in enumerate(replay_types):
         replay_time, test_spikes = make_replay()
         results = classifier.predict(test_spikes, time=replay_time)
         letter = string.ascii_lowercase[replay_ind]
-        plot_classification(test_spikes, results,
-                            outer_grid[replay_ind], fig, replay_name, letter)
+        legend_handle, legend_labels = plot_classification(
+            test_spikes, results, outer_grid[replay_ind], fig, replay_name,
+            letter)
+    legend_ax = fig.add_subplot(outer_grid[-1, :])
+    legend_ax.axis('off')
+    legend_ax.legend(legend_handle, legend_labels, loc='upper center',
+                     fancybox=False, shadow=False, ncol=3, frameon=False)
     sns.despine()
 
     save_figure('Figure3', figure_format='pdf')
