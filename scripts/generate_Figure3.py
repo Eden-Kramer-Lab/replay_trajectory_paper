@@ -1,3 +1,4 @@
+import sys
 import logging
 import string
 
@@ -136,4 +137,4 @@ def generate_figure():
 
 
 if __name__ == '__main__':
-    generate_figure()
+    sys.exit(generate_figure())
