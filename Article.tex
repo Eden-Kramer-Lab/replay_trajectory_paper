@@ -1,7 +1,8 @@
 \documentclass[times, twoside, watermark]{zHenriquesLab-StyleBioRxiv}
 \usepackage{blindtext}
-\usepackage{amsmath}
 \pdfoptionalwaysusepdfpagebox=5
+\DeclareMathOperator*{\E}{\mathbb{E}}
+\newcommand\norm[1]{\left\lVert#1\right\rVert}
 
 % Please give the surname of the lead author for the running footer
 \leadauthor{Denovellis} 
@@ -28,7 +29,7 @@
 %TC:break Abstract
 %the command above serves to have a word count for the abstract
 \begin{abstract}
-During sleep and immobility, hippocampal place cells fire in sequences consistent with temporally compressed versions of trajectories previously run by the animal. These replayed sequences are hypothesized to be an important mechanism for the retrieval of spatial memory in service of consolidation and decision-making. Replay events are typically evaluated based on whether they activate sequences of place cells that represent spatially continuous trajectories through the environment, but recent work has shown that these events can have more complex dynamics. For example, sequences can alternate between hovering on a particular spatial location and continuous movement or can represent continuous trajectories in other spatial environments, which may appear spatially incoherent in the context of the current environment.\newline
+During sleep and immobility, hippocampal place cells fire in sequences consistent with temporally compressed versions of trajectories previously run by the animal. These replayed sequences are hypothesized to be an important mechanism for the retrieval of spatial memory in service of consolidation and decision-making. Replay events are typically evaluated based on whether they activate sequences of place cells that represent spatially continuous trajectories through the environment, but recent work has shown that these events can have more complex dynamics. For example, sequences can alternate between hovering on a particular spatial location and continuous movement or can represent continuous trajectories in other spatial environments, which may appear spatially incoherent in the context of the current environment.
 
 To quantify the structure of replay events, we develop a state space model that uses a combination of discrete and continuous latent state to decompose place cell sequences into categories based on their latent dynamics. Each discrete latent “category” is associated with a type of continuous latent dynamic—hovering in place, spatially fragmented or spatially continuous. This allows for (1) direct comparison between different categories of sequence dynamics, (2) expression of our confidence in one or more categories explaining the data, and (3) characterization of the transitions between categories. In addition, the model can function in 2D, avoiding linearization errors on more complicated environments. We demonstrate the utility of this model on simulated and real data of an animal performing a spatial memory task.
 
@@ -56,7 +57,7 @@ Just for kicks here's a citation \cite{Gustafsson2016}. And a reference to a sup
 \begin{figure}%[tbhp]
 \centering
 \includegraphics[width=1.0\linewidth]{figures/Figure2.pdf}
-\caption{Simulated data used to fit the encoding model. \textbf{a.} Place fields for each simulated neuron are evenly spaced Gaussians with a maximum firing rate of 15 spikes / s. \textbf{b.} Linear position is simulated as a sinusoid to mimic an animal moving back and forth on a linear track. Each neuron spikes according to its place field rate and Poisson distribution.}
+\caption{Simulated data used to fit the encoding model. \textbf{a.} Place fields for each cell are simulated as a Gaussian with a maximum firing rate of 15 spikes / s. \textbf{b.} Position is simulated as a sinusoid to mimic an animal moving back and forth on a linear track. Each cell is simulated as a inhomogeneous Poisson process with a rate that depends on position according to its place field in a.}
 \label{fig:computerNo}
 \end{figure}
 
@@ -64,12 +65,12 @@ Just for kicks here's a citation \cite{Gustafsson2016}. And a reference to a sup
 
 Figure \ref{fig:computerNo} shows an example of how to insert a column-wide figure. To insert a figure wider than one column, please use the \verb|\begin{figure*}...\end{figure*}| environment. Figures wider than one column should be sized to 11.4 cm or 17.8 cm wide. Use \verb|\begin{SCfigure*}...\end{SCfigure*}| for a wide figure with side captions.
 
-\begin{figure*}%[tbhp]
+\begin{figure}%[tbhp]
 \centering
 \includegraphics[width=1.0\linewidth]{figures/Figure3.pdf}
-\caption{Model is able to classify multiple replay types. \textbf{a.} Continuous. \textbf{b.} Hover. \textbf{c.} Fragmented. \textbf{d.} Hover-Continuous-Hover. \textbf{e.} Fragmented-Continuous-Hover. \textbf{f.} Fragmented-Hover-Fragmented.}
+\caption{Model can classify each category of trajectory dynamic (and combinations of dynamics) on simulated data. Each panel shows (from top to bottom) the simulated cell population activity, the probability of the three trajectory dynamics at each time, and the decoded posterior probability of position at each time. \textbf{a.} Continuous. \textbf{b.} Hover. \textbf{c.} Fragmented. \textbf{d.} Hover-Continuous-Hover. \textbf{e.} Fragmented-Continuous-Fragmented. \textbf{f.} Fragmented-Hover-Fragmented.}
 \label{fig:computerNo}
-\end{figure*}
+\end{figure}
 
 \section*{Discussion}
 
@@ -94,6 +95,22 @@ blablaba \ref{fig:computerNo}
 \newpage
 
 \section*{Materials and Methods}
+\subsection*{The Model}
+The 
+\subsection*{Encoding}
+In order to encode each cell's place preference, a generalized linear model was fit to each neuron's spiking activity during movement (defined as time periods when the running speed is greater than 4 cm/s). The model used log link function. 
+
+$$\lambda(t) = \exp{(\sum_{i} f_{i}(position)\beta_{i})}$$
+
+A small L2 penalization term $-\lambda\norm{\beta_{i}}_{2}^{2}$ used to prevent model fitting instability when spiking activity is very low. A third degree B-splines basis over position (or tensor products of the B-splines when position is two dimensional) is used to allow firing activity to smoothly vary over position and to reduce the total number of model parameters.
+\subsection*{Decoding}
+
+\subsection*{Simulated Data}
+
+\subsection*{Data}
+
+\subsection*{Software and Code availability}
+Python code used for analysis and generating figures in the paper is available at: \url{https://github.com/Eden-Kramer-Lab/replay_trajectory_paper}. Code for the classifier is available in a separate software repository to facilitate code reuse at: \url{https://github.com/Eden-Kramer-Lab/replay_trajectory_classification}. All code is open-source and licensed under the MIT Software License.
 
 \subsection*{Filter Derivation}
 \begin{enumerate}
