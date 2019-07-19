@@ -22,6 +22,8 @@ def set_figure_defaults():
         'ps.fonttype': 42,  # Make fonts editable in Adobe Illustrator
         'axes.labelcolor': '#222222',
         'axes.labelsize': 9,
+        'xtick.labelsize': 9,
+        'ytick.labelsize': 9,
         'text.color': '#222222',
         'text.usetex': False,
         'figure.figsize': (7.2, 4.45),
