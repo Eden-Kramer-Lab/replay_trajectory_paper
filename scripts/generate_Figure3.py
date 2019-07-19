@@ -92,7 +92,7 @@ def plot_classification(test_spikes, results, subplot_spec, fig, replay_name,
 
 def generate_figure():
     logging.basicConfig(level=logging.INFO)
-    client = Client()
+    client = Client(processes=False)
     logging.info(client)
     set_figure_defaults()
 
