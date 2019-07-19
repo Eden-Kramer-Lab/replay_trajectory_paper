@@ -23,7 +23,7 @@ def generate_figure():
         axes[0].plot(linear_distance, place_field, linewidth=3, color=color)
     axes[0].set_xlabel('Position [cm]')
     axes[0].set_ylabel('Firing Rate\n[spikes / s]')
-    axes[0].set_title('Simulated Neuron Place Fields')
+    axes[0].set_title('Simulated Place Fields')
     axes[0].set_xlim((linear_distance.min(), linear_distance.max()))
     axes[0].set_yticks([0, np.round(place_fields.max())])
     axes[0].text(-0.1, 1.0, 'a', transform=axes[0].transAxes,
