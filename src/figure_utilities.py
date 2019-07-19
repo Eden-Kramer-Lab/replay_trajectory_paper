@@ -23,7 +23,6 @@ def set_figure_defaults():
         'axes.labelcolor': '#222222',
         'axes.labelsize': 9,
         'text.color': '#222222',
-        'font.sans-serif': 'Helvetica',
         'text.usetex': False,
         'figure.figsize': (7.2, 4.45),
         'xtick.major.size': 0.05,
