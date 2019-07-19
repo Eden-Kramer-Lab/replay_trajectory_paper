@@ -55,7 +55,7 @@ def plot_classification(test_spikes, results, subplot_spec, fig, replay_name,
     ax.set_xlim((replay_time.min(), replay_time.max()))
     ax.set_ylabel('Cells')
     ax.text(-0.3, 1.0, letter, transform=ax.transAxes,
-            size=15, weight='bold')
+            size=15, weight='extra bold')
     ax.set_title(replay_name)
     fig.add_subplot(ax)
 

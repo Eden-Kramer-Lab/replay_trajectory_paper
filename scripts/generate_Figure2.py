@@ -27,7 +27,7 @@ def generate_figure():
     axes[0].set_xlim((linear_distance.min(), linear_distance.max()))
     axes[0].set_yticks([0, np.round(place_fields.max())])
     axes[0].text(-0.1, 1.0, 'a', transform=axes[0].transAxes,
-                 size=15, weight='bold')
+                 size=15, weight='extra bold')
 
     axes[1].plot(time, linear_distance, linewidth=3)
     axes[1].set_ylabel('Position [cm]')
@@ -36,7 +36,7 @@ def generate_figure():
     axes[1].set_xticks([])
     axes[1].set_xlim((0.0, 90.0))
     axes[1].text(-0.1, 1.0, 'b', transform=axes[1].transAxes,
-                 size=15, weight='bold')
+                 size=15, weight='extra bold')
 
     c = [cmap.colors[ind] for ind in neuron_ind]
     axes[2].scatter(time[spike_ind], neuron_ind + 1, c=c, s=0.5)
