@@ -50,7 +50,8 @@ def run_analysis(epoch_key, make_movies=False, data_type='sorted_spikes'):
             classifier = SortedSpikesClassifier(
                 place_bin_size=place_bin_size, movement_var=movement_var,
                 replay_speed=replay_speed,
-                discrete_transition_diag=discrete_diag).fit(
+                discrete_transition_diag=discrete_diag,
+                spike_model_penalty=0.5).fit(
                 position, data['spikes'], is_training=is_training)
         elif data_type == 'clusterless':
             classifier = ClusterlessClassifier(
