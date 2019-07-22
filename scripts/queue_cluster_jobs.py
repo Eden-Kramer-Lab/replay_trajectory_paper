@@ -22,7 +22,7 @@ def get_command_line_arguments():
     parser.add_argument('--n_cores', type=int, default=16)
     parser.add_argument('--wall_time', type=str, default='12:00:00')
     parser.add_argument('--n_workers', type=int, default=4)
-    parser.add_argument('--workers_per_thread', type=int, default=4)
+    parser.add_argument('--threads_per_worker', type=int, default=4)
     return parser.parse_args()
 
 
@@ -48,7 +48,7 @@ def main():
     python_function = 'run_by_epoch.py'
     directives = ' '.join(
         [f'-l h_rt={args.wall_time}', f'-pe omp {args.n_cores}',
-         '-P braincom', '-notify', '-l mem_per_core=8G',
+         '-P braincom', '-notify',
          '-v OPENBLAS_NUM_THREADS', '-v NUMBA_NUM_THREADS',
          '-v OMP_NUM_THREADS'])
 
@@ -78,7 +78,7 @@ def main():
         python_cmd = (f'{python_function} {animal} {day} {epoch}'
                       f' --data_type {args.data_type}'
                       f' --n_workers {args.n_workers}'
-                      f' --workers_per_thread {args.workers_per_thread}')
+                      f' --threads_per_worker {args.threads_per_worker}')
         queue_job(python_cmd,
                   directives=directives,
                   log_file=join(LOG_DIRECTORY, log_file),
