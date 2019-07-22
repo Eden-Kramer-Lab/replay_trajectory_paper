@@ -18,6 +18,11 @@ def get_command_line_arguments():
     parser.add_argument('--Day', type=int, help='Day of recording session')
     parser.add_argument('--Epoch', type=int,
                         help='Epoch number of recording session')
+    parser.add_argument('--data_type', type=str, default='sorted_spikes')
+    parser.add_argument('--n_cores', type=int, default=16)
+    parser.add_argument('--wall_time', type=str, default='12:00:00')
+    parser.add_argument('--n_workers', type=int, default=4)
+    parser.add_argument('--workers_per_thread', type=int, default=4)
     return parser.parse_args()
 
 
@@ -42,7 +47,7 @@ def main():
 
     python_function = 'run_by_epoch.py'
     directives = ' '.join(
-        ['-l h_rt=24:00:00', f'-pe omp {NUM_CORES}',
+        [f'-l h_rt={args.wall_time}', f'-pe omp {args.n_cores}',
          '-P braincom', '-notify', '-l mem_per_core=8G',
          '-v OPENBLAS_NUM_THREADS', '-v NUMBA_NUM_THREADS',
          '-v OMP_NUM_THREADS'])
@@ -71,7 +76,10 @@ def main():
         log_file = f'{animal}_{day:02d}_{epoch:02d}.log'
         function_name = python_function.replace('.py', '')
         job_name = f'{function_name}_{animal}_{day:02d}_{epoch:02d}'
-        python_cmd = f'{python_function} {animal} {day} {epoch}'
+        python_cmd = (f'{python_function} {animal} {day} {epoch}'
+                      f' --data_type {args.data_type}'
+                      f' --n_workers {args.n_workers}'
+                      f' --workers_per_thread {args.workers_per_thread}')
         queue_job(python_cmd,
                   directives=directives,
                   log_file=join(LOG_DIRECTORY, log_file),
