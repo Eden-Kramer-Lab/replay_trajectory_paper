@@ -186,6 +186,9 @@ def get_command_line_arguments():
     parser.add_argument('Day', type=int, help='Day of recording session')
     parser.add_argument('Epoch', type=int,
                         help='Epoch number of recording session')
+    parser.add_argument('--data_type', type=str, default='sorted_spikes')
+    parser.add_argument('--n_workers', type=int, default=16)
+    parser.add_argument('--threads_per_worker', type=int, default=4)
     parser.add_argument(
         '-d', '--debug',
         help='More verbose output for debugging',
@@ -218,13 +221,14 @@ def main():
                    stdout=PIPE, universal_newlines=True).stdout
     logging.info('Git Hash: {git_hash}'.format(git_hash=git_hash.rstrip()))
 
-    client_params = dict(n_workers=14, threads_per_worker=4, processes=True,
+    client_params = dict(n_workers=args.n_workers,
+                         threads_per_worker=args.threads_per_worker,
+                         processes=True,
                          memory_limit='25GB')
     with Client(**client_params) as client:
         logging.info(client)
         # Analysis Code
-        run_analysis(epoch_key, data_type='clusterless')
-        run_analysis(epoch_key, data_type='sorted_spikes')
+        run_analysis(epoch_key, data_type=args.data_type)
 
 
 if __name__ == '__main__':
