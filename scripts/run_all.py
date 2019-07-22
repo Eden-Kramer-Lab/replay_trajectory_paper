@@ -49,6 +49,7 @@ def main():
 
     for epoch_key in tqdm(epoch_info[valid_epochs].index, desc='epochs'):
         animal, day, epoch = epoch_key
+        # Check if this file has already been run
         replay_info_filename = os.path.join(
             PROCESSED_DATA_DIR,
             f'{animal}_{day:02d}_{epoch:02d}_sorted_spikes_replay_info.csv')
