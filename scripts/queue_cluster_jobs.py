@@ -52,8 +52,7 @@ def main():
          '-v OPENBLAS_NUM_THREADS', '-v NUMBA_NUM_THREADS',
          '-v OMP_NUM_THREADS'])
 
-    args = get_command_line_arguments()
-    if args.Animal is None and args.Day is None and args.Epoch is None:
+    if args.Animal is None or args.Day is None or args.Epoch is None:
         epoch_info = make_epochs_dataframe(ANIMALS)
         neuron_info = make_neuron_dataframe(ANIMALS)
         n_neurons = (neuron_info
