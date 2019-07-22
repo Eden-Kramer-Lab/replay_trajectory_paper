@@ -44,7 +44,7 @@ def plot_classification(test_spikes, results, subplot_spec, fig, replay_name,
     replay_time = results.time.values
 
     inner_grid = gridspec.GridSpecFromSubplotSpec(
-        nrows=3, ncols=1, subplot_spec=subplot_spec, hspace=0.3)
+        nrows=3, ncols=1, subplot_spec=subplot_spec, hspace=0.4)
 
     # Spikes
     ax = plt.Subplot(fig, inner_grid[0])
@@ -54,7 +54,7 @@ def plot_classification(test_spikes, results, subplot_spec, fig, replay_name,
     ax.set_xticks([])
     ax.set_xlim((replay_time.min(), replay_time.max()))
     ax.set_ylabel('Cells')
-    ax.text(-0.3, 1.0, letter, transform=ax.transAxes,
+    ax.text(-0.3, 1.3, letter, transform=ax.transAxes,
             size=15, weight='extra bold')
     ax.set_title(replay_name)
     fig.add_subplot(ax)
@@ -124,7 +124,7 @@ def generate_figure():
 
     legend_ax = fig.add_subplot(outer_grid[-1, :2])
     legend_ax.axis('off')
-    legend_ax.legend(legend_handle, legend_labels, loc='upper center',
+    legend_ax.legend(legend_handle, legend_labels, loc='center',
                      fancybox=False, shadow=False, ncol=3, frameon=False,
                      bbox_to_anchor=(0.1, 0, 1, 1))
 
