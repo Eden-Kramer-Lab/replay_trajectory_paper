@@ -38,10 +38,10 @@ def main():
     args = get_command_line_arguments()
 
     # Set the maximum number of threads for openBLAS to use.
-    environ['OPENBLAS_NUM_THREADS'] = '1'
-    environ['MKL_NUM_THREADS'] = '1'
-    environ['NUMBA_NUM_THREADS'] = '1'
-    environ['OMP_NUM_THREADS'] = '1'
+    environ['OPENBLAS_NUM_THREADS'] = '4'
+    environ['MKL_NUM_THREADS'] = '4'
+    environ['NUMBA_NUM_THREADS'] = '4'
+    environ['OMP_NUM_THREADS'] = '4'
     LOG_DIRECTORY = join(getcwd(), 'logs')
     makedirs(LOG_DIRECTORY,  exist_ok=True)
 
