@@ -64,8 +64,9 @@ def load_data(epoch_key, brain_areas=None):
     neuron_info = make_neuron_dataframe(ANIMALS).xs(
         epoch_key, drop_level=False)
     neuron_info = neuron_info.loc[
-        (neuron_info.numspikes > 0) &
-        neuron_info.area.isin(brain_areas)]
+        (neuron_info.numspikes > 100) &
+        neuron_info.area.isin(brain_areas) &
+        (neuron_info.type == 'principal')]
     spikes = get_all_spike_indicators(
         neuron_info.index, ANIMALS, _time_function).reindex(time)
 
