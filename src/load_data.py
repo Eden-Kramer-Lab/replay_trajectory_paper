@@ -30,7 +30,8 @@ def get_ripple_times(epoch_key, sampling_frequency=1500):
         tetrode_keys = tetrode_info.loc[
             (tetrode_info.validripple == 1)].index
     else:
-        pass
+        tetrode_keys = tetrode_info.loc[
+            (tetrode_info.area.isin(_BRAIN_AREAS))].index
 
     lfps = get_LFPs(tetrode_keys, ANIMALS).reindex(time)
     return Kay_ripple_detector(
