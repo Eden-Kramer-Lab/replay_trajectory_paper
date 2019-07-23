@@ -56,6 +56,8 @@ def main():
         epoch_info = make_epochs_dataframe(ANIMALS)
         neuron_info = make_neuron_dataframe(ANIMALS)
         neuron_info = neuron_info.loc[
+            (neuron_info.type == 'principal') &
+            (neuron_info.numspikes > 100) &
             neuron_info.area.isin(_BRAIN_AREAS)]
         n_neurons = (neuron_info
                      .groupby(['animal', 'day', 'epoch'])
