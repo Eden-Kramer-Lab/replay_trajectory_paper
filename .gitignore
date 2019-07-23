@@ -60,3 +60,4 @@ coverage.xml
 *.lock
 *.dirlock
 *.ai
+*.nc
