@@ -61,7 +61,7 @@ def load_data(epoch_key, brain_areas=None):
 
     tetrode_info = make_tetrode_dataframe(ANIMALS).xs(
         epoch_key, drop_level=False)
-    is_brain_areas = tetrode_info.area.isin(brain_areas)
+    is_brain_areas = tetrode_info.area.astype(str).isin(brain_areas)
     tetrode_keys = tetrode_info.loc[is_brain_areas].index
     lfps = get_LFPs(tetrode_keys, ANIMALS)
     lfps = lfps.resample('2ms').mean().fillna(method='pad').reindex(time)
