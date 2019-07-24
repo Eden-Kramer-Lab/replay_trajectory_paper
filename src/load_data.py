@@ -54,7 +54,8 @@ def load_data(epoch_key, brain_areas=None):
         return time
 
     position_info = (
-        get_interpolated_position_dataframe(epoch_key, ANIMALS, _time_function)
+        get_interpolated_position_dataframe(
+            epoch_key, ANIMALS, _time_function, spacing=30)
         .dropna(subset=['linear_distance', 'linear_speed']))
 
     time = position_info.index

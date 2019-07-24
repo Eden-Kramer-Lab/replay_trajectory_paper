@@ -46,6 +46,7 @@ TRANSITION_TO_CATEGORY = {
     'identity': 'hover',
     'uniform': 'fragmented',
     'random_walk': 'continuous',
+    'w_track_1D_random_walk': 'continuous',
 }
 
 PROBABILITY_THRESHOLD = 0.8
