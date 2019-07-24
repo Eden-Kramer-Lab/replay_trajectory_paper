@@ -70,7 +70,7 @@ def main():
         epoch_info = epoch_info.join(n_neurons)
         is_w_track = (epoch_info.environment
                       .isin(['TrackA', 'TrackB', 'WTrackA', 'WTrackB']))
-        epoch_keys = epoch_info[is_w_track & (epoch_info.n_neurons > 5)].index
+        epoch_keys = epoch_info[is_w_track & (epoch_info.n_neurons > 9)].index
     else:
         epoch_keys = [(args.Animal, args.Day, args.Epoch)]
 
