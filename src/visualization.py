@@ -4,9 +4,9 @@ import numpy as np
 import seaborn as sns
 from matplotlib.collections import LineCollection
 from matplotlib.colorbar import ColorbarBase, make_axes
-from replay_trajectory_classification import SortedSpikesClassifier
 
-from .analysis import maximum_a_posteriori_estimate
+from src.analysis import maximum_a_posteriori_estimate
+from src.parameters import STATE_COLORS
 
 try:
     from upsetplot import UpSet
@@ -124,9 +124,9 @@ def make_movie(position, posterior_density, position_info, map_position,
     return fig, movie
 
 
-def plot_ripple_decode(posterior, ripple_position,
-                       ripple_spikes, position, linear_position_order,
-                       ):
+def plot_ripple_decode_2D(posterior, ripple_position,
+                          ripple_spikes, position, linear_position_order,
+                          spike_label='Cells'):
     time = posterior.time.values
     map_estimate = maximum_a_posteriori_estimate(posterior.sum('state'))
     spike_time_ind, neuron_ind = np.nonzero(
@@ -135,23 +135,29 @@ def plot_ripple_decode(posterior, ripple_position,
 
     fig, axes = plt.subplots(1, 2, figsize=(12, 6), constrained_layout=True)
 
-    g = SortedSpikesClassifier.predict_proba(posterior).plot(
-        hue='state', ax=axes[0], linewidth=4)
+    replay_probability = posterior.sum('position')
+    for state, prob in replay_probability.groupby('state'):
+        axes[0].plot(prob.time, prob.values, linewidth=3, label=state,
+                     color=STATE_COLORS[state])
     axes[0].set_ylim((0, 1))
 
     twin_ax = axes[0].twinx()
     twin_ax.scatter(time[spike_time_ind], neuron_ind, color='black', zorder=1,
-                    marker='|', s=80, linewidth=3)
+                    marker='|', s=40, linewidth=3)
     twin_ax.set_ylim((-0.5, n_neurons - 0.5))
-    twin_ax.set_ylabel('Neuron ID')
+    twin_ax.set_yticks((1, n_neurons))
+    twin_ax.set_ylabel(spike_label)
 
     box = axes[0].get_position()
     axes[0].set_position([box.x0, box.y0 + box.height * 0.1,
                           box.width, box.height * 0.9])
 
-    axes[0].legend(g, posterior.state.values, loc='upper right',
-                   bbox_to_anchor=(1.0, -0.05), fancybox=False, shadow=False,
-                   ncol=1, frameon=False)
+    axes[0].legend(loc='upper right', bbox_to_anchor=(1.0, -0.05),
+                   fancybox=False, shadow=False, ncol=1, frameon=False)
+    axes[0].set_ylabel('Probability')
+    axes[0].set_xlabel('Time [ms]')
+    axes[0].set_xlim((time.min(), time.max()))
+    axes[0].set_xticks((time.min(), time.max()))
 
     position = np.asarray(position)
     axes[1].plot(position[:, 0], position[:, 1],
@@ -162,10 +168,74 @@ def plot_ripple_decode(posterior, ripple_position,
     axes[1].scatter(ripple_position[:, 0], ripple_position[:, 1],
                     color='black', s=100, label='actual position')
     posterior.sum(['state', 'time']).plot(
-        x='x_position', y='y_position', robust=True, cmap='Purples', alpha=0.3,
+        x='x_position', y='y_position', robust=True, cmap='Purples', alpha=0.5,
         ax=axes[1], add_colorbar=False, zorder=0)
+    axes[1].set_xlabel('X-Position [cm]')
+    axes[1].set_ylabel('Y-Position [cm]')
 
     axes[1].legend()
+
+
+def plot_ripple_decode_1D(posterior, ripple_position, ripple_spikes,
+                          linear_position_order, position_info,
+                          spike_label='Cells', figsize=(10, 7)):
+    ripple_spikes = np.asarray(ripple_spikes)
+    spike_time_ind, neuron_ind = np.nonzero(
+        ripple_spikes[:, linear_position_order])
+    ripple_time = posterior.time.values
+    min_time, max_time = ripple_time.min(), ripple_time.max()
+
+    fig, axes = plt.subplots(
+        3, 1, figsize=figsize,
+        constrained_layout=True, sharex=True)
+
+    axes[0].scatter(ripple_time[spike_time_ind], neuron_ind, color='black',
+                    zorder=1, marker='|', s=20, linewidth=1)
+    axes[0].set_yticks((1, ripple_spikes.shape[1]))
+    axes[0].set_xticks([])
+    axes[0].set_xlim((min_time, max_time))
+    axes[0].set_ylabel(spike_label)
+
+    replay_probability = posterior.sum('position')
+    for state, prob in replay_probability.groupby('state'):
+        axes[1].plot(prob.time, prob.values, linewidth=3, label=state,
+                     color=STATE_COLORS[state])
+    axes[1].set_ylabel('Probability')
+    axes[1].set_yticks([0, 1])
+    axes[1].set_xticks([])
+    axes[1].set_xlim((min_time, max_time))
+    axes[1].set_ylim((-0.01, 1.05))
+    axes[1].legend(loc='center left', bbox_to_anchor=(1, 0.5),
+                   fancybox=False, shadow=False, ncol=1, frameon=False)
+
+    posterior.sum('state').plot(
+        x='time', y='position', robust=True, vmin=0.0, ax=axes[2])
+    axes[2].set_ylabel('Position [cm]')
+    axes[2].set_xlim((min_time, max_time))
+    axes[2].set_xticks((min_time, max_time))
+    axes[-1].set_xlabel('Time [ms]')
+
+    max_df = position_info.groupby('arm_name').linear_position2.max()
+    min_df = position_info.groupby('arm_name').linear_position2.min()
+    axes[2].set_ylim((0, position_info.linear_position2.max()))
+    axes[2].set_yticks((0, position_info.linear_position2.max()))
+
+    max_df = (position_info
+              .groupby('arm_name').linear_position2.max())
+    for arm_name, max_position in max_df.iteritems():
+        axes[2].axhline(max_position, color='lightgrey',
+                        linestyle='-', linewidth=1)
+        axes[2].text(min_time, max_position - 5, arm_name, color='white',
+                     fontsize=8, verticalalignment='top')
+    min_df = (position_info
+              .groupby('arm_name').linear_position2.min())
+    for arm_name, min_position in min_df.iteritems():
+        axes[2].axhline(min_position, color='lightgrey',
+                        linestyle='-', linewidth=1)
+    axes[2].plot(ripple_time, ripple_position, color='white', linestyle='--',
+                 linewidth=2, alpha=0.7)
+
+    sns.despine()
 
 
 def plot_neuron_place_field_2D_1D_position(
