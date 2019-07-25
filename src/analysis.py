@@ -1,14 +1,17 @@
 import numpy as np
 import pandas as pd
 
-from replay_trajectory_classification import SortedSpikesClassifier
-
 
 def get_replay_info(results, ripple_spikes, ripple_position, ripple_times,
                     sampling_frequency, probablity_threshold):
-    duration = (
-        (SortedSpikesClassifier.predict_proba(results) > probablity_threshold)
-        .sum('time') / sampling_frequency)
+    try:
+        duration = (
+            (results.sum(['x_position', 'y_position']) > probablity_threshold)
+            .sum('time') / sampling_frequency)
+    except ValueError:
+        duration = (
+            (results.sum('position') > probablity_threshold)
+            .sum('time') / sampling_frequency)
     duration = duration.acausal_posterior.to_dataframe().unstack(level=1)
     duration.columns = list(duration.columns.get_level_values('state'))
     duration = duration.rename(
