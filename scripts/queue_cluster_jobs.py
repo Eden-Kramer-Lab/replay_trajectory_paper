@@ -78,7 +78,7 @@ def main():
         print(f'Animal: {animal}, Day: {day}, Epoch: {epoch}')
 
         log_file = (f'{animal}_{day:02d}_{epoch:02d}_{args.data_type}'
-                    f'_{args.dims}.log')
+                    f'_{args.dim}.log')
         function_name = python_function.replace('.py', '')
         job_name = f'{function_name}_{animal}_{day:02d}_{epoch:02d}'
         python_cmd = (f'{python_function} {animal} {day} {epoch}'
