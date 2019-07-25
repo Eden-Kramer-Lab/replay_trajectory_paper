@@ -148,7 +148,7 @@ def sorted_spikes_analysis_1D(epoch_key):
         fig_name = (f'{animal}_{day:02d}_{epoch:02d}_{ripple_number:04d}_'
                     f'{data_type}_{dim}_acasual_classification.png')
         fig_name = os.path.join(
-            FIGURE_DIR, f'{data_type}_ripples', fig_name)
+            FIGURE_DIR, 'ripple_classifications', fig_name)
         plt.savefig(fig_name, bbox_inches='tight')
         plt.close(plt.gcf())
 
@@ -258,7 +258,7 @@ def sorted_spikes_analysis_2D(epoch_key):
         fig_name = (f'{animal}_{day:02d}_{epoch:02d}_{ripple_number:04d}_'
                     f'{data_type}_{dim}_acasual_classification.png')
         fig_name = os.path.join(
-            FIGURE_DIR, f'{data_type}_ripples', fig_name)
+            FIGURE_DIR, 'ripple_classifications', fig_name)
         plt.savefig(fig_name, bbox_inches='tight')
         plt.close(plt.gcf())
 
@@ -360,7 +360,7 @@ def clusterless_analysis_1D(epoch_key):
         fig_name = (f'{animal}_{day:02d}_{epoch:02d}_{ripple_number:04d}_'
                     f'{data_type}_{dim}_acasual_classification.png')
         fig_name = os.path.join(
-            FIGURE_DIR, f'{data_type}_ripples', fig_name)
+            FIGURE_DIR, 'ripple_classifications', fig_name)
         plt.savefig(fig_name, bbox_inches='tight')
         plt.close(plt.gcf())
 
@@ -461,7 +461,7 @@ def clusterless_analysis_2D(epoch_key):
         fig_name = (f'{animal}_{day:02d}_{epoch:02d}_{ripple_number:04d}_'
                     f'{data_type}_{dim}_acasual_classification.png')
         fig_name = os.path.join(
-            FIGURE_DIR, f'{data_type}_ripples', fig_name)
+            FIGURE_DIR, 'ripple_classifications', fig_name)
         plt.savefig(fig_name, bbox_inches='tight')
         plt.close(plt.gcf())
 
