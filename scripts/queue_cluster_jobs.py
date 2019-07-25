@@ -8,8 +8,7 @@ from sys import exit
 
 from loren_frank_data_processing import (make_epochs_dataframe,
                                          make_neuron_dataframe)
-
-from src.parameters import ANIMALS, _BRAIN_AREAS
+from src.parameters import _BRAIN_AREAS, ANIMALS
 
 
 def get_command_line_arguments():
@@ -19,6 +18,7 @@ def get_command_line_arguments():
     parser.add_argument('--Epoch', type=int,
                         help='Epoch number of recording session')
     parser.add_argument('--data_type', type=str, default='sorted_spikes')
+    parser.add_argument('--dim', type=str, default='1D')
     parser.add_argument('--n_cores', type=int, default=16)
     parser.add_argument('--wall_time', type=str, default='12:00:00')
     parser.add_argument('--n_workers', type=int, default=16)
@@ -77,11 +77,13 @@ def main():
     for animal, day, epoch in epoch_keys:
         print(f'Animal: {animal}, Day: {day}, Epoch: {epoch}')
 
-        log_file = f'{animal}_{day:02d}_{epoch:02d}.log'
+        log_file = (f'{animal}_{day:02d}_{epoch:02d}_{args.data_type}'
+                    f'_{args.dims}.log')
         function_name = python_function.replace('.py', '')
         job_name = f'{function_name}_{animal}_{day:02d}_{epoch:02d}'
         python_cmd = (f'{python_function} {animal} {day} {epoch}'
                       f' --data_type {args.data_type}'
+                      f' --dim {args.dim}'
                       f' --n_workers {args.n_workers}'
                       f' --threads_per_worker {args.threads_per_worker}')
         queue_job(python_cmd,
