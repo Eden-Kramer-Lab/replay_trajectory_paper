@@ -1,24 +1,24 @@
 from logging import getLogger
 
-
 import numpy as np
 import pandas as pd
+
 from loren_frank_data_processing import (get_all_multiunit_indicators,
                                          get_all_spike_indicators,
                                          get_interpolated_position_dataframe,
-                                         get_LFPs, make_neuron_dataframe,
-                                         make_tetrode_dataframe,
-                                         get_trial_time)
-
+                                         get_LFPs, get_trial_time,
+                                         make_neuron_dataframe,
+                                         make_tetrode_dataframe)
 from ripple_detection import (Kay_ripple_detector, filter_ripple_band,
                               get_multiunit_population_firing_rate)
 
-from .parameters import ANIMALS, SAMPLING_FREQUENCY, _BRAIN_AREAS, _MARKS
+from .parameters import _BRAIN_AREAS, _MARKS, ANIMALS, SAMPLING_FREQUENCY
 
 logger = getLogger(__name__)
 
 
-def get_ripple_times(epoch_key, sampling_frequency=1500):
+def get_ripple_times(epoch_key, sampling_frequency=1500,
+                     brain_areas=['CA1', 'CA3']):
     position_info = (
         get_interpolated_position_dataframe(epoch_key, ANIMALS)
         .dropna(subset=['linear_distance', 'linear_speed']))
@@ -30,8 +30,9 @@ def get_ripple_times(epoch_key, sampling_frequency=1500):
         tetrode_keys = tetrode_info.loc[
             (tetrode_info.validripple == 1)].index
     else:
-        tetrode_keys = tetrode_info.loc[
-            (tetrode_info.area.isin(_BRAIN_AREAS))].index
+        is_brain_areas = (
+            tetrode_info.area.astype(str).str.upper().isin(brain_areas))
+        tetrode_keys = tetrode_info.loc[is_brain_areas].index
 
     lfps = get_LFPs(tetrode_keys, ANIMALS).reindex(time)
     return Kay_ripple_detector(
@@ -62,19 +63,22 @@ def load_data(epoch_key, brain_areas=None):
 
     tetrode_info = make_tetrode_dataframe(ANIMALS).xs(
         epoch_key, drop_level=False)
-    is_brain_areas = tetrode_info.area.astype(str).isin(brain_areas)
+    is_brain_areas = (
+        tetrode_info.area.astype(str).str.upper().isin(brain_areas))
     tetrode_keys = tetrode_info.loc[is_brain_areas].index
     lfps = get_LFPs(tetrode_keys, ANIMALS)
     lfps = lfps.resample('2ms').mean().fillna(method='pad').reindex(time)
-
-    neuron_info = make_neuron_dataframe(ANIMALS).xs(
-        epoch_key, drop_level=False)
-    neuron_info = neuron_info.loc[
-        (neuron_info.numspikes > 100) &
-        neuron_info.area.isin(brain_areas) &
-        (neuron_info.type == 'principal')]
-    spikes = get_all_spike_indicators(
-        neuron_info.index, ANIMALS, _time_function).reindex(time)
+    try:
+        neuron_info = make_neuron_dataframe(ANIMALS).xs(
+            epoch_key, drop_level=False)
+        neuron_info = neuron_info.loc[
+            (neuron_info.numspikes > 100) &
+            neuron_info.area.isin(brain_areas) &
+            (neuron_info.type == 'principal')]
+        spikes = get_all_spike_indicators(
+            neuron_info.index, ANIMALS, _time_function).reindex(time)
+    except KeyError:
+        spikes = None
 
     tetrode_info = tetrode_info.loc[is_brain_areas]
     try:

@@ -27,6 +27,7 @@ ANIMALS = {
     'gov': Animal(directory=join(RAW_DATA_DIR, 'Government'),
                   short_name='gov'),
     'hig': Animal(directory=join(RAW_DATA_DIR, 'Higgs'), short_name='hig'),
+    'remy': Animal(directory=join(RAW_DATA_DIR, 'Remy'), short_name='remy'),
 }
 
 _MARKS = ['channel_1_max', 'channel_2_max', 'channel_3_max', 'channel_4_max']
