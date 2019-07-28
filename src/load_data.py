@@ -81,19 +81,16 @@ def load_data(epoch_key, brain_areas=None):
         spikes = None
 
     tetrode_info = tetrode_info.loc[is_brain_areas]
-    try:
-        multiunit = (get_all_multiunit_indicators(
-            tetrode_info.index, ANIMALS, _time_function)
-                     .sel(features=_MARKS)
-                     .reindex({'time': time}))
-        multiunit_spikes = (np.any(~np.isnan(multiunit.values), axis=1)
-                            ).astype(np.float)
-        multiunit_firing_rate = pd.DataFrame(
-            get_multiunit_population_firing_rate(
-                multiunit_spikes, SAMPLING_FREQUENCY), index=time,
-            columns=['firing_rate'])
-    except AttributeError:
-        multiunit, multiunit_spikes, multiunit_firing_rate = None, None, None
+    multiunit = (get_all_multiunit_indicators(
+        tetrode_info.index, ANIMALS, _time_function)
+        .sel(features=_MARKS)
+        .reindex({'time': time}))
+    multiunit_spikes = (np.any(~np.isnan(multiunit.values), axis=1)
+                        ).astype(np.float)
+    multiunit_firing_rate = pd.DataFrame(
+        get_multiunit_population_firing_rate(
+            multiunit_spikes, SAMPLING_FREQUENCY), index=time,
+        columns=['firing_rate'])
 
     logger.info('Finding ripple times...')
     ripple_times = get_ripple_times(epoch_key)
