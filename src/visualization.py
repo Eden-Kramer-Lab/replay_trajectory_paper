@@ -271,7 +271,7 @@ def plot_neuron_place_field_2D_1D_position(
 
 def plot_category_counts(replay_info):
     upset = UpSet(replay_info.set_index(['hover', 'continuous', 'fragmented']),
-                  sum_over=False, intersection_plot_elements=3)
+                  sum_over=False, sort_sets_by=None)
     return upset.plot()
 
 
