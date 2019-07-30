@@ -14,10 +14,11 @@ from replay_trajectory_classification import (ClusterlessClassifier,
 from tqdm.auto import tqdm
 
 from loren_frank_data_processing import save_xarray
+from loren_frank_data_processing.position import make_track_graph
 from src.analysis import (get_linear_position_order, get_place_field_max,
                           get_replay_info, reshape_to_segments)
 from src.load_data import load_data
-from src.parameters import (FIGURE_DIR, PROBABILITY_THRESHOLD,
+from src.parameters import (ANIMALS, FIGURE_DIR, PROBABILITY_THRESHOLD,
                             PROCESSED_DATA_DIR, SAMPLING_FREQUENCY,
                             TRANSITION_TO_CATEGORY, discrete_diag, model,
                             model_kwargs, movement_var, place_bin_size,
@@ -104,10 +105,10 @@ def sorted_spikes_analysis_1D(epoch_key):
                 group=f'/{data_type}/{dim}/classifier/ripples/')
 
     logging.info('Saving replay_info...')
-    ripple_position = reshape_to_segments(position, ripple_times)
+    track_graph, _ = make_track_graph(epoch_key, ANIMALS)
     replay_info = get_replay_info(
-        results, ripple_spikes, ripple_position, data['ripple_times'],
-        SAMPLING_FREQUENCY, PROBABILITY_THRESHOLD)
+        results, ripple_spikes, data['ripple_times'], data['position_info'],
+        track_graph, SAMPLING_FREQUENCY, PROBABILITY_THRESHOLD)
     epoch_identifier = f'{animal}_{day:02d}_{epoch:02d}_{data_type}_{dim}'
     replay_info_filename = os.path.join(
         PROCESSED_DATA_DIR, f'{epoch_identifier}_replay_info.csv')
@@ -130,6 +131,8 @@ def sorted_spikes_analysis_1D(epoch_key):
     fig_name = os.path.join(FIGURE_DIR, fig_name)
     plt.savefig(fig_name, bbox_inches='tight')
     plt.close(plt.gcf())
+
+    ripple_position = reshape_to_segments(position, ripple_times)
 
     for ripple_number in tqdm(ripple_times.index, desc='ripple figures'):
         posterior = (
@@ -205,10 +208,10 @@ def sorted_spikes_analysis_2D(epoch_key):
                 group=f'/{data_type}/{dim}/classifier/ripples/')
 
     logging.info('Saving replay_info...')
-    ripple_position = reshape_to_segments(position, ripple_times)
+    track_graph, _ = make_track_graph(epoch_key, ANIMALS)
     replay_info = get_replay_info(
-        results, ripple_spikes, ripple_position, data['ripple_times'],
-        SAMPLING_FREQUENCY, PROBABILITY_THRESHOLD)
+        results, ripple_spikes, data['ripple_times'], data['position_info'],
+        track_graph, SAMPLING_FREQUENCY, PROBABILITY_THRESHOLD)
     epoch_identifier = f'{animal}_{day:02d}_{epoch:02d}_{data_type}_{dim}'
     replay_info_filename = os.path.join(
         PROCESSED_DATA_DIR, f'{epoch_identifier}_replay_info.csv')
@@ -239,6 +242,8 @@ def sorted_spikes_analysis_2D(epoch_key):
     fig_name = os.path.join(FIGURE_DIR, fig_name)
     plt.savefig(fig_name, bbox_inches='tight')
     plt.close(plt.gcf())
+
+    ripple_position = reshape_to_segments(position, ripple_times)
 
     for ripple_number in tqdm(ripple_times.index, desc='ripple figures'):
         posterior = (
@@ -315,10 +320,10 @@ def clusterless_analysis_1D(epoch_key):
                 group=f'/{data_type}/{dim}/classifier/ripples/')
 
     logging.info('Saving replay_info...')
-    ripple_position = reshape_to_segments(position, ripple_times)
+    track_graph, _ = make_track_graph(epoch_key, ANIMALS)
     replay_info = get_replay_info(
-        results, ripple_spikes, ripple_position, data['ripple_times'],
-        SAMPLING_FREQUENCY, PROBABILITY_THRESHOLD)
+        results, ripple_spikes, data['ripple_times'], data['position_info'],
+        track_graph, SAMPLING_FREQUENCY, PROBABILITY_THRESHOLD)
     epoch_identifier = f'{animal}_{day:02d}_{epoch:02d}_{data_type}_{dim}'
     replay_info_filename = os.path.join(
         PROCESSED_DATA_DIR, f'{epoch_identifier}_replay_info.csv')
@@ -341,6 +346,8 @@ def clusterless_analysis_1D(epoch_key):
     fig_name = os.path.join(FIGURE_DIR, fig_name)
     plt.savefig(fig_name, bbox_inches='tight')
     plt.close(plt.gcf())
+
+    ripple_position = reshape_to_segments(position, ripple_times)
 
     for ripple_number in tqdm(ripple_times.index, desc='ripple figures'):
         posterior = (
@@ -408,10 +415,10 @@ def clusterless_analysis_2D(epoch_key):
                 group=f'/{data_type}/{dim}/classifier/ripples/')
 
     logging.info('Saving replay_info...')
-    ripple_position = reshape_to_segments(position, ripple_times)
+    track_graph, _ = make_track_graph(epoch_key, ANIMALS)
     replay_info = get_replay_info(
-        results, ripple_spikes, ripple_position, data['ripple_times'],
-        SAMPLING_FREQUENCY, PROBABILITY_THRESHOLD)
+        results, ripple_spikes, data['ripple_times'], data['position_info'],
+        track_graph, SAMPLING_FREQUENCY, PROBABILITY_THRESHOLD)
     epoch_identifier = f'{animal}_{day:02d}_{epoch:02d}_{data_type}_{dim}'
     replay_info_filename = os.path.join(
         PROCESSED_DATA_DIR, f'{epoch_identifier}_replay_info.csv')
@@ -442,6 +449,8 @@ def clusterless_analysis_2D(epoch_key):
     fig_name = os.path.join(FIGURE_DIR, fig_name)
     plt.savefig(fig_name, bbox_inches='tight')
     plt.close(plt.gcf())
+
+    ripple_position = reshape_to_segments(position, ripple_times)
 
     for ripple_number in tqdm(ripple_times.index, desc='ripple figures'):
         posterior = (
