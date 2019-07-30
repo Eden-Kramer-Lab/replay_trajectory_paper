@@ -277,9 +277,11 @@ def plot_category_counts(replay_info):
 
 def plot_category_duration(replay_info):
     is_duration_col = replay_info.columns.str.endswith('_duration')
-    sns.stripplot(data=(replay_info.loc[:, is_duration_col]
+    zero_mask = np.isclose(replay_info.loc[:, is_duration_col], 0.0)
+    sns.stripplot(data=(replay_info.loc[:, is_duration_col].mask(zero_mask)
                         .rename(columns=lambda c: c.split('_')[0])),
                   order=['continuous', 'fragmented', 'hover'],
-                  orient='horizontal')
+                  orient='horizontal',
+                  palette=STATE_COLORS)
     plt.xlabel('Duration (s)')
     sns.despine(left=True)
