@@ -18,7 +18,7 @@ logger = getLogger(__name__)
 
 
 def get_ripple_times(epoch_key, sampling_frequency=1500,
-                     brain_areas=['CA1', 'CA3']):
+                     brain_areas=['CA1', 'CA2', 'CA3']):
     position_info = (
         get_interpolated_position_dataframe(epoch_key, ANIMALS)
         .dropna(subset=['linear_distance', 'linear_speed']))
