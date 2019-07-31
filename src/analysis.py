@@ -7,7 +7,8 @@ from loren_frank_data_processing.track_segment_classification import (
 
 
 def get_replay_info(results, ripple_spikes, ripple_times, position_info,
-                    track_graph, sampling_frequency, probablity_threshold):
+                    track_graph, sampling_frequency, probablity_threshold,
+                    epoch_key):
     '''
 
     Parameters
@@ -20,6 +21,7 @@ def get_replay_info(results, ripple_spikes, ripple_times, position_info,
     track_graph : networkx.Graph
     sampling_frequency : float
     probablity_threshold : float
+    epoch_key : tuple
 
     Returns
     -------
@@ -58,8 +60,10 @@ def get_replay_info(results, ripple_spikes, ripple_times, position_info,
             results, ripple_position_info, ripple_number, position_info,
             track_graph, sampling_frequency, probablity_threshold)
          for ripple_number in ripple_times.index], index=ripple_times.index)
+    replay_info = pd.concat((ripple_times, duration, metrics), axis=1)
+    replay_info['animal'], replay_info['day'], replay_info['epoch'] = epoch_key
 
-    return pd.concat((ripple_times, duration, metrics), axis=1)
+    return replay_info
 
 
 def get_replay_distance_metrics(results, ripple_position_info, ripple_number,

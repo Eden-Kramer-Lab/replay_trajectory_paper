@@ -108,7 +108,7 @@ def sorted_spikes_analysis_1D(epoch_key):
     track_graph, _ = make_track_graph(epoch_key, ANIMALS)
     replay_info = get_replay_info(
         results, ripple_spikes, data['ripple_times'], data['position_info'],
-        track_graph, SAMPLING_FREQUENCY, PROBABILITY_THRESHOLD)
+        track_graph, SAMPLING_FREQUENCY, PROBABILITY_THRESHOLD, epoch_key)
     epoch_identifier = f'{animal}_{day:02d}_{epoch:02d}_{data_type}_{dim}'
     replay_info_filename = os.path.join(
         PROCESSED_DATA_DIR, f'{epoch_identifier}_replay_info.csv')
@@ -211,7 +211,7 @@ def sorted_spikes_analysis_2D(epoch_key):
     track_graph, _ = make_track_graph(epoch_key, ANIMALS)
     replay_info = get_replay_info(
         results, ripple_spikes, data['ripple_times'], data['position_info'],
-        track_graph, SAMPLING_FREQUENCY, PROBABILITY_THRESHOLD)
+        track_graph, SAMPLING_FREQUENCY, PROBABILITY_THRESHOLD, epoch_key)
     epoch_identifier = f'{animal}_{day:02d}_{epoch:02d}_{data_type}_{dim}'
     replay_info_filename = os.path.join(
         PROCESSED_DATA_DIR, f'{epoch_identifier}_replay_info.csv')
@@ -323,7 +323,7 @@ def clusterless_analysis_1D(epoch_key):
     track_graph, _ = make_track_graph(epoch_key, ANIMALS)
     replay_info = get_replay_info(
         results, ripple_spikes, data['ripple_times'], data['position_info'],
-        track_graph, SAMPLING_FREQUENCY, PROBABILITY_THRESHOLD)
+        track_graph, SAMPLING_FREQUENCY, PROBABILITY_THRESHOLD, epoch_key)
     epoch_identifier = f'{animal}_{day:02d}_{epoch:02d}_{data_type}_{dim}'
     replay_info_filename = os.path.join(
         PROCESSED_DATA_DIR, f'{epoch_identifier}_replay_info.csv')
@@ -418,7 +418,7 @@ def clusterless_analysis_2D(epoch_key):
     track_graph, _ = make_track_graph(epoch_key, ANIMALS)
     replay_info = get_replay_info(
         results, ripple_spikes, data['ripple_times'], data['position_info'],
-        track_graph, SAMPLING_FREQUENCY, PROBABILITY_THRESHOLD)
+        track_graph, SAMPLING_FREQUENCY, PROBABILITY_THRESHOLD, epoch_key)
     epoch_identifier = f'{animal}_{day:02d}_{epoch:02d}_{data_type}_{dim}'
     replay_info_filename = os.path.join(
         PROCESSED_DATA_DIR, f'{epoch_identifier}_replay_info.csv')
