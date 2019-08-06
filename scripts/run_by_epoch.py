@@ -53,6 +53,8 @@ def sorted_spikes_analysis_1D(epoch_key):
             os.path.join(
                 PROCESSED_DATA_DIR, f'{animal}_{day:02}_{epoch:02}.nc'),
             group=f'/{data_type}/{dim}/classifier/ripples/')
+        ripple_times = data['ripple_times'].loc[:, ['start_time', 'end_time']]
+        ripple_spikes = reshape_to_segments(data['spikes'], ripple_times)
     except (FileNotFoundError, OSError):
         logging.info('Fitting classifier...')
         classifier = SortedSpikesClassifier(
@@ -181,6 +183,8 @@ def sorted_spikes_analysis_2D(epoch_key):
             os.path.join(
                 PROCESSED_DATA_DIR, f'{animal}_{day:02}_{epoch:02}.nc'),
             group=f'/{data_type}/{dim}/classifier/ripples/')
+        ripple_times = data['ripple_times'].loc[:, ['start_time', 'end_time']]
+        ripple_spikes = reshape_to_segments(data['spikes'], ripple_times)
     except (FileNotFoundError, OSError):
         logging.info('Fitting classifier...')
         classifier = SortedSpikesClassifier(
@@ -305,6 +309,11 @@ def clusterless_analysis_1D(epoch_key):
             os.path.join(
                 PROCESSED_DATA_DIR, f'{animal}_{day:02}_{epoch:02}.nc'),
             group=f'/{data_type}/{dim}/classifier/ripples/')
+        ripple_times = data['ripple_times'].loc[:, ['start_time', 'end_time']]
+        spikes = (((data['multiunit'].sum('features') > 0) * 1.0)
+                  .to_dataframe(name='spikes').unstack())
+        spikes.columns = data['tetrode_info'].tetrode_id
+        ripple_spikes = reshape_to_segments(spikes, ripple_times)
     except (FileNotFoundError, OSError):
         logging.info('Fitting classifier...')
         classifier = ClusterlessClassifier(
@@ -409,6 +418,11 @@ def clusterless_analysis_2D(epoch_key):
             os.path.join(
                 PROCESSED_DATA_DIR, f'{animal}_{day:02}_{epoch:02}.nc'),
             group=f'/{data_type}/{dim}/classifier/ripples/')
+        ripple_times = data['ripple_times'].loc[:, ['start_time', 'end_time']]
+        spikes = (((data['multiunit'].sum('features') > 0) * 1.0)
+                  .to_dataframe(name='spikes').unstack())
+        spikes.columns = data['tetrode_info'].tetrode_id
+        ripple_spikes = reshape_to_segments(spikes, ripple_times)
     except (FileNotFoundError, OSError):
         logging.info('Fitting classifier...')
         classifier = ClusterlessClassifier(
