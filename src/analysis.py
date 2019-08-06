@@ -68,6 +68,14 @@ def get_replay_info(results, ripple_spikes, ripple_times, position_info,
     replay_info['day'] = int(day)
     replay_info['epoch'] = int(epoch)
 
+    max_df = position_info.groupby('arm_name').linear_position2.max()
+    min_df = position_info.groupby('arm_name').linear_position2.min()
+
+    replay_info['center_well_position'] = min_df['Center Arm']
+    replay_info['left_well_position'] = max_df['Left Arm']
+    replay_info['right_well_position'] = max_df['Right Arm']
+    replay_info['choice_position'] = max_df['Center Arm']
+
     return replay_info
 
 
