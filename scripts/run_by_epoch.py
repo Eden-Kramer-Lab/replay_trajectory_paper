@@ -47,62 +47,70 @@ def sorted_spikes_analysis_1D(epoch_key):
         [['w_track_1D_random_walk', 'uniform', 'identity'],
          ['uniform',   'uniform', 'uniform'],
          ['w_track_1D_random_walk', 'uniform', 'identity']])
+    try:
+        logging.info('Found existing results. Loading...')
+        results = xr.open_dataset(
+            os.path.join(
+                PROCESSED_DATA_DIR, f'{animal}_{day:02}_{epoch:02}.nc'),
+            group=f'/{data_type}/{dim}/classifier/ripples/')
+    except (FileNotFoundError, OSError):
+        logging.info('Fitting classifier...')
+        classifier = SortedSpikesClassifier(
+            place_bin_size=1.0, movement_var=movement_var,
+            replay_speed=replay_speed,
+            discrete_transition_diag=discrete_diag,
+            spike_model_penalty=0.5, knot_spacing=10,
+            continuous_transition_types=continuous_transition_types).fit(
+                position, data['spikes'], is_training=is_training,
+                track_labels=track_labels)
+        logging.info(classifier)
 
-    logging.info('Fitting classifier...')
-    classifier = SortedSpikesClassifier(
-        place_bin_size=1.0, movement_var=movement_var,
-        replay_speed=replay_speed,
-        discrete_transition_diag=discrete_diag,
-        spike_model_penalty=0.5, knot_spacing=10,
-        continuous_transition_types=continuous_transition_types).fit(
-            position, data['spikes'], is_training=is_training,
-            track_labels=track_labels)
-    logging.info(classifier)
+        # Plot Place Fields
+        g = (classifier.place_fields_ * data['sampling_frequency']).plot(
+            x='position', col='neuron', col_wrap=4)
+        arm_grouper = (data['position_info']
+                       .groupby('arm_name')
+                       .linear_position2)
+        max_df = arm_grouper.max()
+        min_df = arm_grouper.min()
+        plt.xlim((0, data['position_info'].linear_position2.max()))
+        max_rate = (classifier.place_fields_.values.max() *
+                    data['sampling_frequency'])
+        for ax in g.axes.flat:
+            for arm_name, min_position in min_df.iteritems():
+                ax.axvline(min_position, color='lightgrey', zorder=0,
+                           linestyle='--')
+                ax.text(min_position + 0.2, max_rate, arm_name,
+                        color='lightgrey', horizontalalignment='left',
+                        verticalalignment='top', fontsize=8)
+            for arm_name, max_position in max_df.iteritems():
+                ax.axvline(max_position, color='lightgrey', zorder=0,
+                           linestyle='--')
+        plt.suptitle(epoch_key, y=1.04, fontsize=16)
+        fig_name = (
+            f'{animal}_{day:02d}_{epoch:02d}_{data_type}_place_fields_1D.png')
+        fig_name = os.path.join(FIGURE_DIR, 'neuron_place_fields', fig_name)
+        plt.savefig(fig_name, bbox_inches='tight')
+        plt.close(g.fig)
 
-    # Plot Place Fields
-    g = (classifier.place_fields_ * data['sampling_frequency']).plot(
-        x='position', col='neuron', col_wrap=4)
-    arm_grouper = data['position_info'].groupby('arm_name').linear_position2
-    max_df = arm_grouper.max()
-    min_df = arm_grouper.min()
-    plt.xlim((0, data['position_info'].linear_position2.max()))
-    max_rate = (classifier.place_fields_.values.max() *
-                data['sampling_frequency'])
-    for ax in g.axes.flat:
-        for arm_name, min_position in min_df.iteritems():
-            ax.axvline(min_position, color='lightgrey', zorder=0,
-                       linestyle='--')
-            ax.text(min_position + 0.2, max_rate, arm_name, color='lightgrey',
-                    horizontalalignment='left', verticalalignment='top',
-                    fontsize=8)
-        for arm_name, max_position in max_df.iteritems():
-            ax.axvline(max_position, color='lightgrey', zorder=0,
-                       linestyle='--')
-    plt.suptitle(epoch_key, y=1.04, fontsize=16)
-    fig_name = (
-        f'{animal}_{day:02d}_{epoch:02d}_{data_type}_place_fields_1D.png')
-    fig_name = os.path.join(FIGURE_DIR, 'neuron_place_fields', fig_name)
-    plt.savefig(fig_name, bbox_inches='tight')
-    plt.close(g.fig)
+        # Decode
+        ripple_times = data['ripple_times'].loc[:, ['start_time', 'end_time']]
+        ripple_spikes = reshape_to_segments(data['spikes'], ripple_times)
+        results = []
+        for ripple_number in tqdm(data['ripple_times'].index, desc='ripple'):
+            ripple_time = (ripple_spikes.loc[ripple_number].index -
+                           ripple_spikes.loc[ripple_number].index[0])
+            results.append(
+                classifier.predict(ripple_spikes.loc[ripple_number],
+                                   time=ripple_time))
+        results = (xr.concat(results, dim=data['ripple_times'].index)
+                   .assign_coords(state=lambda ds: ds.state.to_index()
+                                  .map(TRANSITION_TO_CATEGORY)))
 
-    # Decode
-    ripple_times = data['ripple_times'].loc[:, ['start_time', 'end_time']]
-    ripple_spikes = reshape_to_segments(data['spikes'], ripple_times)
-    results = []
-    for ripple_number in tqdm(data['ripple_times'].index, desc='ripple'):
-        ripple_time = (ripple_spikes.loc[ripple_number].index -
-                       ripple_spikes.loc[ripple_number].index[0])
-        results.append(
-            classifier.predict(ripple_spikes.loc[ripple_number],
-                               time=ripple_time))
-    results = (xr.concat(results, dim=data['ripple_times'].index)
-               .assign_coords(state=lambda ds: ds.state.to_index()
-                              .map(TRANSITION_TO_CATEGORY)))
-
-    logging.info('Saving results...')
-    save_xarray(PROCESSED_DATA_DIR, epoch_key,
-                results.drop(['likelihood', 'causal_posterior']),
-                group=f'/{data_type}/{dim}/classifier/ripples/')
+        logging.info('Saving results...')
+        save_xarray(PROCESSED_DATA_DIR, epoch_key,
+                    results.drop(['likelihood', 'causal_posterior']),
+                    group=f'/{data_type}/{dim}/classifier/ripples/')
 
     logging.info('Saving replay_info...')
     track_graph, _ = make_track_graph(epoch_key, ANIMALS)
@@ -167,45 +175,52 @@ def sorted_spikes_analysis_2D(epoch_key):
 
     is_training = data['position_info'].speed > 4
     position = data['position_info'].loc[:, ['x_position', 'y_position']]
+    try:
+        logging.info('Found existing results. Loading...')
+        results = xr.open_dataset(
+            os.path.join(
+                PROCESSED_DATA_DIR, f'{animal}_{day:02}_{epoch:02}.nc'),
+            group=f'/{data_type}/{dim}/classifier/ripples/')
+    except (FileNotFoundError, OSError):
+        logging.info('Fitting classifier...')
+        classifier = SortedSpikesClassifier(
+            place_bin_size=place_bin_size, movement_var=movement_var,
+            replay_speed=replay_speed,
+            discrete_transition_diag=discrete_diag,
+            spike_model_penalty=0.5).fit(
+            position, data['spikes'], is_training=is_training)
+        logging.info(classifier)
 
-    logging.info('Fitting classifier...')
-    classifier = SortedSpikesClassifier(
-        place_bin_size=place_bin_size, movement_var=movement_var,
-        replay_speed=replay_speed,
-        discrete_transition_diag=discrete_diag,
-        spike_model_penalty=0.5).fit(
-        position, data['spikes'], is_training=is_training)
-    logging.info(classifier)
+        # Plot Place Fields
+        g = classifier.plot_place_fields(
+            data['spikes'], position, SAMPLING_FREQUENCY)
+        plt.suptitle(epoch_key, y=1.04, fontsize=16)
 
-    # Plot Place Fields
-    g = classifier.plot_place_fields(
-        data['spikes'], position, SAMPLING_FREQUENCY)
-    plt.suptitle(epoch_key, y=1.04, fontsize=16)
+        fig_name = (
+            f'{animal}_{day:02d}_{epoch:02d}_{data_type}_place_fields_{dim}'
+            '.png')
+        fig_name = os.path.join(FIGURE_DIR, 'neuron_place_fields', fig_name)
+        plt.savefig(fig_name, bbox_inches='tight')
+        plt.close(g.fig)
 
-    fig_name = (
-        f'{animal}_{day:02d}_{epoch:02d}_{data_type}_place_fields_{dim}.png')
-    fig_name = os.path.join(FIGURE_DIR, 'neuron_place_fields', fig_name)
-    plt.savefig(fig_name, bbox_inches='tight')
-    plt.close(g.fig)
+        # Decode
+        ripple_times = data['ripple_times'].loc[:, ['start_time', 'end_time']]
+        ripple_spikes = reshape_to_segments(data['spikes'], ripple_times)
+        results = []
+        for ripple_number in tqdm(data['ripple_times'].index, desc='ripple'):
+            ripple_time = (ripple_spikes.loc[ripple_number].index -
+                           ripple_spikes.loc[ripple_number].index[0])
+            results.append(
+                classifier.predict(ripple_spikes.loc[ripple_number],
+                                   time=ripple_time))
+        results = (xr.concat(results, dim=data['ripple_times'].index)
+                   .assign_coords(state=lambda ds: ds.state.to_index()
+                                  .map(TRANSITION_TO_CATEGORY)))
 
-    # Decode
-    ripple_times = data['ripple_times'].loc[:, ['start_time', 'end_time']]
-    ripple_spikes = reshape_to_segments(data['spikes'], ripple_times)
-    results = []
-    for ripple_number in tqdm(data['ripple_times'].index, desc='ripple'):
-        ripple_time = (ripple_spikes.loc[ripple_number].index -
-                       ripple_spikes.loc[ripple_number].index[0])
-        results.append(
-            classifier.predict(ripple_spikes.loc[ripple_number],
-                               time=ripple_time))
-    results = (xr.concat(results, dim=data['ripple_times'].index)
-               .assign_coords(state=lambda ds: ds.state.to_index()
-                              .map(TRANSITION_TO_CATEGORY)))
-
-    logging.info('Saving results...')
-    save_xarray(PROCESSED_DATA_DIR, epoch_key,
-                results.drop(['likelihood', 'causal_posterior']),
-                group=f'/{data_type}/{dim}/classifier/ripples/')
+        logging.info('Saving results...')
+        save_xarray(PROCESSED_DATA_DIR, epoch_key,
+                    results.drop(['likelihood', 'causal_posterior']),
+                    group=f'/{data_type}/{dim}/classifier/ripples/')
 
     logging.info('Saving replay_info...')
     track_graph, _ = make_track_graph(epoch_key, ANIMALS)
@@ -284,40 +299,46 @@ def clusterless_analysis_1D(epoch_key):
         [['w_track_1D_random_walk', 'uniform', 'identity'],
          ['uniform',   'uniform', 'uniform'],
          ['w_track_1D_random_walk', 'uniform', 'identity']])
+    try:
+        logging.info('Found existing results. Loading...')
+        results = xr.open_dataset(
+            os.path.join(
+                PROCESSED_DATA_DIR, f'{animal}_{day:02}_{epoch:02}.nc'),
+            group=f'/{data_type}/{dim}/classifier/ripples/')
+    except (FileNotFoundError, OSError):
+        logging.info('Fitting classifier...')
+        classifier = ClusterlessClassifier(
+            place_bin_size=1.0, movement_var=movement_var,
+            replay_speed=replay_speed,
+            discrete_transition_diag=discrete_diag,
+            continuous_transition_types=continuous_transition_types,
+            model=model, model_kwargs=model_kwargs).fit(
+                position, data['multiunit'], is_training=is_training,
+                track_labels=track_labels)
+        logging.info(classifier)
 
-    logging.info('Fitting classifier...')
-    classifier = ClusterlessClassifier(
-        place_bin_size=1.0, movement_var=movement_var,
-        replay_speed=replay_speed,
-        discrete_transition_diag=discrete_diag,
-        continuous_transition_types=continuous_transition_types,
-        model=model, model_kwargs=model_kwargs).fit(
-            position, data['multiunit'], is_training=is_training,
-            track_labels=track_labels)
-    logging.info(classifier)
+        # Decode
+        ripple_times = data['ripple_times'].loc[:, ['start_time', 'end_time']]
+        spikes = (((data['multiunit'].sum('features') > 0) * 1.0)
+                  .to_dataframe(name='spikes').unstack())
+        spikes.columns = data['tetrode_info'].tetrode_id
+        ripple_spikes = reshape_to_segments(spikes, ripple_times)
 
-    # Decode
-    ripple_times = data['ripple_times'].loc[:, ['start_time', 'end_time']]
-    spikes = (((data['multiunit'].sum('features') > 0) * 1.0)
-              .to_dataframe(name='spikes').unstack())
-    spikes.columns = data['tetrode_info'].tetrode_id
-    ripple_spikes = reshape_to_segments(spikes, ripple_times)
+        results = []
+        for ripple_number in tqdm(data['ripple_times'].index, desc='ripple'):
+            time_slice = slice(*data['ripple_times'].loc[
+                ripple_number, ['start_time', 'end_time']])
+            m = data['multiunit'].sel(time=time_slice)
+            results.append(classifier.predict(m, m.time - m.time[0]))
+        results = xr.concat(results, dim=data['ripple_times'].index)
+        results = results.assign_coords(
+            state=lambda ds: ds.state.to_index()
+            .map(TRANSITION_TO_CATEGORY))
 
-    results = []
-    for ripple_number in tqdm(data['ripple_times'].index, desc='ripple'):
-        time_slice = slice(*data['ripple_times'].loc[
-            ripple_number, ['start_time', 'end_time']])
-        m = data['multiunit'].sel(time=time_slice)
-        results.append(classifier.predict(m, m.time - m.time[0]))
-    results = xr.concat(results, dim=data['ripple_times'].index)
-    results = results.assign_coords(
-        state=lambda ds: ds.state.to_index()
-        .map(TRANSITION_TO_CATEGORY))
-
-    logging.info('Saving results...')
-    save_xarray(PROCESSED_DATA_DIR, epoch_key,
-                results.drop(['likelihood', 'causal_posterior']),
-                group=f'/{data_type}/{dim}/classifier/ripples/')
+        logging.info('Saving results...')
+        save_xarray(PROCESSED_DATA_DIR, epoch_key,
+                    results.drop(['likelihood', 'causal_posterior']),
+                    group=f'/{data_type}/{dim}/classifier/ripples/')
 
     logging.info('Saving replay_info...')
     track_graph, _ = make_track_graph(epoch_key, ANIMALS)
@@ -382,37 +403,43 @@ def clusterless_analysis_2D(epoch_key):
     data = load_data(epoch_key)
     position = data['position_info'].loc[:, ['x_position', 'y_position']]
     is_training = data['position_info'].speed > 4
+    try:
+        logging.info('Found existing results. Loading...')
+        results = xr.open_dataset(
+            os.path.join(
+                PROCESSED_DATA_DIR, f'{animal}_{day:02}_{epoch:02}.nc'),
+            group=f'/{data_type}/{dim}/classifier/ripples/')
+    except (FileNotFoundError, OSError):
+        logging.info('Fitting classifier...')
+        classifier = ClusterlessClassifier(
+            place_bin_size=place_bin_size, movement_var=movement_var,
+            replay_speed=replay_speed, model=model,
+            model_kwargs=model_kwargs,
+            discrete_transition_diag=discrete_diag).fit(
+            position, data['multiunit'], is_training=is_training)
+        logging.info(classifier)
+        # Decode
+        ripple_times = data['ripple_times'].loc[:, ['start_time', 'end_time']]
+        spikes = (((data['multiunit'].sum('features') > 0) * 1.0)
+                  .to_dataframe(name='spikes').unstack())
+        spikes.columns = data['tetrode_info'].tetrode_id
+        ripple_spikes = reshape_to_segments(spikes, ripple_times)
 
-    logging.info('Fitting classifier...')
-    classifier = ClusterlessClassifier(
-        place_bin_size=place_bin_size, movement_var=movement_var,
-        replay_speed=replay_speed, model=model,
-        model_kwargs=model_kwargs,
-        discrete_transition_diag=discrete_diag).fit(
-        position, data['multiunit'], is_training=is_training)
-    logging.info(classifier)
-    # Decode
-    ripple_times = data['ripple_times'].loc[:, ['start_time', 'end_time']]
-    spikes = (((data['multiunit'].sum('features') > 0) * 1.0)
-              .to_dataframe(name='spikes').unstack())
-    spikes.columns = data['tetrode_info'].tetrode_id
-    ripple_spikes = reshape_to_segments(spikes, ripple_times)
+        results = []
+        for ripple_number in tqdm(data['ripple_times'].index, desc='ripple'):
+            time_slice = slice(*data['ripple_times'].loc[
+                ripple_number, ['start_time', 'end_time']])
+            m = data['multiunit'].sel(time=time_slice)
+            results.append(classifier.predict(m, m.time - m.time[0]))
+        results = xr.concat(results, dim=data['ripple_times'].index)
+        results = results.assign_coords(
+            state=lambda ds: ds.state.to_index()
+            .map(TRANSITION_TO_CATEGORY))
 
-    results = []
-    for ripple_number in tqdm(data['ripple_times'].index, desc='ripple'):
-        time_slice = slice(*data['ripple_times'].loc[
-            ripple_number, ['start_time', 'end_time']])
-        m = data['multiunit'].sel(time=time_slice)
-        results.append(classifier.predict(m, m.time - m.time[0]))
-    results = xr.concat(results, dim=data['ripple_times'].index)
-    results = results.assign_coords(
-        state=lambda ds: ds.state.to_index()
-        .map(TRANSITION_TO_CATEGORY))
-
-    logging.info('Saving results...')
-    save_xarray(PROCESSED_DATA_DIR, epoch_key,
-                results.drop(['likelihood', 'causal_posterior']),
-                group=f'/{data_type}/{dim}/classifier/ripples/')
+        logging.info('Saving results...')
+        save_xarray(PROCESSED_DATA_DIR, epoch_key,
+                    results.drop(['likelihood', 'causal_posterior']),
+                    group=f'/{data_type}/{dim}/classifier/ripples/')
 
     logging.info('Saving replay_info...')
     track_graph, _ = make_track_graph(epoch_key, ANIMALS)
