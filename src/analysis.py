@@ -328,7 +328,7 @@ def calculate_replay_distance(track_graph, map_estimate, actual_positions,
     replay_distance_from_actual_position = np.asarray(
         replay_distance_from_actual_position)
     replay_distance_from_center_well = np.asarray(
-        replay_distance_from_actual_position)
+        replay_distance_from_center_well)
 
     # linear position
     SEGMENT_ID_TO_ARM_NAME = {0.0: 'Center Arm',
