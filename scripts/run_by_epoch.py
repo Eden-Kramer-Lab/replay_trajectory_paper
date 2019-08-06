@@ -521,7 +521,7 @@ def get_command_line_arguments():
     parser.add_argument('--data_type', type=str, default='sorted_spikes')
     parser.add_argument('--dim', type=str, default='1D')
     parser.add_argument('--n_workers', type=int, default=16)
-    parser.add_argument('--threads_per_worker', type=int, default=4)
+    parser.add_argument('--threads_per_worker', type=int, default=1)
     parser.add_argument(
         '-d', '--debug',
         help='More verbose output for debugging',
