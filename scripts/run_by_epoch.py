@@ -573,6 +573,7 @@ def main():
     logging.info(
         'Processing epoch: Animal {0}, Day {1}, Epoch #{2}...'.format(
             *epoch_key))
+    logging.info(f'Data type: {args.data_type}, Dim: {args.dim}')
     git_hash = run(['git', 'rev-parse', 'HEAD'],
                    stdout=PIPE, universal_newlines=True).stdout
     logging.info('Git Hash: {git_hash}'.format(git_hash=git_hash.rstrip()))
