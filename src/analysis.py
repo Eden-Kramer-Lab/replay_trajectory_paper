@@ -2,6 +2,7 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 
+from loren_frank_data_processing.position import _calulcate_linear_position2
 from loren_frank_data_processing.track_segment_classification import (
     get_track_segments_from_graph, project_points_to_segment)
 
@@ -46,13 +47,13 @@ def get_replay_info(results, ripple_spikes, ripple_times, position_info,
     duration['n_unique_spiking'] = get_n_unique_spiking(ripple_spikes)
     duration['n_total_spikes'] = get_n_total_spikes(ripple_spikes)
     ripple_position_info = reshape_to_segments(position_info, ripple_times)
-    duration['avg_actual_x_position'] = ripple_position_info.groupby(
+    duration['actual_x_position'] = ripple_position_info.groupby(
         'ripple_number').x_position.mean()
-    duration['avg_actual_y_position'] = ripple_position_info.groupby(
+    duration['actual_y_position'] = ripple_position_info.groupby(
         'ripple_number').y_position.mean()
-    duration['avg_actual_linear_position2'] = ripple_position_info.groupby(
+    duration['actual_linear_position2'] = ripple_position_info.groupby(
         'ripple_number').linear_position2.mean()
-    duration['avg_actual_speed'] = ripple_position_info.groupby(
+    duration['actual_speed'] = ripple_position_info.groupby(
         'ripple_number').speed.mean()
 
     metrics = pd.DataFrame(
@@ -61,7 +62,11 @@ def get_replay_info(results, ripple_spikes, ripple_times, position_info,
             track_graph, sampling_frequency, probablity_threshold)
          for ripple_number in ripple_times.index], index=ripple_times.index)
     replay_info = pd.concat((ripple_times, duration, metrics), axis=1)
-    replay_info['animal'], replay_info['day'], replay_info['epoch'] = epoch_key
+    animal, day, epoch = epoch_key
+
+    replay_info['animal'] = animal
+    replay_info['day'] = int(day)
+    replay_info['epoch'] = int(epoch)
 
     return replay_info
 
@@ -72,7 +77,9 @@ def get_replay_distance_metrics(results, ripple_position_info, ripple_number,
     posterior = (results
                  .sel(ripple_number=ripple_number)
                  .acausal_posterior
-                 .dropna('time'))
+                 .dropna('time')
+                 .assign_coords(
+                     time=lambda ds: 1000 * ds.time / np.timedelta64(1, 's')))
     map_estimate = maximum_a_posteriori_estimate(posterior.sum('state'))
 
     actual_positions = (ripple_position_info
@@ -82,25 +89,49 @@ def get_replay_distance_metrics(results, ripple_position_info, ripple_number,
                                 .loc[ripple_number, 'track_segment_id']
                                 .values.squeeze().astype(int))
 
-    distance = calculate_replay_distance(
+    (replay_distance_from_actual_position, replay_distance_from_center_well,
+     replay_linear_position) = calculate_replay_distance(
         track_graph, map_estimate, actual_positions,
         actual_track_segment_ids, position_info)
 
     metrics = {
-        'avg_replay_distance': np.mean(distance),
-        'avg_replay_speed': np.mean(np.abs(np.diff(distance)) /
-                                    sampling_frequency),
-        'avg_replay_velocity': np.mean(np.diff(distance) / sampling_frequency),
+        'replay_distance_from_actual_position': np.mean(
+            replay_distance_from_actual_position),
+        'replay_speed': np.mean(
+            np.abs(np.diff(replay_distance_from_actual_position)) /
+            sampling_frequency),
+        'replay_velocity': np.mean(
+            np.diff(replay_distance_from_actual_position) /
+            sampling_frequency),
+        'replay_distance_from_center_well': np.mean(
+            replay_distance_from_center_well),
+        'replay_linear_position': np.mean(replay_linear_position),
     }
 
     for state, probability in posterior.sum('position').groupby('state'):
-        state_distance = distance[probability > probablity_threshold]
-        metrics[f'{state}_avg_replay_distance'] = np.mean(state_distance)
-        metrics[f'{state}_avg_replay_speed'] = np.mean(
+        above_threshold = probability > probablity_threshold
+        time = np.asarray(posterior.time)
+        state_distance = replay_distance_from_actual_position[above_threshold]
+
+        metrics[f'{state}_replay_distance_from_actual_position'] = np.mean(
+            state_distance)
+        metrics[f'{state}_replay_speed'] = np.mean(
             np.abs(np.diff(state_distance)) / sampling_frequency)
-        metrics[f'{state}_avg_replay_velocity'] = np.mean(
+        metrics[f'{state}_replay_velocity'] = np.mean(
             np.diff(state_distance) / sampling_frequency)
         metrics[f'{state}_max_probability'] = np.max(np.asarray(probability))
+        metrics[f'{state}_replay_distance_from_center_well'] = np.mean(
+            replay_distance_from_center_well[above_threshold])
+        metrics[f'{state}_replay_linear_position'] = np.mean(
+            replay_linear_position[above_threshold])
+        try:
+            metrics[f'{state}_min_time'] = np.min(time[above_threshold])
+        except ValueError:
+            metrics[f'{state}_min_time'] = np.nan
+        try:
+            metrics[f'{state}_max_time'] = np.max(time[above_threshold])
+        except ValueError:
+            metrics[f'{state}_max_time'] = np.nan
 
     return metrics
 
@@ -190,7 +221,8 @@ def _get_projected_track_positions(position, track_segments, track_segment_id):
 
 
 def calculate_replay_distance(track_graph, map_estimate, actual_positions,
-                              actual_track_segment_ids, position_info):
+                              actual_track_segment_ids, position_info,
+                              center_well_id=0):
     '''Calculate the linearized distance between the replay position and the
     animal's physical position for each time point.
 
@@ -205,10 +237,13 @@ def calculate_replay_distance(track_graph, map_estimate, actual_positions,
     actual_track_segment_ids : ndarray, shape (n_time,)
         Animal's track segment ID during the replay
     position_info : pandas.DataFrame
+    center_well_id : hasable, optional
 
     Returns
     -------
     replay_distance_from_actual_position : ndarray, shape (n_time,)
+    replay_distance_from_center_well : ndarray, shape (n_time,)
+    replay_linear_position : ndarray, shape (n_time,)
 
     '''
 
@@ -241,6 +276,7 @@ def calculate_replay_distance(track_graph, map_estimate, actual_positions,
     replay_edge_ids = edges[replay_track_segment_ids]
     actual_edge_ids = edges[actual_track_segment_ids]
     replay_distance_from_actual_position = []
+    replay_distance_from_center_well = []
 
     zipped = zip(
         actual_edge_ids, replay_edge_ids, actual_positions, replay_positions,
@@ -285,5 +321,29 @@ def calculate_replay_distance(track_graph, map_estimate, actual_positions,
             nx.shortest_path_length(
                 track_graph1, source='actual_position',
                 target='replay_position', weight='distance'))
+        replay_distance_from_center_well.append(
+            nx.shortest_path_length(
+                track_graph1, source=center_well_id,
+                target='replay_position', weight='distance'))
+    replay_distance_from_actual_position = np.asarray(
+        replay_distance_from_actual_position)
+    replay_distance_from_center_well = np.asarray(
+        replay_distance_from_actual_position)
 
-    return np.asarray(replay_distance_from_actual_position)
+    # linear position
+    SEGMENT_ID_TO_ARM_NAME = {0.0: 'Center Arm',
+                              1.0: 'Left Arm',
+                              2.0: 'Right Arm',
+                              3.0: 'Left Arm',
+                              4.0: 'Right Arm'}
+    arm_names = [SEGMENT_ID_TO_ARM_NAME[segment_id]
+                 for segment_id in replay_track_segment_ids]
+    replay_position_df = pd.DataFrame(
+        {'linear_distance': replay_distance_from_center_well,
+         'arm_name': arm_names})
+    replay_linear_position = np.asarray(_calulcate_linear_position2(
+        replay_position_df, spacing=30))
+
+    return (replay_distance_from_actual_position,
+            replay_distance_from_center_well,
+            replay_linear_position)
