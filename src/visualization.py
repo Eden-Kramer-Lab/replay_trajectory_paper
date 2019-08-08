@@ -220,15 +220,11 @@ def plot_ripple_decode_1D(posterior, ripple_position, ripple_spikes,
     axes[2].set_ylim((0, position_info.linear_position2.max()))
     axes[2].set_yticks((0, position_info.linear_position2.max()))
 
-    max_df = (position_info
-              .groupby('arm_name').linear_position2.max())
     for arm_name, max_position in max_df.iteritems():
         axes[2].axhline(max_position, color='lightgrey',
                         linestyle='-', linewidth=1)
         axes[2].text(min_time, max_position - 5, arm_name, color='white',
                      fontsize=8, verticalalignment='top')
-    min_df = (position_info
-              .groupby('arm_name').linear_position2.min())
     for arm_name, min_position in min_df.iteritems():
         axes[2].axhline(min_position, color='lightgrey',
                         linestyle='-', linewidth=1)
