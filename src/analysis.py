@@ -353,9 +353,15 @@ def calculate_replay_distance(track_graph, map_estimate, actual_positions,
     replay_position_df = pd.DataFrame(
         {'linear_distance': replay_distance_from_center_well,
          'arm_name': arm_names})
+    min_max_ind = np.concatenate(
+        (position_info.groupby('arm_name')
+         .apply(lambda df: df.linear_position2.idxmin()).values,
+         position_info.groupby('arm_name')
+         .apply(lambda df: df.linear_position2.idxmax()).values))
+    minimal_distance_df = position_info.loc[
+        min_max_ind, ['arm_name', 'linear_distance']]
     replay_linear_position = np.asarray(_calulcate_linear_position2(
-        pd.concat((replay_position_df,
-                   position_info.loc[:, ['linear_distance', 'arm_name']]),
+        pd.concat((replay_position_df, minimal_distance_df),
                   axis=0), spacing=30))
     replay_linear_position = replay_linear_position[:len(replay_position_df)]
 
