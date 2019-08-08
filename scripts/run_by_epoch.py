@@ -508,7 +508,7 @@ def clusterless_analysis_2D(epoch_key, plot_ripple_figures=False):
                 .sel(ripple_number=ripple_number)
                 .dropna('time')
                 .assign_coords(
-                    time=lambda ds: 1000 * ds.time / np.timedelta64(1, 's'),))
+                    time=lambda ds: 1000 * ds.time / np.timedelta64(1, 's')))
             plot_ripple_decode_2D(
                 posterior, ripple_position.loc[ripple_number],
                 ripple_spikes.loc[ripple_number], linear_position_order,
