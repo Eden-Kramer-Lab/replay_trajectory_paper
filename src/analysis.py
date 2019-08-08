@@ -354,7 +354,10 @@ def calculate_replay_distance(track_graph, map_estimate, actual_positions,
         {'linear_distance': replay_distance_from_center_well,
          'arm_name': arm_names})
     replay_linear_position = np.asarray(_calulcate_linear_position2(
-        replay_position_df, spacing=30))
+        pd.concat((replay_position_df,
+                   position_info.loc[:, ['linear_distance', 'arm_name']]),
+                  axis=0), spacing=30))
+    replay_linear_position = replay_linear_position[:len(replay_position_df)]
 
     return (replay_distance_from_actual_position,
             replay_distance_from_center_well,
