@@ -207,43 +207,32 @@ def get_replay_distance_metrics(results, ripple_position_info, ripple_number,
 
     for state, above_threshold in is_classified.groupby('state'):
         above_threshold = above_threshold.astype(bool).values.squeeze()
-        time = np.asarray(posterior.time)
-        state_distance = replay_distance_from_actual_position[above_threshold]
+        metrics[f'{state}_max_probability'] = np.max(
+            np.asarray(probability.sel(state=state)))
+        if np.any(above_threshold):
+            time = np.asarray(posterior.time)
+            state_distance = replay_distance_from_actual_position[
+                above_threshold]
 
-        metrics[f'{state}_replay_distance_from_actual_position'] = np.mean(
-            state_distance)
-        metrics[f'{state}_replay_speed'] = np.mean(
-            np.abs(np.diff(state_distance)) / sampling_frequency)
-        metrics[f'{state}_replay_velocity_actual_position'] = np.mean(
-            np.diff(state_distance) / sampling_frequency)
-        metrics[f'{state}_replay_velocity_center_well'] = np.mean(
-            np.diff(replay_distance_from_center_well[above_threshold])
-            / sampling_frequency)
-        try:
-            metrics[f'{state}_max_probability'] = np.max(
-                np.asarray(probability.sel(state=state)))
-        except ValueError:
-            metrics[f'{state}_max_probability'] = np.nan
-        metrics[f'{state}_replay_distance_from_center_well'] = np.mean(
-            replay_distance_from_center_well[above_threshold])
-        metrics[f'{state}_replay_linear_position'] = np.mean(
-            replay_linear_position[above_threshold])
-        metrics[f'{state}_replay_total_distance'] = np.sum(
-            np.abs(np.diff(state_distance)))
-        try:
+            metrics[f'{state}_replay_distance_from_actual_position'] = np.mean(
+                state_distance)
+            metrics[f'{state}_replay_speed'] = np.mean(
+                np.abs(np.diff(state_distance)) / sampling_frequency)
+            metrics[f'{state}_replay_velocity_actual_position'] = np.mean(
+                np.diff(state_distance) / sampling_frequency)
+            metrics[f'{state}_replay_velocity_center_well'] = np.mean(
+                np.diff(replay_distance_from_center_well[above_threshold])
+                / sampling_frequency)
+            metrics[f'{state}_replay_distance_from_center_well'] = np.mean(
+                replay_distance_from_center_well[above_threshold])
+            metrics[f'{state}_replay_linear_position'] = np.mean(
+                replay_linear_position[above_threshold])
+            metrics[f'{state}_replay_total_distance'] = np.sum(
+                np.abs(np.diff(state_distance)))
             metrics[f'{state}_replay_total_displacement'] = np.abs(
                 state_distance[-1] - state_distance[0])
-        except IndexError:
-            metrics[f'{state}_replay_total_displacement'] = np.nan
-
-        try:
             metrics[f'{state}_min_time'] = np.min(time[above_threshold])
-        except ValueError:
-            metrics[f'{state}_min_time'] = np.nan
-        try:
             metrics[f'{state}_max_time'] = np.max(time[above_threshold])
-        except ValueError:
-            metrics[f'{state}_max_time'] = np.nan
 
     return metrics
 
