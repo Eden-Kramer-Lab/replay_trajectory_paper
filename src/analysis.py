@@ -182,6 +182,12 @@ def get_replay_distance_metrics(results, ripple_position_info, ripple_number,
      replay_linear_position) = calculate_replay_distance(
         track_graph, map_estimate, actual_positions,
         actual_track_segment_ids, position_info)
+    try:
+        replay_total_displacement = np.abs(
+            replay_distance_from_actual_position[-1] -
+            replay_distance_from_actual_position[0])
+    except IndexError:
+        replay_total_displacement = np.nan
 
     metrics = {
         'replay_distance_from_actual_position': np.mean(
@@ -200,9 +206,7 @@ def get_replay_distance_metrics(results, ripple_position_info, ripple_number,
         'replay_linear_position': np.mean(replay_linear_position),
         'replay_total_distance': np.sum(
             np.abs(np.diff(replay_distance_from_actual_position))),
-        'replay_total_displacement': np.abs(
-            replay_distance_from_actual_position[-1] -
-            replay_distance_from_actual_position[0]),
+        'replay_total_displacement': replay_total_displacement,
     }
 
     for state, above_threshold in is_classified.groupby('state'):
