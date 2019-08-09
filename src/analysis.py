@@ -1,10 +1,11 @@
 import networkx as nx
 import numpy as np
 import pandas as pd
+import xarray as xr
 
 from loren_frank_data_processing.position import _calulcate_linear_position2
-from loren_frank_data_processing.track_segment_classification import (
-    get_track_segments_from_graph, project_points_to_segment)
+from loren_frank_data_processing.track_segment_classification import (get_track_segments_from_graph,
+                                                                      project_points_to_segment)
 
 
 def get_replay_info(results, ripple_spikes, ripple_times, position_info,
@@ -29,15 +30,11 @@ def get_replay_info(results, ripple_spikes, ripple_times, position_info,
     replay_info : pandas.DataFrame, shape (n_ripples, n_covariates)
 
     '''
-    try:
-        duration = (
-            (results.sum(['x_position', 'y_position']) > probablity_threshold)
-            .sum('time') / sampling_frequency)
-    except ValueError:
-        duration = (
-            (results.sum('position') > probablity_threshold)
-            .sum('time') / sampling_frequency)
-    duration = duration.acausal_posterior.to_dataframe().unstack(level=1)
+    probability = get_probability(results)
+    is_classified = get_is_classified(probability, probablity_threshold)
+
+    duration = (is_classified.sum('time') / sampling_frequency)
+    duration = duration.to_dataframe().unstack(level=1)
     duration.columns = list(duration.columns.get_level_values('state'))
     duration = duration.rename(
         columns=lambda column_name: column_name + '_duration')
@@ -46,11 +43,14 @@ def get_replay_info(results, ripple_spikes, ripple_times, position_info,
     duration['is_classified'] = np.any(duration > 0.0, axis=1)
     duration['n_unique_spiking'] = get_n_unique_spiking(ripple_spikes)
     duration['n_total_spikes'] = get_n_total_spikes(ripple_spikes)
+
     ripple_position_info = reshape_to_segments(position_info, ripple_times)
     duration['actual_x_position'] = ripple_position_info.groupby(
         'ripple_number').x_position.mean()
     duration['actual_y_position'] = ripple_position_info.groupby(
         'ripple_number').y_position.mean()
+    duration['actual_linear_distance'] = ripple_position_info.groupby(
+        'ripple_number').linear_distance.mean()
     duration['actual_linear_position2'] = ripple_position_info.groupby(
         'ripple_number').linear_position2.mean()
     duration['actual_speed'] = ripple_position_info.groupby(
@@ -59,7 +59,7 @@ def get_replay_info(results, ripple_spikes, ripple_times, position_info,
     metrics = pd.DataFrame(
         [get_replay_distance_metrics(
             results, ripple_position_info, ripple_number, position_info,
-            track_graph, sampling_frequency, probablity_threshold)
+            track_graph, sampling_frequency, is_classified, probability)
          for ripple_number in ripple_times.index], index=ripple_times.index)
     replay_info = pd.concat((ripple_times, duration, metrics), axis=1)
     animal, day, epoch = epoch_key
@@ -72,22 +72,101 @@ def get_replay_info(results, ripple_spikes, ripple_times, position_info,
     min_df = position_info.groupby('arm_name').linear_position2.min()
 
     replay_info['center_well_position'] = min_df['Center Arm']
-    replay_info['left_well_position'] = max_df['Left Arm']
-    replay_info['right_well_position'] = max_df['Right Arm']
     replay_info['choice_position'] = max_df['Center Arm']
+
+    replay_info['left_arm_start'] = min_df['Left Arm']
+    replay_info['left_well_position'] = max_df['Left Arm']
+
+    replay_info['right_arm_start'] = min_df['Right Arm']
+    replay_info['right_well_position'] = max_df['Right Arm']
 
     return replay_info
 
 
+def get_probability(results):
+    '''Get probability of each state and two states derived from mixtures of
+    each state.
+
+    Parameters
+    ----------
+    results : xarray.Dataset
+
+    Returns
+    -------
+    probability : xarray.DataArray
+
+    '''
+    try:
+        probability = results.acausal_posterior.sum(
+            ['x_position', 'y_position'], skipna=False)
+    except ValueError:
+        probability = results.acausal_posterior.sum('position', skipna=False)
+
+    return xr.concat(
+        (probability,
+         probability
+            .sel(state=['hover', 'continuous'])
+            .sum('state', skipna=False)
+            .assign_coords(state='hover-continuous-mix'),
+         probability
+            .sel(state=['fragmented', 'continuous'])
+            .sum('state', skipna=False)
+            .assign_coords(state='fragmented-continuous-mix'),
+         ), dim='state')
+
+
+def get_is_classified(probability, probablity_threshold):
+    '''Classify each state by the confidence threshold and make sure two
+    derived states exclude their parent states.
+
+    Parameters
+    ----------
+    probability : xarray.DataArray
+    probablity_threshold : float
+
+    Returns
+    -------
+    is_classified : xarray.DataArray
+
+    '''
+    is_classified = probability > probablity_threshold
+    is_classified.loc[dict(state='hover-continuous-mix')] = (
+        is_classified.sel(state='hover-continuous-mix') &
+        ~is_classified.sel(state='hover') &
+        ~is_classified.sel(state='continuous'))
+
+    is_classified.loc[dict(state='fragmented-continuous-mix')] = (
+        is_classified.sel(state='fragmented-continuous-mix') &
+        ~is_classified.sel(state='fragmented') &
+        ~is_classified.sel(state='continuous'))
+    is_classified = is_classified.rename('is_classified')
+    is_classified = is_classified.where(~np.isnan(probability))
+
+    return is_classified
+
+
 def get_replay_distance_metrics(results, ripple_position_info, ripple_number,
-                                position_info, track_graph,
-                                sampling_frequency, probablity_threshold):
+                                position_info, track_graph, sampling_frequency,
+                                is_classified, probability):
     posterior = (results
                  .sel(ripple_number=ripple_number)
                  .acausal_posterior
                  .dropna('time')
                  .assign_coords(
                      time=lambda ds: 1000 * ds.time / np.timedelta64(1, 's')))
+    is_classified = (
+        is_classified
+        .sel(ripple_number=ripple_number)
+        .dropna('time')
+        .assign_coords(
+            time=lambda ds: 1000 * ds.time / np.timedelta64(1, 's')))
+    probability = (
+        probability
+        .sel(ripple_number=ripple_number)
+        .dropna('time')
+        .assign_coords(
+            time=lambda ds: 1000 * ds.time / np.timedelta64(1, 's'))
+    )
     map_estimate = maximum_a_posteriori_estimate(posterior.sum('state'))
 
     actual_positions = (ripple_position_info
@@ -116,8 +195,8 @@ def get_replay_distance_metrics(results, ripple_position_info, ripple_number,
         'replay_linear_position': np.mean(replay_linear_position),
     }
 
-    for state, probability in posterior.sum('position').groupby('state'):
-        above_threshold = probability > probablity_threshold
+    for state, above_threshold in is_classified.groupby('state'):
+        above_threshold = above_threshold.astype(bool).squeeze()
         time = np.asarray(posterior.time)
         state_distance = replay_distance_from_actual_position[above_threshold]
 
