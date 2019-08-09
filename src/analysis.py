@@ -195,7 +195,7 @@ def get_replay_distance_metrics(results, ripple_position_info, ripple_number,
         'replay_distance_from_center_well': np.mean(
             replay_distance_from_center_well),
         'replay_linear_position': np.mean(replay_linear_position),
-        'replay_total_distance': np.mean(
+        'replay_total_distance': np.sum(
             np.abs(np.diff(replay_distance_from_actual_position))),
         'replay_total_displacement': (
             replay_distance_from_actual_position[-1] -
@@ -222,7 +222,7 @@ def get_replay_distance_metrics(results, ripple_position_info, ripple_number,
             replay_distance_from_center_well[above_threshold])
         metrics[f'{state}_replay_linear_position'] = np.mean(
             replay_linear_position[above_threshold])
-        metrics[f'{state}_replay_total_distance'] = np.mean(
+        metrics[f'{state}_replay_total_distance'] = np.sum(
             np.abs(np.diff(state_distance)))
         try:
             metrics[f'{state}_replay_total_displacement'] = (
