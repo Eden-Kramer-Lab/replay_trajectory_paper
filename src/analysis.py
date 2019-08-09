@@ -189,9 +189,12 @@ def get_replay_distance_metrics(results, ripple_position_info, ripple_number,
         'replay_speed': np.mean(
             np.abs(np.diff(replay_distance_from_actual_position)) /
             sampling_frequency),
-        'replay_velocity': np.mean(
+        'replay_velocity_actual_position': np.mean(
             np.diff(replay_distance_from_actual_position) /
             sampling_frequency),
+        'replay_velocity_center_well': np.mean(
+            np.diff(replay_distance_from_center_well)
+            / sampling_frequency),
         'replay_distance_from_center_well': np.mean(
             replay_distance_from_center_well),
         'replay_linear_position': np.mean(replay_linear_position),
@@ -211,8 +214,11 @@ def get_replay_distance_metrics(results, ripple_position_info, ripple_number,
             state_distance)
         metrics[f'{state}_replay_speed'] = np.mean(
             np.abs(np.diff(state_distance)) / sampling_frequency)
-        metrics[f'{state}_replay_velocity'] = np.mean(
+        metrics[f'{state}_replay_velocity_actual_position'] = np.mean(
             np.diff(state_distance) / sampling_frequency)
+        metrics[f'{state}_replay_velocity_center_well'] = np.mean(
+            np.diff(replay_distance_from_center_well[above_threshold])
+            / sampling_frequency)
         try:
             metrics[f'{state}_max_probability'] = np.max(
                 np.asarray(probability.sel(state=state)))
