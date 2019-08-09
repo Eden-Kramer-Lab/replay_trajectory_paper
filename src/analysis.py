@@ -215,7 +215,7 @@ def get_replay_distance_metrics(results, ripple_position_info, ripple_number,
             np.diff(state_distance) / sampling_frequency)
         try:
             metrics[f'{state}_max_probability'] = np.max(
-                np.asarray(probability))
+                np.asarray(probability.sel(state=state)))
         except ValueError:
             metrics[f'{state}_max_probability'] = np.nan
         metrics[f'{state}_replay_distance_from_center_well'] = np.mean(
