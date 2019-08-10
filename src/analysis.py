@@ -211,8 +211,11 @@ def get_replay_distance_metrics(results, ripple_position_info, ripple_number,
 
     for state, above_threshold in is_classified.groupby('state'):
         above_threshold = above_threshold.astype(bool).values.squeeze()
-        metrics[f'{state}_max_probability'] = np.max(
-            np.asarray(probability.sel(state=state)))
+        try:
+            metrics[f'{state}_max_probability'] = np.max(
+                np.asarray(probability.sel(state=state)))
+        except ValueError:
+            metrics[f'{state}_max_probability'] = np.nan
         if np.any(above_threshold):
             time = np.asarray(posterior.time)
             state_distance = replay_distance_from_actual_position[
