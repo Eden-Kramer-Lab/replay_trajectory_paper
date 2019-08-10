@@ -52,11 +52,16 @@ TRANSITION_TO_CATEGORY = {
 
 PROBABILITY_THRESHOLD = 0.8
 
+STATE_ORDER = ['continuous', 'fragmented', 'hover', 'hover-continuous-mix',
+               'fragmented-continuous-mix']
+
 # Plotting Colors
 STATE_COLORS = {
     'hover': '#9f043a',
     'fragmented': '#ff6944',
     'continuous': '#521b65',
+    'hover-continuous-mix': '#61c5e6',
+    'fragmented-continuous-mix': '#2a586a',
     '': '#c7c7c7',
 }
 

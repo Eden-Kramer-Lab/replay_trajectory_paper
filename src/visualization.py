@@ -6,7 +6,7 @@ from matplotlib.collections import LineCollection
 from matplotlib.colorbar import ColorbarBase, make_axes
 
 from src.analysis import maximum_a_posteriori_estimate
-from src.parameters import STATE_COLORS
+from src.parameters import STATE_COLORS, STATE_ORDER
 
 try:
     from upsetplot import UpSet
@@ -266,7 +266,7 @@ def plot_neuron_place_field_2D_1D_position(
 
 
 def plot_category_counts(replay_info):
-    upset = UpSet(replay_info.set_index(['hover', 'continuous', 'fragmented']),
+    upset = UpSet(replay_info.set_index(STATE_ORDER),
                   sum_over=False, sort_sets_by=None)
     return upset.plot()
 
@@ -276,8 +276,61 @@ def plot_category_duration(replay_info):
     zero_mask = np.isclose(replay_info.loc[:, is_duration_col], 0.0)
     sns.stripplot(data=(replay_info.loc[:, is_duration_col].mask(zero_mask)
                         .rename(columns=lambda c: c.split('_')[0])),
-                  order=['continuous', 'fragmented', 'hover'],
+                  order=STATE_ORDER,
                   orient='horizontal',
                   palette=STATE_COLORS)
     plt.xlabel('Duration (s)')
     sns.despine(left=True)
+
+
+def plot_linear_position_markers(replay_info, ax=None, is_vertical=True,
+                                 horizontalalignment='left',
+                                 verticalalignment='top', fontsize=9,
+                                 color='lightgrey', linestyle='--', alpha=0.5,
+                                 zorder=0, jitter=1):
+    if ax is None:
+        ax = plt.gca()
+    if is_vertical:
+        _, y_max = ax.get_ylim()
+        ax.axvline(replay_info.center_well_position.mean(),
+                   color=color, zorder=zorder, linestyle=linestyle,
+                   alpha=alpha)
+        ax.text(replay_info.center_well_position.mean() + jitter, y_max,
+                'center', horizontalalignment=horizontalalignment,
+                verticalalignment=verticalalignment, fontsize=fontsize,
+                color=color)
+
+        ax.axvline(replay_info.choice_position.mean(),
+                   color=color, zorder=zorder, linestyle=linestyle,
+                   alpha=alpha)
+
+        ax.axvline(replay_info.right_well_position.mean(),
+                   color=color, zorder=zorder, linestyle=linestyle,
+                   alpha=alpha)
+        ax.text(replay_info.right_well_position.mean() + jitter, y_max, 'left',
+                horizontalalignment=horizontalalignment,
+                verticalalignment=verticalalignment,
+                fontsize=fontsize, color=color)
+
+        ax.axvline(replay_info.left_well_position.mean(),
+                   color=color, zorder=zorder, linestyle=linestyle,
+                   alpha=alpha)
+        ax.text(replay_info.choice_position.mean() + jitter, y_max, 'right',
+                horizontalalignment=horizontalalignment,
+                verticalalignment=verticalalignment,
+                fontsize=fontsize, color=color)
+
+    else:
+        _, x_max = ax.get_xlim()
+        ax.axhline(replay_info.center_well_position.mean(),
+                   color=color, zorder=zorder, linestyle=linestyle,
+                   alpha=alpha)
+        ax.axhline(replay_info.choice_position.mean(),
+                   color=color, zorder=zorder, linestyle=linestyle,
+                   alpha=alpha)
+        ax.axhline(replay_info.right_well_position.mean(),
+                   color=color, zorder=zorder, linestyle=linestyle,
+                   alpha=alpha)
+        ax.axhline(replay_info.left_well_position.mean(),
+                   color=color, zorder=zorder, linestyle=linestyle,
+                   alpha=alpha)
