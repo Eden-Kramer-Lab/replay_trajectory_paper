@@ -1,6 +1,7 @@
 import matplotlib.animation as animation
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import seaborn as sns
 from matplotlib.collections import LineCollection
 from matplotlib.colorbar import ColorbarBase, make_axes
@@ -271,23 +272,357 @@ def plot_category_counts(replay_info):
     return upset.plot()
 
 
-def plot_category_duration(replay_info):
-    is_duration_col = replay_info.columns.str.endswith('_duration')
-    zero_mask = np.isclose(replay_info.loc[:, is_duration_col], 0.0)
-    sns.stripplot(data=(replay_info.loc[:, is_duration_col].mask(zero_mask)
-                        .rename(columns=lambda c: c.split('_')[0])),
-                  order=STATE_ORDER,
-                  orient='horizontal',
-                  palette=STATE_COLORS)
-    plt.xlabel('Duration (s)')
+def _plot_category(replay_info, category, kind='strip', ax=None,
+                   is_zero_mask=False, is_normalized=False, **kwargs):
+    is_col = replay_info.columns.str.endswith(f'_{category}')
+    if is_zero_mask:
+        zero_mask = np.isclose(replay_info.loc[:, is_col], 0.0)
+    else:
+        zero_mask = np.zeros_like(replay_info.loc[:, is_col], dtype=np.bool)
+    if is_normalized:
+        norm = replay_info.left_well_position.values[:, np.newaxis]
+    else:
+        norm = np.ones_like(
+            replay_info.left_well_position.values[:, np.newaxis])
+    data = (replay_info.loc[:, is_col].mask(zero_mask)
+            .rename(columns=lambda c: c.split('_')[0]))
+    data /= norm
+    if kind == 'strip':
+        sns.stripplot(data=data, order=STATE_ORDER, orient='horizontal',
+                      palette=STATE_COLORS, ax=ax, **kwargs)
+    elif kind == 'violin':
+        sns.violinplot(data=data, order=STATE_ORDER, orient='horizontal',
+                       palette=STATE_COLORS, ax=ax, cut=0, **kwargs)
+    sns.despine(left=True, ax=ax)
+
+
+def plot_category_duration(replay_info, kind='strip', ax=None, **kwargs):
+    if ax is None:
+        ax = plt.gca()
+    _plot_category(replay_info, 'duration', kind=kind, ax=ax,
+                   is_zero_mask=True, **kwargs)
+    ax.set_xlabel('Duration [s]')
+
+
+def plot_linear_position_of_animal(replay_info, ax=None):
+    if ax is None:
+        ax = plt.gca()
+    pos = pd.concat(
+        [replay_info.loc[replay_info[state]]
+         .actual_linear_position2.rename(state)
+         for state in STATE_ORDER], axis=1)
+    sns.violinplot(data=pos, order=STATE_ORDER, orient='horizontal',
+                   palette=STATE_COLORS, cut=0, inner=None, bw=0.05, ax=ax)
+    plot_linear_position_markers(replay_info, ax=ax)
+    ax.set_xlabel('Linear position of animal during ripple [cm]')
+    sns.despine(left=True, ax=ax)
+
+
+def plot_normalized_linear_position_of_animal(replay_info, ax=None):
+    if ax is None:
+        ax = plt.gca()
+    pos = pd.concat(
+        [(replay_info.loc[replay_info[state]]
+          .actual_linear_position2.rename(state)) /
+         replay_info.loc[replay_info[state]].left_well_position.values
+         for state in STATE_ORDER], axis=1)
+    sns.violinplot(data=pos, order=STATE_ORDER, orient='horizontal',
+                   palette=STATE_COLORS, cut=0, inner=None, bw=0.025, ax=ax)
+    plot_linear_position_markers(replay_info, is_normalized=True, jitter=0.01,
+                                 ax=ax)
+    ax.set_xlabel('Normalized linear position of animal during ripple [a.u]')
+    sns.despine(left=True, ax=ax)
+
+
+def plot_replay_distance_from_actual_position(replay_info, kind='strip',
+                                              ax=None, **kwargs):
+    if ax is None:
+        ax = plt.gca()
+    _plot_category(replay_info, 'replay_distance_from_actual_position',
+                   kind=kind, ax=ax, **kwargs)
+    ax.set_xlabel('Average distance from animal position [cm]')
+
+
+def plot_replay_distance_from_center_well(replay_info, kind='strip', ax=None,
+                                          **kwargs):
+    if ax is None:
+        ax = plt.gca()
+    _plot_category(replay_info, 'replay_distance_from_center_well',
+                   kind=kind, ax=ax, **kwargs)
+    ax.set_xlabel('Replay distance from center well [cm]')
+    ax.axvline(replay_info.center_well_position.mean(), color='lightgrey',
+               zorder=0, linestyle='--', alpha=0.5)
+    ax.axvline(replay_info.choice_position.mean(), color='lightgrey', zorder=0,
+               linestyle='--', alpha=0.5)
+
+
+def plot_replay_total_distance(replay_info, kind='strip', ax=None, **kwargs):
+    if ax is None:
+        ax = plt.gca()
+    _plot_category(replay_info, 'replay_total_distance',
+                   kind=kind, ax=ax, **kwargs)
+    if kind == 'violin':
+        ax.set_xscale('log')
+    ax.set_xlabel('Replay total distance travelled [cm]')
+
+
+def plot_replay_total_displacement(replay_info, kind='strip', ax=None,
+                                   **kwargs):
+    if ax is None:
+        ax = plt.gca()
+    _plot_category(replay_info, 'replay_total_displacement',
+                   kind=kind, ax=ax, **kwargs)
+    ax.set_xlabel('Replay total displacement [cm]')
+
+
+def plot_replay_linear_position(replay_info, kind='strip', ax=None, **kwargs):
+    if ax is None:
+        ax = plt.gca()
+    _plot_category(replay_info, 'replay_linear_position',
+                   kind=kind, ax=ax, **kwargs)
+    plot_linear_position_markers(replay_info, ax)
+    ax.set_xlabel('Average replay position [cm]')
+
+
+def plot_replay_norm_linear_position(replay_info, kind='strip', ax=None,
+                                     **kwargs):
+    if ax is None:
+        ax = plt.gca()
+    _plot_category(replay_info, 'replay_linear_position',
+                   kind=kind, ax=ax, is_normalized=True, **kwargs)
+    plot_linear_position_markers(replay_info, is_normalized=True, jitter=0.01,
+                                 ax=ax)
+    ax.set_xlabel('Average norm. replay position [a.u]')
+
+
+def plot_replay_linear_position_vs_distance_from_actual_position(replay_info):
+    fig, axes = plt.subplots(
+        1, len(STATE_ORDER), constrained_layout=True,
+        figsize=(len(STATE_ORDER) * 3, 3), sharex=True, sharey=True)
+    for ax, state in zip(axes.flat, STATE_ORDER):
+        ax.scatter(
+            replay_info[f'{state}_replay_linear_position'],
+            replay_info[f'{state}_replay_distance_from_actual_position'],
+            color=STATE_COLORS[state], s=10)
+        ax.set_title(state)
+        ax.set_ylim((0, replay_info.replay_distance_from_center_well.max()))
+        plot_linear_position_markers(replay_info, ax=ax, fontsize=8)
+
+    sns.despine(left=True)
+    axes[0].set_ylabel('Avg. replay distance\nfrom animal position [cm]')
+    axes[axes.size // 2].set_xlabel('Avg. replay position [cm]')
+
+
+def plot_norm_replay_linear_position_vs_distance_from_actual_position(
+        replay_info):
+    fig, axes = plt.subplots(1, len(STATE_ORDER), constrained_layout=True,
+                             figsize=(len(STATE_ORDER) * 3, 3), sharex=True,
+                             sharey=True)
+
+    max_distance = replay_info.choice_position.values + np.abs(
+        replay_info.right_well_position.values -
+        replay_info.right_arm_start.values)
+    for ax, state in zip(axes.flat, STATE_ORDER):
+        ax.scatter(
+            replay_info[f'{state}_replay_linear_position'] /
+            replay_info.left_well_position.values,
+            replay_info[f'{state}_replay_distance_from_actual_position'] /
+            max_distance, color=STATE_COLORS[state], s=10)
+        ax.set_title(state)
+        ax.set_ylim((0, 1))
+        plot_linear_position_markers(
+            replay_info, ax=ax, fontsize=8, is_normalized=True, jitter=0.01)
+
+    sns.despine(left=True)
+    axes[0].set_ylabel('Avg. norm. replay distance\nfrom animal position [cm]')
+    axes[axes.size // 2].set_xlabel('Avg. norm. replay position [cm]')
+
+
+def plot_actual_position_vs_replay_position(replay_info, kind='scatter',
+                                            vmax=30):
+    fig, axes = plt.subplots(1, len(STATE_ORDER), constrained_layout=True,
+                             figsize=(len(STATE_ORDER) * 3, 3), sharex=True,
+                             sharey=True)
+    avg_left_well_position = replay_info.left_well_position.mean()
+    extent = (0, avg_left_well_position, 0, avg_left_well_position)
+
+    for ax, state in zip(axes.flat, STATE_ORDER):
+        if kind == 'scatter':
+            ax.scatter(replay_info['actual_linear_position2'],
+                       replay_info[f'{state}_replay_linear_position'],
+                       color=STATE_COLORS[state], s=20)
+        elif kind == 'hexbin':
+            cmap = sns.light_palette(STATE_COLORS[state], as_cmap=True)
+            h = ax.hexbin(replay_info['actual_linear_position2'],
+                          replay_info[f'{state}_replay_linear_position'],
+                          gridsize=10, extent=extent, vmin=0.0, vmax=vmax,
+                          cmap=cmap)
+            ax.set_ylim((0, avg_left_well_position))
+            ax.set_xlim((0, avg_left_well_position))
+        elif kind == 'kdeplot':
+            cmap = sns.light_palette(STATE_COLORS[state], as_cmap=True)
+            temp_df = (replay_info
+                       .loc[:, ['actual_linear_position2',
+                                f'{state}_replay_linear_position']]
+                       .dropna())
+            sns.kdeplot(temp_df['actual_linear_position2'],
+                        temp_df[f'{state}_replay_linear_position'],
+                        clip=extent, vmin=0.0, cmap=cmap, ax=ax,
+                        bw=(10, 10), shade=True, gridsize=30,
+                        shade_lowest=True, n_levels=10)
+            ax.set_ylabel('')
+            ax.set_xlabel('')
+            ax.set_ylim((0, avg_left_well_position))
+            ax.set_xlim((0, avg_left_well_position))
+        ax.set_title(state)
+        plot_linear_position_markers(replay_info, ax=ax, fontsize=8, zorder=10)
+        plot_linear_position_markers(replay_info, ax=ax, is_vertical=False,
+                                     zorder=10)
+    sns.despine(left=True)
+    axes[0].set_ylabel('Avg. replay position [cm]')
+    axes[axes.size // 2].set_xlabel('Actual position [cm]')
+
+    if (kind == 'hexbin'):
+        plt.colorbar(h, ax=axes[-1])
+
+
+def plot_norm_actual_position_vs_replay_position(replay_info, kind='scatter',
+                                                 vmax=30):
+    fig, axes = plt.subplots(1, len(STATE_ORDER), constrained_layout=True,
+                             figsize=(len(STATE_ORDER) * 3, 3), sharex=True,
+                             sharey=True)
+    for ax, state in zip(axes.flat, STATE_ORDER):
+        temp_df = (replay_info
+                   .loc[:, ['actual_linear_position2',
+                            f'{state}_replay_linear_position',
+                            'left_well_position']]
+                   .dropna())
+        actual_position = (temp_df.actual_linear_position2 /
+                           temp_df.left_well_position.values)
+        replay_position = (temp_df[f'{state}_replay_linear_position'] /
+                           temp_df.left_well_position.values)
+        if kind == 'scatter':
+            ax.scatter(actual_position, replay_position,
+                       color=STATE_COLORS[state], s=20)
+        elif kind == 'hexbin':
+            cmap = sns.light_palette(STATE_COLORS[state], as_cmap=True)
+            h = ax.hexbin(actual_position, replay_position,
+                          gridsize=15, extent=(0, 1, 0, 1),
+                          vmin=0.0, vmax=vmax, cmap=cmap)
+        elif kind == 'kdeplot':
+            cmap = sns.light_palette(STATE_COLORS[state], as_cmap=True)
+            sns.kdeplot(actual_position, replay_position,
+                        clip=(0, 1, 0, 1), vmin=0.0, cmap=cmap, ax=ax,
+                        bw=0.05, shade=True, gridsize=30,
+                        shade_lowest=True, n_levels=20)
+            ax.set_ylabel('')
+            ax.set_xlabel('')
+        ax.set_xticks([0, 1])
+        ax.set_yticks([0, 1])
+        ax.set_title(state)
+        plot_linear_position_markers(replay_info, ax=ax, fontsize=8,
+                                     is_normalized=True, jitter=0.01,
+                                     zorder=10)
+        plot_linear_position_markers(replay_info, ax=ax, is_vertical=False,
+                                     is_normalized=True, jitter=0.01,
+                                     zorder=10)
+    sns.despine(left=True)
+    axes[0].set_ylabel('Avg. norm. replay position [a.u]')
+    axes[axes.size // 2].set_xlabel('Actual norm. position [a.u]')
+
+    if (kind == 'hexbin'):
+        plt.colorbar(h, ax=axes[-1])
+
+
+def plot_replay_time(replay_info, kind='strip', ax=None, is_min=True,
+                     **kwargs):
+    if ax is None:
+        ax = plt.gca()
+    category = 'min_time' if is_min else 'max_time'
+    name = 'Start' if is_min else 'End'
+    _plot_category(
+        replay_info.select_dtypes(np.number) /
+        (replay_info.duration.values[:, np.newaxis] * 1000),
+        category, kind=kind, ax=ax, **kwargs)
+    ax.set_xlim((-0.05, 1.05))
+    ax.set_xlabel(f'{name} time [normalized ripple time]')
+
+
+def plot_replay_speed(replay_info, kind='strip', ax=None, **kwargs):
+    if ax is None:
+        ax = plt.gca()
+    _plot_category(replay_info.select_dtypes(np.number) * 10_000,
+                   'replay_speed', kind=kind, ax=ax, **kwargs)
+    plt.xlabel('Average Speed [m / s]')
+
+
+def plot_replay_velocity(replay_info, ax=None, relative_to='actual_position',
+                         **kwargs):
+    if ax is None:
+        ax = plt.gca()
+    is_col = replay_info.columns.str.endswith(
+        f'_replay_velocity_{relative_to}')
+    sns.violinplot(data=10_000 * (replay_info.loc[:, is_col]
+                                  .rename(columns=lambda c: c.split('_')[0])),
+                   order=STATE_ORDER, orient='horizontal',
+                   palette=STATE_COLORS, scale='width', ax=ax, **kwargs)
+    plt.axvline(0, color='lightgrey', linestyle='--', zorder=0, alpha=0.5)
+    sns.despine(left=True, ax=ax)
+    ax.set_xlabel(
+        f'Average velocity relative to {relative_to.strip("_")} [m / s]')
+
+
+def plot_max_probability(replay_info, ax=None, kind='strip', **kwargs):
+    if ax is None:
+        ax = plt.gca()
+    _plot_category(replay_info, 'max_probability', kind=kind, ax=ax, **kwargs)
+    ax.set_xlabel('Maximum probability of state for each ripple')
+
+
+def plot_population_rate(replay_info, ax=None):
+    if ax is None:
+        ax = plt.gca()
+    data = pd.concat(
+        [replay_info.loc[replay_info[state]].n_total_spikes.rename(state) /
+         replay_info.loc[replay_info[state]].duration.values
+         for state in STATE_ORDER], axis=1)
+    sns.violinplot(data=data, order=STATE_ORDER,
+                   orient='horizontal',
+                   palette=STATE_COLORS, cut=0)
+    plt.xlabel('Population firing rate per ripple [spikes / s]')
     sns.despine(left=True)
 
 
+def plot_n_unique_spiking(replay_info, ax=None, kind='strip',
+                          data_type='cells', **kwargs):
+    if ax is None:
+        ax = plt.gca()
+    data = pd.concat(
+        [replay_info.loc[replay_info[state]].n_unique_spiking.rename(state)
+         for state in STATE_ORDER], axis=1)
+    if kind == 'violin':
+        sns.violinplot(data=data, order=STATE_ORDER, orient='horizontal',
+                       palette=STATE_COLORS, cut=0, ax=ax)
+    elif kind == 'strip':
+        sns.stripplot(data=data, order=STATE_ORDER, orient='horizontal',
+                      palette=STATE_COLORS, ax=ax)
+    sns.despine(left=True, ax=ax)
+    ax.set_xlabel(f'Number of {data_type} participating per ripple')
+    ax.set_xlim((1, np.nanmax(data.values) + 1))
+
+
 def plot_linear_position_markers(replay_info, ax=None, is_vertical=True,
+                                 is_normalized=False,
                                  horizontalalignment='left',
                                  verticalalignment='top', fontsize=9,
                                  color='lightgrey', linestyle='--', alpha=0.5,
                                  zorder=0, jitter=1):
+    if is_normalized:
+        COLUMNS = ['center_well_position', 'choice_position',
+                   'right_well_position', 'left_well_position',
+                   'right_arm_start', 'left_arm_start']
+        replay_info = (replay_info.loc[:, COLUMNS] /
+                       replay_info.left_well_position.values[:, np.newaxis])
     if ax is None:
         ax = plt.gca()
     if is_vertical:
@@ -303,19 +638,24 @@ def plot_linear_position_markers(replay_info, ax=None, is_vertical=True,
         ax.axvline(replay_info.choice_position.mean(),
                    color=color, zorder=zorder, linestyle=linestyle,
                    alpha=alpha)
-
+        ax.axvline(replay_info.right_arm_start.mean(),
+                   color=color, zorder=zorder, linestyle=linestyle,
+                   alpha=alpha)
         ax.axvline(replay_info.right_well_position.mean(),
                    color=color, zorder=zorder, linestyle=linestyle,
                    alpha=alpha)
-        ax.text(replay_info.right_well_position.mean() + jitter, y_max, 'left',
+        ax.text(replay_info.left_arm_start.mean() + jitter, y_max, 'left',
                 horizontalalignment=horizontalalignment,
                 verticalalignment=verticalalignment,
                 fontsize=fontsize, color=color)
 
+        ax.axvline(replay_info.left_arm_start.mean(),
+                   color=color, zorder=zorder, linestyle=linestyle,
+                   alpha=alpha)
         ax.axvline(replay_info.left_well_position.mean(),
                    color=color, zorder=zorder, linestyle=linestyle,
                    alpha=alpha)
-        ax.text(replay_info.choice_position.mean() + jitter, y_max, 'right',
+        ax.text(replay_info.right_arm_start.mean() + jitter, y_max, 'right',
                 horizontalalignment=horizontalalignment,
                 verticalalignment=verticalalignment,
                 fontsize=fontsize, color=color)
@@ -328,7 +668,13 @@ def plot_linear_position_markers(replay_info, ax=None, is_vertical=True,
         ax.axhline(replay_info.choice_position.mean(),
                    color=color, zorder=zorder, linestyle=linestyle,
                    alpha=alpha)
+        ax.axhline(replay_info.right_arm_start.mean(),
+                   color=color, zorder=zorder, linestyle=linestyle,
+                   alpha=alpha)
         ax.axhline(replay_info.right_well_position.mean(),
+                   color=color, zorder=zorder, linestyle=linestyle,
+                   alpha=alpha)
+        ax.axhline(replay_info.left_arm_start.mean(),
                    color=color, zorder=zorder, linestyle=linestyle,
                    alpha=alpha)
         ax.axhline(replay_info.left_well_position.mean(),
