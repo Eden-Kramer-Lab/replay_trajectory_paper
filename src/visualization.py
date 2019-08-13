@@ -6,6 +6,10 @@ import seaborn as sns
 from matplotlib.collections import LineCollection
 from matplotlib.colorbar import ColorbarBase, make_axes
 
+from loren_frank_data_processing.position import (get_position_dataframe,
+                                                  make_track_graph)
+from loren_frank_data_processing.track_segment_classification import (
+    get_track_segments_from_graph, plot_track, project_points_to_segment)
 from src.analysis import maximum_a_posteriori_estimate
 from src.parameters import STATE_COLORS, STATE_ORDER
 
@@ -680,3 +684,76 @@ def plot_linear_position_markers(replay_info, ax=None, is_vertical=True,
         ax.axhline(replay_info.left_well_position.mean(),
                    color=color, zorder=zorder, linestyle=linestyle,
                    alpha=alpha)
+
+
+def get_projected_track_position(track_graph, track_segment_id, position):
+    track_segment_id[np.isnan(track_segment_id)] = 0
+    track_segment_id = track_segment_id.astype(int)
+
+    track_segments = get_track_segments_from_graph(track_graph)
+    projected_track_position = project_points_to_segment(
+        track_segments, position)
+    n_time = projected_track_position.shape[0]
+    return projected_track_position[(
+        np.arange(n_time), track_segment_id)]
+
+
+def make_linearization_movie(epoch_key, animals, max_distance_from_well=5,
+                             route_euclidean_distance_scaling=1,
+                             min_distance_traveled=50,
+                             sensor_std_dev=10, spacing=30):
+    animal, day, epoch = epoch_key
+    position_info = get_position_dataframe(
+        epoch_key, animals, use_hmm=True,
+        max_distance_from_well=max_distance_from_well,
+        route_euclidean_distance_scaling=route_euclidean_distance_scaling,
+        min_distance_traveled=min_distance_traveled,
+        sensor_std_dev=sensor_std_dev,
+        spacing=spacing)
+
+    track_graph, center_well_id = make_track_graph(epoch_key, animals)
+    position = position_info.loc[:, ['x_position', 'y_position']].values
+    track_segment_id = position_info.track_segment_id.values
+    projected_track_position = get_projected_track_position(
+        track_graph, track_segment_id, position)
+    # Set up formatting for the movie files
+    Writer = animation.writers['ffmpeg']
+    writer = Writer(fps=33, metadata=dict(artist='Me'), bitrate=1800)
+
+    fig, ax = plt.subplots(figsize=(7, 7))
+    plt.plot(position[:, 0], position[:, 1], color='lightgrey', zorder=-10)
+    plot_track(track_graph, ax)
+
+    plt.xlim(position[:, 0].min() - 1, position[:, 0].max() + 1)
+    plt.ylim(position[:, 1].min() + 1, position[:, 1].max() + 1)
+    sns.despine(left=True, bottom=True, ax=ax)
+    plt.title('Linearized vs. Actual Position')
+
+    actual_line, = plt.plot(
+        [], [], 'g-', label='actual position', linewidth=3, zorder=101)
+    actual_head = plt.scatter([], [], s=80, zorder=101, color='g')
+
+    predicted_line, = plt.plot(
+        [], [], 'r-', label='linearized position', linewidth=3, zorder=102)
+    predicted_head = plt.scatter([], [], s=80, zorder=102, color='r')
+
+    plt.legend()
+
+    def _update_line(time_ind):
+        start_ind = max(0, time_ind - 33)
+        time_slice = slice(start_ind, time_ind)
+
+        actual_line.set_data(position[time_slice, 0], position[time_slice, 1])
+        actual_head.set_offsets(position[time_ind])
+
+        predicted_line.set_data(projected_track_position[time_slice, 0],
+                                projected_track_position[time_slice, 1])
+        predicted_head.set_offsets(projected_track_position[time_ind])
+
+        return actual_line, predicted_line
+
+    n_time = position.shape[0]
+    line_ani = animation.FuncAnimation(fig, _update_line, frames=n_time,
+                                       interval=50, blit=True)
+    line_ani.save(
+        f'{animal}_{day:02}_{epoch:02}_linearization.mp4', writer=writer)
