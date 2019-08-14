@@ -58,8 +58,9 @@ def get_replay_info(results, ripple_spikes, ripple_times, position_info,
 
     metrics = pd.DataFrame(
         [get_replay_distance_metrics(
-            results, ripple_position_info, ripple_number, position_info,
-            track_graph, sampling_frequency, is_classified, probability)
+            results, ripple_position_info, ripple_spikes, ripple_number,
+            position_info, track_graph, sampling_frequency, is_classified,
+            probability)
          for ripple_number in ripple_times.index], index=ripple_times.index)
     replay_info = pd.concat((ripple_times, duration, metrics), axis=1)
     animal, day, epoch = epoch_key
@@ -148,9 +149,10 @@ def get_is_classified(probability, probablity_threshold):
     return is_classified
 
 
-def get_replay_distance_metrics(results, ripple_position_info, ripple_number,
-                                position_info, track_graph, sampling_frequency,
-                                is_classified, probability):
+def get_replay_distance_metrics(results, ripple_position_info, ripple_spikes,
+                                ripple_number, position_info, track_graph,
+                                sampling_frequency, is_classified,
+                                probability):
     posterior = (results
                  .sel(ripple_number=ripple_number)
                  .acausal_posterior
@@ -170,6 +172,7 @@ def get_replay_distance_metrics(results, ripple_position_info, ripple_number,
         .assign_coords(
             time=lambda ds: 1000 * ds.time / np.timedelta64(1, 's'))
     )
+    ripple_spikes = ripple_spikes.loc[ripple_number]
     map_estimate = maximum_a_posteriori_estimate(posterior.sum('state'))
 
     actual_positions = (ripple_position_info
@@ -241,6 +244,13 @@ def get_replay_distance_metrics(results, ripple_position_info, ripple_number,
                 state_distance[-1] - state_distance[0])
             metrics[f'{state}_min_time'] = np.min(time[above_threshold])
             metrics[f'{state}_max_time'] = np.max(time[above_threshold])
+            metrics[f'{state}_n_unique_spiking'] = (
+                ripple_spikes.sum(axis=0) > 0).sum()
+            metrics[f'{state}_n_total_spikes'] = (
+                ripple_spikes.sum(axis=0)).sum()
+            metrics[f'{state}_popultion_rate'] = (
+                sampling_frequency * metrics[f'{state}_n_total_spikes'] /
+                above_threshold.sum())
 
     return metrics
 
