@@ -79,6 +79,7 @@ def get_replay_info(results, ripple_spikes, ripple_times, position_info,
 
     replay_info['right_arm_start'] = min_df['Right Arm']
     replay_info['right_well_position'] = max_df['Right Arm']
+    replay_info['max_linear_distance'] = position_info.linear_distance.max()
 
     return replay_info
 
