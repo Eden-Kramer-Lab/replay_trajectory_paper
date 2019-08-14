@@ -9,7 +9,7 @@ from loren_frank_data_processing.track_segment_classification import (get_track_
 
 
 def get_replay_info(results, ripple_spikes, ripple_times, position_info,
-                    track_graph, sampling_frequency, probablity_threshold,
+                    track_graph, sampling_frequency, probability_threshold,
                     epoch_key):
     '''
 
@@ -22,7 +22,7 @@ def get_replay_info(results, ripple_spikes, ripple_times, position_info,
     position_info : pandas.DataFrame (n_time, n_covariates)
     track_graph : networkx.Graph
     sampling_frequency : float
-    probablity_threshold : float
+    probability_threshold : float
     epoch_key : tuple
 
     Returns
@@ -31,7 +31,7 @@ def get_replay_info(results, ripple_spikes, ripple_times, position_info,
 
     '''
     probability = get_probability(results)
-    is_classified = get_is_classified(probability, probablity_threshold)
+    is_classified = get_is_classified(probability, probability_threshold)
 
     duration = (is_classified.sum('time') / sampling_frequency)
     duration = duration.to_dataframe().unstack(level=1)
