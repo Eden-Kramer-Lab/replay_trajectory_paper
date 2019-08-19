@@ -41,6 +41,8 @@ model = NumbaKDE
 model_kwargs = {
     'bandwidth': np.array([24.0, 24.0, 24.0, 24.0, 6.0, 6.0])
 }
+knot_spacing = 5
+spike_model_penalty = 0.5
 discrete_diag = 1 - 1E-3
 
 TRANSITION_TO_CATEGORY = {

@@ -20,9 +20,9 @@ from src.analysis import (get_linear_position_order, get_place_field_max,
 from src.load_data import load_data
 from src.parameters import (ANIMALS, FIGURE_DIR, PROBABILITY_THRESHOLD,
                             PROCESSED_DATA_DIR, SAMPLING_FREQUENCY,
-                            TRANSITION_TO_CATEGORY, discrete_diag, model,
-                            model_kwargs, movement_var, place_bin_size,
-                            replay_speed)
+                            TRANSITION_TO_CATEGORY, discrete_diag,
+                            knot_spacing, model, model_kwargs, movement_var,
+                            place_bin_size, replay_speed, spike_model_penalty)
 from src.visualization import (plot_category_counts, plot_category_duration,
                                plot_neuron_place_field_2D_1D_position,
                                plot_ripple_decode_1D, plot_ripple_decode_2D)
@@ -61,7 +61,7 @@ def sorted_spikes_analysis_1D(epoch_key, plot_ripple_figures=False):
             place_bin_size=1.0, movement_var=movement_var,
             replay_speed=replay_speed,
             discrete_transition_diag=discrete_diag,
-            spike_model_penalty=0.5, knot_spacing=10,
+            spike_model_penalty=spike_model_penalty, knot_spacing=knot_spacing,
             continuous_transition_types=continuous_transition_types).fit(
                 position, data['spikes'], is_training=is_training,
                 track_labels=track_labels)
@@ -194,7 +194,8 @@ def sorted_spikes_analysis_2D(epoch_key, plot_ripple_figures=False):
             place_bin_size=place_bin_size, movement_var=movement_var,
             replay_speed=replay_speed,
             discrete_transition_diag=discrete_diag,
-            spike_model_penalty=0.5).fit(
+            knot_spacing=knot_spacing,
+            spike_model_penalty=spike_model_penalty).fit(
             position, data['spikes'], is_training=is_training)
         logging.info(classifier)
 
