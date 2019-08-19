@@ -3,7 +3,6 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 
-from loren_frank_data_processing.position import _calulcate_linear_position2
 from loren_frank_data_processing.track_segment_classification import (get_track_segments_from_graph,
                                                                       project_points_to_segment)
 
@@ -55,6 +54,8 @@ def get_replay_info(results, ripple_spikes, ripple_times, position_info,
         'ripple_number').linear_position2.mean()
     duration['actual_speed'] = ripple_position_info.groupby(
         'ripple_number').speed.mean()
+    duration['actual_velocity_center_well'] = ripple_position_info.groupby(
+        'ripple_number').linear_velocity.mean()
 
     metrics = pd.DataFrame(
         [get_replay_distance_metrics(
@@ -182,8 +183,8 @@ def get_replay_distance_metrics(results, ripple_position_info, ripple_spikes,
                                 .loc[ripple_number, 'track_segment_id']
                                 .values.squeeze().astype(int))
 
-    (replay_distance_from_actual_position, replay_distance_from_center_well,
-     replay_linear_position) = calculate_replay_distance(
+    (replay_distance_from_actual_position,
+     replay_distance_from_center_well) = calculate_replay_distance(
         track_graph, map_estimate, actual_positions,
         actual_track_segment_ids, position_info)
     try:
@@ -192,6 +193,8 @@ def get_replay_distance_metrics(results, ripple_position_info, ripple_spikes,
             replay_distance_from_actual_position[0])
     except IndexError:
         replay_total_displacement = np.nan
+
+    map_estimate = map_estimate.squeeze()
 
     metrics = {
         'replay_distance_from_actual_position': np.mean(
@@ -207,7 +210,7 @@ def get_replay_distance_metrics(results, ripple_position_info, ripple_spikes,
             / sampling_frequency),
         'replay_distance_from_center_well': np.mean(
             replay_distance_from_center_well),
-        'replay_linear_position': np.mean(replay_linear_position),
+        'replay_linear_position': np.mean(map_estimate),
         'replay_total_distance': np.sum(
             np.abs(np.diff(replay_distance_from_actual_position))),
         'replay_total_displacement': replay_total_displacement,
@@ -237,7 +240,7 @@ def get_replay_distance_metrics(results, ripple_position_info, ripple_spikes,
             metrics[f'{state}_replay_distance_from_center_well'] = np.mean(
                 replay_distance_from_center_well[above_threshold])
             metrics[f'{state}_replay_linear_position'] = np.mean(
-                replay_linear_position[above_threshold])
+                map_estimate[above_threshold])
             metrics[f'{state}_replay_total_distance'] = np.sum(
                 np.abs(np.diff(state_distance)))
             metrics[f'{state}_replay_total_displacement'] = np.abs(
@@ -449,29 +452,5 @@ def calculate_replay_distance(track_graph, map_estimate, actual_positions,
     replay_distance_from_center_well = np.asarray(
         replay_distance_from_center_well)
 
-    # linear position
-    SEGMENT_ID_TO_ARM_NAME = {0.0: 'Center Arm',
-                              1.0: 'Left Arm',
-                              2.0: 'Right Arm',
-                              3.0: 'Left Arm',
-                              4.0: 'Right Arm'}
-    arm_names = [SEGMENT_ID_TO_ARM_NAME[segment_id]
-                 for segment_id in replay_track_segment_ids]
-    replay_position_df = pd.DataFrame(
-        {'linear_distance': replay_distance_from_center_well,
-         'arm_name': arm_names})
-    min_max_ind = np.concatenate(
-        (position_info.groupby('arm_name')
-         .apply(lambda df: df.linear_position2.idxmin()).values,
-         position_info.groupby('arm_name')
-         .apply(lambda df: df.linear_position2.idxmax()).values))
-    minimal_distance_df = position_info.loc[
-        min_max_ind, ['arm_name', 'linear_distance']]
-    replay_linear_position = np.asarray(_calulcate_linear_position2(
-        pd.concat((replay_position_df, minimal_distance_df),
-                  axis=0), spacing=30))
-    replay_linear_position = replay_linear_position[:len(replay_position_df)]
-
     return (replay_distance_from_actual_position,
-            replay_distance_from_center_well,
-            replay_linear_position)
+            replay_distance_from_center_well)
