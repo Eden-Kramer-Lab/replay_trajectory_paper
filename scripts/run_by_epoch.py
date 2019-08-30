@@ -58,7 +58,7 @@ def sorted_spikes_analysis_1D(epoch_key, plot_ripple_figures=False):
     except (FileNotFoundError, OSError):
         logging.info('Fitting classifier...')
         classifier = SortedSpikesClassifier(
-            place_bin_size=1.0, movement_var=movement_var,
+            place_bin_size=place_bin_size, movement_var=movement_var,
             replay_speed=replay_speed,
             discrete_transition_diag=discrete_diag,
             spike_model_penalty=spike_model_penalty, knot_spacing=knot_spacing,
@@ -323,7 +323,7 @@ def clusterless_analysis_1D(epoch_key, plot_ripple_figures=False):
     except (FileNotFoundError, OSError):
         logging.info('Fitting classifier...')
         classifier = ClusterlessClassifier(
-            place_bin_size=1.0, movement_var=movement_var,
+            place_bin_size=place_bin_size, movement_var=movement_var,
             replay_speed=replay_speed,
             discrete_transition_diag=discrete_diag,
             continuous_transition_types=continuous_transition_types,
