@@ -48,8 +48,10 @@ discrete_diag = 1 - 1E-3
 TRANSITION_TO_CATEGORY = {
     'identity': 'hover',
     'uniform': 'fragmented',
+    'w_track_1D_inverse_random_walk': 'fragmented',
     'random_walk': 'continuous',
     'w_track_1D_random_walk': 'continuous',
+    'w_track_1D_random_walk_minus_identity': 'continuous',
 }
 
 PROBABILITY_THRESHOLD = 0.8
