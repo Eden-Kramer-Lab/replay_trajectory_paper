@@ -39,7 +39,7 @@ movement_var = 2.0
 replay_speed = 1
 model = NumbaKDE
 model_kwargs = {
-    'bandwidth': np.array([24.0, 24.0, 24.0, 24.0, 6.0, 6.0])
+    'bandwidth': np.array([24.0, 24.0, 24.0, 24.0, 5.0, 5.0])
 }
 knot_spacing = 5
 spike_model_penalty = 0.5
