@@ -35,7 +35,7 @@ _BRAIN_AREAS = ['CA1', 'CA2', 'CA3']
 
 # Classifier Parameters
 place_bin_size = 2.0
-movement_var = 2.0
+movement_var = 4.0
 replay_speed = 1
 model = NumbaKDE
 model_kwargs = {
