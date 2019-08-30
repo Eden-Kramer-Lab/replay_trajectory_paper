@@ -44,9 +44,9 @@ def sorted_spikes_analysis_1D(epoch_key, plot_ripple_figures=False):
     position = data['position_info'].loc[:, 'linear_position2']
     track_labels = data['position_info'].arm_name
     continuous_transition_types = (
-        [['w_track_1D_random_walk', 'uniform', 'identity'],
-         ['uniform',   'uniform', 'uniform'],
-         ['w_track_1D_random_walk', 'uniform', 'identity']])
+        [['w_track_1D_random_walk_minus_identity', 'w_track_1D_inverse_random_walk', 'identity'],
+         ['uniform',                               'w_track_1D_inverse_random_walk', 'uniform'],
+         ['w_track_1D_random_walk_minus_identity', 'w_track_1D_inverse_random_walk', 'identity']])
     try:
         logging.info('Found existing results. Loading...')
         results = xr.open_dataset(
