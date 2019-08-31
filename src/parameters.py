@@ -44,6 +44,10 @@ model_kwargs = {
 knot_spacing = 5
 spike_model_penalty = 0.5
 discrete_diag = 1 - 1E-3
+continuous_transition_types = (
+    [['w_track_1D_random_walk_minus_identity', 'w_track_1D_inverse_random_walk', 'identity'],
+     ['uniform',                               'w_track_1D_inverse_random_walk', 'uniform'],
+     ['w_track_1D_random_walk_minus_identity', 'w_track_1D_inverse_random_walk', 'identity']])
 
 TRANSITION_TO_CATEGORY = {
     'identity': 'hover',

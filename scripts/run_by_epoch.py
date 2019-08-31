@@ -20,7 +20,8 @@ from src.analysis import (get_linear_position_order, get_place_field_max,
 from src.load_data import load_data
 from src.parameters import (ANIMALS, FIGURE_DIR, PROBABILITY_THRESHOLD,
                             PROCESSED_DATA_DIR, SAMPLING_FREQUENCY,
-                            TRANSITION_TO_CATEGORY, discrete_diag,
+                            TRANSITION_TO_CATEGORY,
+                            continuous_transition_types, discrete_diag,
                             knot_spacing, model, model_kwargs, movement_var,
                             place_bin_size, replay_speed, spike_model_penalty)
 from src.visualization import (plot_category_counts, plot_category_duration,
@@ -43,10 +44,6 @@ def sorted_spikes_analysis_1D(epoch_key, plot_ripple_figures=False):
     is_training = data['position_info'].speed > 4
     position = data['position_info'].loc[:, 'linear_position2']
     track_labels = data['position_info'].arm_name
-    continuous_transition_types = (
-        [['w_track_1D_random_walk_minus_identity', 'w_track_1D_inverse_random_walk', 'identity'],
-         ['uniform',                               'w_track_1D_inverse_random_walk', 'uniform'],
-         ['w_track_1D_random_walk_minus_identity', 'w_track_1D_inverse_random_walk', 'identity']])
     try:
         logging.info('Found existing results. Loading...')
         results = xr.open_dataset(
@@ -194,8 +191,8 @@ def sorted_spikes_analysis_2D(epoch_key, plot_ripple_figures=False):
             place_bin_size=place_bin_size, movement_var=movement_var,
             replay_speed=replay_speed,
             discrete_transition_diag=discrete_diag,
-            knot_spacing=knot_spacing,
-            spike_model_penalty=spike_model_penalty).fit(
+            spike_model_penalty=spike_model_penalty, knot_spacing=knot_spacing,
+            continuous_transition_types=continuous_transition_types).fit(
             position, data['spikes'], is_training=is_training)
         logging.info(classifier)
 
@@ -305,10 +302,7 @@ def clusterless_analysis_1D(epoch_key, plot_ripple_figures=False):
     is_training = data['position_info'].speed > 4
     position = data['position_info'].loc[:, 'linear_position2']
     track_labels = data['position_info'].arm_name
-    continuous_transition_types = (
-        [['w_track_1D_random_walk', 'uniform', 'identity'],
-         ['uniform',   'uniform', 'uniform'],
-         ['w_track_1D_random_walk', 'uniform', 'identity']])
+
     try:
         logging.info('Found existing results. Loading...')
         results = xr.open_dataset(
@@ -434,9 +428,10 @@ def clusterless_analysis_2D(epoch_key, plot_ripple_figures=False):
         logging.info('Fitting classifier...')
         classifier = ClusterlessClassifier(
             place_bin_size=place_bin_size, movement_var=movement_var,
-            replay_speed=replay_speed, model=model,
-            model_kwargs=model_kwargs,
-            discrete_transition_diag=discrete_diag).fit(
+            replay_speed=replay_speed,
+            discrete_transition_diag=discrete_diag,
+            continuous_transition_types=continuous_transition_types,
+            model=model, model_kwargs=model_kwargs).fit(
             position, data['multiunit'], is_training=is_training)
         logging.info(classifier)
         # Decode
