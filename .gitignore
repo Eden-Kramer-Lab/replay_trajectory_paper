@@ -61,3 +61,4 @@ coverage.xml
 *.dirlock
 *.ai
 *.nc
+*.pkl
