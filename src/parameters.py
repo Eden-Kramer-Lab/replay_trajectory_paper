@@ -1,9 +1,8 @@
 from os.path import abspath, dirname, join, pardir
 
 import numpy as np
-from replay_trajectory_classification.misc import NumbaKDE
-
 from loren_frank_data_processing import Animal
+from replay_trajectory_classification.misc import NumbaKDE
 
 # LFP sampling frequency
 SAMPLING_FREQUENCY = 500

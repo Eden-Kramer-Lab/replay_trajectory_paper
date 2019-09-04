@@ -3,13 +3,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from matplotlib.collections import LineCollection
-from matplotlib.colorbar import ColorbarBase, make_axes
-
 from loren_frank_data_processing.position import (get_position_dataframe,
                                                   make_track_graph)
 from loren_frank_data_processing.track_segment_classification import (
     get_track_segments_from_graph, plot_track, project_points_to_segment)
+from matplotlib.collections import LineCollection
+from matplotlib.colorbar import ColorbarBase, make_axes
 from src.analysis import maximum_a_posteriori_estimate
 from src.parameters import STATE_COLORS, STATE_ORDER
 

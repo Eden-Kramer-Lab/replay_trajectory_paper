@@ -136,7 +136,7 @@ def make_fragmented_replay(place_field_means=PLACE_FIELD_MEANS,
     replay_time = np.arange(N_TIME) / sampling_frequency
 
     n_total_neurons = place_field_means.size
-    neuron_inds = [1, n_total_neurons-1, 10, n_total_neurons-5, 8]
+    neuron_inds = [1, n_total_neurons - 1, 10, n_total_neurons - 5, 8]
     neuron_inds = np.unravel_index(neuron_inds, place_field_means.shape)
     spike_time_ind = [1, 3, 5, 7, 9]
     test_multiunits = np.full(
@@ -155,7 +155,8 @@ def make_hover_continuous_hover_replay(sampling_frequency=SAMPLING_FREQUENCY,
     _, test_multiunits1 = make_hover_replay(hover_neuron_ind=0)
     _, test_multiunits2 = make_continuous_replay()
     n_total_neurons = place_field_means.size
-    _, test_multiunits3 = make_hover_replay(hover_neuron_ind=n_total_neurons-1)
+    _, test_multiunits3 = make_hover_replay(
+        hover_neuron_ind=n_total_neurons - 1)
 
     test_multiunits = np.concatenate(
         (test_multiunits1, test_multiunits2, test_multiunits3))

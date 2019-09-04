@@ -2,7 +2,6 @@ from logging import getLogger
 
 import numpy as np
 import pandas as pd
-
 from loren_frank_data_processing import (get_all_multiunit_indicators,
                                          get_all_spike_indicators,
                                          get_interpolated_position_dataframe,
@@ -68,7 +67,7 @@ def load_data(epoch_key, brain_areas=None):
     tetrode_keys = tetrode_info.loc[is_brain_areas].index
     lfps = get_LFPs(tetrode_keys, ANIMALS)
     lfps = lfps.resample('2ms').mean().fillna(method='pad').reindex(time)
-    
+
     try:
         neuron_info = make_neuron_dataframe(ANIMALS).xs(
             epoch_key, drop_level=False)

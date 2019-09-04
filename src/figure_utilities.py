@@ -3,7 +3,6 @@ import os
 import matplotlib.pyplot as plt
 import seaborn as sns
 from numpy import sqrt
-
 from src.parameters import FIGURE_DIR
 
 # Figure Parameters
