@@ -6,7 +6,7 @@ from tqdm.auto import tqdm
 
 from loren_frank_data_processing import (make_epochs_dataframe,
                                          make_neuron_dataframe)
-from src.parameters import (ANIMALS, MIN_N_NEURONS, MAX_N_EXPOSURES,
+from src.parameters import (ANIMALS, MAX_N_EXPOSURES, MIN_N_NEURONS,
                             PROCESSED_DATA_DIR)
 
 

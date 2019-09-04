@@ -1,6 +1,7 @@
 from os.path import abspath, dirname, join, pardir
 
 import numpy as np
+
 from loren_frank_data_processing import Animal
 from replay_trajectory_classification.misc import NumbaKDE
 
@@ -71,7 +72,3 @@ STATE_COLORS = {
     'fragmented-continuous-mix': '#2a586a',
     '': '#c7c7c7',
 }
-
-# Epoch Parameters
-MAX_N_EXPOSURES = 7
-MIN_N_NEURONS = 20

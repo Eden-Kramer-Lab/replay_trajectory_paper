@@ -9,12 +9,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
 from dask.distributed import Client
-from replay_trajectory_classification import (ClusterlessClassifier,
-                                              SortedSpikesClassifier)
 from tqdm.auto import tqdm
 
 from loren_frank_data_processing import save_xarray
 from loren_frank_data_processing.position import make_track_graph
+from replay_trajectory_classification import (ClusterlessClassifier,
+                                              SortedSpikesClassifier)
 from src.analysis import (get_linear_position_order, get_place_field_max,
                           get_replay_info, reshape_to_segments)
 from src.load_data import load_data
