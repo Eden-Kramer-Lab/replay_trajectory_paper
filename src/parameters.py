@@ -53,7 +53,9 @@ TRANSITION_TO_CATEGORY = {
     'identity': 'hover',
     'uniform': 'fragmented',
     'w_track_1D_inverse_random_walk': 'fragmented',
+    'inverse_random_walk': 'fragmented',
     'random_walk': 'continuous',
+    'random_walk_minus_identity': 'continuous',
     'w_track_1D_random_walk': 'continuous',
     'w_track_1D_random_walk_minus_identity': 'continuous',
 }
