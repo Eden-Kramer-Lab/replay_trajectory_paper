@@ -140,7 +140,7 @@ def plot_ripple_decode_2D(posterior, ripple_position,
 
     fig, axes = plt.subplots(1, 2, figsize=(12, 6), constrained_layout=True)
 
-    replay_probability = posterior.sum('position')
+    replay_probability = posterior.sum(['x_position', 'y_position'])
     for state, prob in replay_probability.groupby('state'):
         axes[0].plot(prob.time, prob.values, linewidth=3, label=state,
                      color=STATE_COLORS[state])
