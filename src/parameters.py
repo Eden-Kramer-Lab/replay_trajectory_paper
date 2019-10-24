@@ -45,15 +45,17 @@ knot_spacing = 5
 spike_model_penalty = 0.5
 discrete_diag = 1 - 1E-3
 continuous_transition_types = (
-    [['w_track_1D_random_walk_minus_identity', 'w_track_1D_inverse_random_walk', 'identity'],
-     ['uniform',                               'w_track_1D_inverse_random_walk', 'uniform'],
-     ['w_track_1D_random_walk_minus_identity', 'w_track_1D_inverse_random_walk', 'identity']])
+    [['w_track_1D_random_walk_minus_identity', 'w_track_1D_inverse_random_walk', 'identity'],  # noqa
+     ['uniform',                               'w_track_1D_inverse_random_walk', 'uniform'],   # noqa
+     ['w_track_1D_random_walk_minus_identity', 'w_track_1D_inverse_random_walk', 'identity']])  # noqa
 
 TRANSITION_TO_CATEGORY = {
     'identity': 'hover',
     'uniform': 'fragmented',
     'w_track_1D_inverse_random_walk': 'fragmented',
+    'inverse_random_walk': 'fragmented',
     'random_walk': 'continuous',
+    'random_walk_minus_identity': 'continuous',
     'w_track_1D_random_walk': 'continuous',
     'w_track_1D_random_walk_minus_identity': 'continuous',
 }

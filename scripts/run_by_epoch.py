@@ -507,8 +507,8 @@ def clusterless_analysis_2D(epoch_key, plot_ripple_figures=False):
                     time=lambda ds: 1000 * ds.time / np.timedelta64(1, 's')))
             plot_ripple_decode_2D(
                 posterior, ripple_position.loc[ripple_number],
-                ripple_spikes.loc[ripple_number], linear_position_order,
-                data['position_info'], spike_label='Cells')
+                ripple_spikes.loc[ripple_number], position,
+                linear_position_order, spike_label='Tetrodes')
             plt.suptitle(
                 f'ripple number = {animal}_{day:02d}_{epoch:02d}_'
                 f'{ripple_number:04d}')
