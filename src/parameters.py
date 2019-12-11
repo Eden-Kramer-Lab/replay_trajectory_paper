@@ -43,7 +43,7 @@ model_kwargs = {
 }
 knot_spacing = 5
 spike_model_penalty = 0.5
-discrete_diag = 1 - 1E-3
+discrete_diag = 0.98
 continuous_transition_types = (
     [['w_track_1D_random_walk_minus_identity', 'w_track_1D_inverse_random_walk', 'identity'],  # noqa
      ['uniform',                               'w_track_1D_inverse_random_walk', 'uniform'],   # noqa
