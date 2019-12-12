@@ -411,23 +411,23 @@ def calculate_replay_distance(track_graph, map_estimate, actual_positions,
             # Add actual position node
             node_name = 'actual_position'
             node1, node2 = actual_edge_id
-            track_graph1.add_path([node1, node_name, node2])
+            nx.add_path(track_graph1, [node1, node_name, node2])
             track_graph1.remove_edge(node1, node2)
             track_graph1.nodes[node_name]['pos'] = tuple(actual_pos)
 
             # Add replay position node
             node_name = 'replay_position'
             node1, node2 = replay_edge_id
-            track_graph1.add_path([node1, node_name, node2])
+            nx.add_path(track_graph1, [node1, node_name, node2])
             track_graph1.remove_edge(node1, node2)
             track_graph1.nodes[node_name]['pos'] = tuple(replay_pos)
         else:
             node1, node2 = actual_edge_id
 
-            track_graph1.add_path(
-                [node1, 'actual_position', 'replay_position', node2])
-            track_graph1.add_path(
-                [node1, 'replay_position', 'actual_position', node2])
+            nx.add_path(track_graph1,
+                        [node1, 'actual_position', 'replay_position', node2])
+            nx.add_path(track_graph1,
+                        [node1, 'replay_position', 'actual_position', node2])
 
             track_graph1.nodes['actual_position']['pos'] = tuple(actual_pos)
             track_graph1.nodes['replay_position']['pos'] = tuple(replay_pos)
