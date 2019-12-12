@@ -118,6 +118,7 @@ def sorted_spikes_analysis_1D(epoch_key, plot_ripple_figures=False):
                                   .map(TRANSITION_TO_CATEGORY)))
 
         logging.info('Saving results...')
+        ripple_times = data['ripple_times'].loc[:, ['start_time', 'end_time']]
         ripple_spikes = reshape_to_segments(data['spikes'], ripple_times)
         save_xarray(PROCESSED_DATA_DIR, epoch_key,
                     results.drop(['likelihood', 'causal_posterior']),
@@ -152,7 +153,6 @@ def sorted_spikes_analysis_1D(epoch_key, plot_ripple_figures=False):
     if plot_ripple_figures:
         place_field_max = get_place_field_max(classifier)
         linear_position_order = place_field_max.argsort(axis=0).squeeze()
-        ripple_times = data['ripple_times'].loc[:, ['start_time', 'end_time']]
         ripple_position = reshape_to_segments(position, ripple_times)
 
         for ripple_number in tqdm(ripple_times.index, desc='ripple figures'):
