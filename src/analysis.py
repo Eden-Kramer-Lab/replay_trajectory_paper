@@ -436,8 +436,8 @@ def calculate_replay_distance(track_graph, map_estimate, actual_positions,
         # Calculate distance between all nodes
         for edge in track_graph1.edges(data=True):
             track_graph1.edges[edge[:2]]['distance'] = np.linalg.norm(
-                track_graph1.node[edge[0]]['pos'] -
-                np.array(track_graph1.node[edge[1]]['pos']))
+                track_graph1.nodes[edge[0]]['pos'] -
+                np.array(track_graph1.nodes[edge[1]]['pos']))
 
         replay_distance_from_actual_position.append(
             nx.shortest_path_length(
