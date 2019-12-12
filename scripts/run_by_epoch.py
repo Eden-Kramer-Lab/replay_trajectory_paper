@@ -7,14 +7,16 @@ from subprocess import PIPE, run
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import xarray as xr
 from dask.distributed import Client
+from replay_trajectory_classification import (ClusterlessClassifier,
+                                              SortedSpikesClassifier)
+from scipy.ndimage import label
 from tqdm.auto import tqdm
 
 from loren_frank_data_processing import save_xarray
 from loren_frank_data_processing.position import make_track_graph
-from replay_trajectory_classification import (ClusterlessClassifier,
-                                              SortedSpikesClassifier)
 from src.analysis import (get_linear_position_order, get_place_field_max,
                           get_replay_info, reshape_to_segments)
 from src.load_data import load_data
@@ -93,20 +95,29 @@ def sorted_spikes_analysis_1D(epoch_key, plot_ripple_figures=False):
         plt.close(g.fig)
 
         # Decode
-        ripple_times = data['ripple_times'].loc[:, ['start_time', 'end_time']]
-        ripple_spikes = reshape_to_segments(data['spikes'], ripple_times)
-        results = []
-        for ripple_number in tqdm(data['ripple_times'].index, desc='ripple'):
-            ripple_time = (ripple_spikes.loc[ripple_number].index -
-                           ripple_spikes.loc[ripple_number].index[0])
-            results.append(
-                classifier.predict(ripple_spikes.loc[ripple_number],
-                                   time=ripple_time))
+        is_test = ~is_training
+
+        test_groups = pd.DataFrame(
+            {'test_groups': label(is_test.values)[0]}, index=is_test.index)
+        immobility_results = []
+        for _, df in test_groups.loc[is_test].groupby('test_groups'):
+            start_time, end_time = df.iloc[0].name, df.iloc[-1].name
+            test_spikes = data['spikes'].loc[start_time:end_time]
+            immobility_results.append(
+                classifier.predict(test_spikes, time=test_spikes.index))
+        immobility_results = xr.concat(immobility_results, dim='time')
+
+        results = [(immobility_results
+                    .sel(time=slice(df.start_time, df.end_time))
+                    .assign_coords(time=lambda ds: ds.time - ds.time[0]))
+                   for _, df in data['ripple_times'].iterrows()]
+
         results = (xr.concat(results, dim=data['ripple_times'].index)
                    .assign_coords(state=lambda ds: ds.state.to_index()
                                   .map(TRANSITION_TO_CATEGORY)))
 
         logging.info('Saving results...')
+        ripple_spikes = reshape_to_segments(data['spikes'], ripple_times)
         save_xarray(PROCESSED_DATA_DIR, epoch_key,
                     results.drop(['likelihood', 'causal_posterior']),
                     group=f'/{data_type}/{dim}/classifier/ripples/')
@@ -140,7 +151,7 @@ def sorted_spikes_analysis_1D(epoch_key, plot_ripple_figures=False):
     if plot_ripple_figures:
         place_field_max = get_place_field_max(classifier)
         linear_position_order = place_field_max.argsort(axis=0).squeeze()
-
+        ripple_times = data['ripple_times'].loc[:, ['start_time', 'end_time']]
         ripple_position = reshape_to_segments(position, ripple_times)
 
         for ripple_number in tqdm(ripple_times.index, desc='ripple figures'):
@@ -327,22 +338,33 @@ def clusterless_analysis_1D(epoch_key, plot_ripple_figures=False):
         logging.info(classifier)
 
         # Decode
+        is_test = ~is_training
+
+        test_groups = pd.DataFrame(
+            {'test_groups': label(is_test.values)[0]}, index=is_test.index)
+        immobility_results = []
+        for _, df in test_groups.loc[is_test].groupby('test_groups'):
+            start_time, end_time = df.iloc[0].name, df.iloc[-1].name
+            test_multiunit = data['multiunit'].sel(
+                time=slice(start_time, end_time))
+            immobility_results.append(
+                classifier.predict(test_multiunit, time=test_multiunit.time))
+        immobility_results = xr.concat(immobility_results, dim='time')
+
+        results = [(immobility_results
+                    .sel(time=slice(df.start_time, df.end_time))
+                    .assign_coords(time=lambda ds: ds.time - ds.time[0]))
+                   for _, df in data['ripple_times'].iterrows()]
+
+        results = (xr.concat(results, dim=data['ripple_times'].index)
+                   .assign_coords(state=lambda ds: ds.state.to_index()
+                                  .map(TRANSITION_TO_CATEGORY)))
+
         ripple_times = data['ripple_times'].loc[:, ['start_time', 'end_time']]
         spikes = (((data['multiunit'].sum('features') > 0) * 1.0)
                   .to_dataframe(name='spikes').unstack())
         spikes.columns = data['tetrode_info'].tetrode_id
         ripple_spikes = reshape_to_segments(spikes, ripple_times)
-
-        results = []
-        for ripple_number in tqdm(data['ripple_times'].index, desc='ripple'):
-            time_slice = slice(*data['ripple_times'].loc[
-                ripple_number, ['start_time', 'end_time']])
-            m = data['multiunit'].sel(time=time_slice)
-            results.append(classifier.predict(m, m.time - m.time[0]))
-        results = xr.concat(results, dim=data['ripple_times'].index)
-        results = results.assign_coords(
-            state=lambda ds: ds.state.to_index()
-            .map(TRANSITION_TO_CATEGORY))
 
         logging.info('Saving results...')
         save_xarray(PROCESSED_DATA_DIR, epoch_key,
