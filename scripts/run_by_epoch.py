@@ -100,7 +100,8 @@ def sorted_spikes_analysis_1D(epoch_key, plot_ripple_figures=False):
         test_groups = pd.DataFrame(
             {'test_groups': label(is_test.values)[0]}, index=is_test.index)
         immobility_results = []
-        for _, df in test_groups.loc[is_test].groupby('test_groups'):
+        for _, df in tqdm(test_groups.loc[is_test].groupby('test_groups'),
+                          desc='immobility'):
             start_time, end_time = df.iloc[0].name, df.iloc[-1].name
             test_spikes = data['spikes'].loc[start_time:end_time]
             immobility_results.append(
@@ -343,12 +344,14 @@ def clusterless_analysis_1D(epoch_key, plot_ripple_figures=False):
         test_groups = pd.DataFrame(
             {'test_groups': label(is_test.values)[0]}, index=is_test.index)
         immobility_results = []
-        for _, df in test_groups.loc[is_test].groupby('test_groups'):
+        for _, df in tqdm(test_groups.loc[is_test].groupby('test_groups'),
+                          desc='immobility'):
             start_time, end_time = df.iloc[0].name, df.iloc[-1].name
             test_multiunit = data['multiunit'].sel(
                 time=slice(start_time, end_time))
             immobility_results.append(
                 classifier.predict(test_multiunit, time=test_multiunit.time))
+
         immobility_results = xr.concat(immobility_results, dim='time')
 
         results = [(immobility_results
