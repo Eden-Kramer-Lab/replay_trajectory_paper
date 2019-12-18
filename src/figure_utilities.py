@@ -32,7 +32,7 @@ def set_figure_defaults():
         'axes.labelpad': 0.1,
     }
     sns.set(style='white', context='paper', rc=rc_params,
-            font_scale=1.3)
+            font_scale=1.4)
 
 
 def save_figure(figure_name, figure_format='pdf'):
