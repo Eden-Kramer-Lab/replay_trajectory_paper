@@ -1,7 +1,6 @@
 from os.path import abspath, dirname, join, pardir
 
 import numpy as np
-
 from loren_frank_data_processing import Animal
 from replay_trajectory_classification.misc import NumbaKDE
 
@@ -43,34 +42,34 @@ model_kwargs = {
 }
 knot_spacing = 5
 spike_model_penalty = 0.5
-discrete_diag = 0.98
+discrete_diag = 1 - 1E-3
 continuous_transition_types = (
     [['w_track_1D_random_walk_minus_identity', 'w_track_1D_inverse_random_walk', 'identity'],  # noqa
      ['uniform',                               'w_track_1D_inverse_random_walk', 'uniform'],   # noqa
      ['w_track_1D_random_walk_minus_identity', 'w_track_1D_inverse_random_walk', 'identity']])  # noqa
 
 TRANSITION_TO_CATEGORY = {
-    'identity': 'hover',
-    'uniform': 'fragmented',
-    'w_track_1D_inverse_random_walk': 'fragmented',
-    'inverse_random_walk': 'fragmented',
-    'random_walk': 'continuous',
-    'random_walk_minus_identity': 'continuous',
-    'w_track_1D_random_walk': 'continuous',
-    'w_track_1D_random_walk_minus_identity': 'continuous',
+    'identity': 'Hover',
+    'uniform': 'Fragmented',
+    'w_track_1D_inverse_random_walk': 'Fragmented',
+    'inverse_random_walk': 'Fragmented',
+    'random_walk': 'Continuous',
+    'random_walk_minus_identity': 'Continuous',
+    'w_track_1D_random_walk': 'Continuous',
+    'w_track_1D_random_walk_minus_identity': 'Continuous',
 }
 
 PROBABILITY_THRESHOLD = 0.8
 
-STATE_ORDER = ['continuous', 'fragmented', 'hover', 'hover-continuous-mix',
-               'fragmented-continuous-mix']
+STATE_ORDER = ['Hover', 'Hover-Continuous-Mix', 'Continuous',
+               'Fragmented-Continuous-Mix', 'Fragmented']
 
 # Plotting Colors
 STATE_COLORS = {
-    'hover': '#9f043a',
-    'fragmented': '#ff6944',
-    'continuous': '#521b65',
-    'hover-continuous-mix': '#61c5e6',
-    'fragmented-continuous-mix': '#2a586a',
+    'Hover': '#9f043a',
+    'Fragmented': '#ff6944',
+    'Continuous': '#521b65',
+    'Hover-Continuous-Mix': '#61c5e6',
+    'Fragmented-Continuous-Mix': '#2a586a',
     '': '#c7c7c7',
 }
