@@ -1,5 +1,4 @@
 import numpy as np
-
 from replay_trajectory_classification.simulate import (
     simulate_linear_distance, simulate_neuron_with_place_field,
     simulate_place_field_firing_rate, simulate_time)
@@ -146,6 +145,21 @@ def make_fragmented_continuous_fragmented_replay(
     _, test_spikes3 = make_fragmented_replay()
 
     test_spikes = np.concatenate((test_spikes1, test_spikes2, test_spikes3))
+    replay_time = np.arange(test_spikes.shape[0]) / sampling_frequency
+
+    return replay_time, test_spikes
+
+
+def make_hover_continuous_fragmented_replay(
+        sampling_frequency=SAMPLING_FREQUENCY):
+    _, test_spikes1 = make_hover_replay(hover_neuron_ind=1)
+    _, test_spikes2 = make_continuous_replay()
+    _, test_spikes3 = make_fragmented_replay()
+    _, test_spikes4 = make_fragmented_replay()
+    _, test_spikes5 = make_fragmented_replay()
+
+    test_spikes = np.concatenate((test_spikes1, test_spikes2, test_spikes3,
+                                  test_spikes4, test_spikes5))
     replay_time = np.arange(test_spikes.shape[0]) / sampling_frequency
 
     return replay_time, test_spikes
