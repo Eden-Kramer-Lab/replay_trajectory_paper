@@ -67,7 +67,7 @@ def plot_all_positions(position_info, ax=None):
     if ax is None:
         ax = plt.gca()
     ax.plot(position_info.x_position.values, position_info.y_position.values,
-            color='lightgrey', alpha=0.5, label='all positions')
+            color='lightgrey', alpha=0.6, label='All positions')
 
 
 def make_movie(position, posterior_density, position_info, map_position,
@@ -76,29 +76,34 @@ def make_movie(position, posterior_density, position_info, map_position,
     Writer = animation.writers['ffmpeg']
     writer = Writer(fps=15, metadata=dict(artist='Me'), bitrate=1800)
 
-    fig, ax = plt.subplots(1, 1, figsize=(7, 7))
+    fig, ax = plt.subplots(1, 1, figsize=(12, 10))
+    plt.gca().set_xlabel('x-position', fontsize=24)
+    plt.gca().set_ylabel('y-position', fontsize=24)
     plot_all_positions(position_info, ax=ax)
-
+    plt.gca().set_xlabel('x-position', fontsize=24)
+    plt.gca().set_ylabel('y-position', fontsize=24)
     ax.set_xlim(position_info.x_position.min() - 1,
                 position_info.x_position.max() + 1)
     ax.set_ylim(position_info.y_position.min() + 1,
                 position_info.y_position.max() + 1)
-    ax.set_xlabel('x-position')
-    ax.set_ylabel('y-position')
 
-    position_dot = plt.scatter([], [], s=80, zorder=102, color='b',
-                               label='actual position')
-    position_line, = plt.plot([], [], 'b-', linewidth=3)
-    map_dot = plt.scatter([], [], s=80, zorder=102, color='r',
-                          label='replay position')
+    position_dot = plt.scatter([], [], s=200, zorder=102, color='black',
+                               label='Actual position')
+    position_line, = plt.plot([], [], '-', linewidth=3, color='black')
+
+    map_dot = plt.scatter([], [], s=200, zorder=102, color='r',
+                          label='Decoded position')
     map_line, = plt.plot([], [], 'r-', linewidth=3)
-    spikes_dot = plt.scatter([], [], s=40, zorder=104, color='k',
-                             label='spikes')
+    # spikes_dot = plt.scatter([], [], s=40, zorder=104, color='k',
+    #                          label='spikes')
     vmax = np.percentile(posterior_density.values, 99)
-    ax.legend()
+    # ax.legend(loc='upper right')
     posterior_density.isel(time=0).plot(
         x='x_position', y='y_position', vmin=0.0, vmax=vmax,
-        ax=ax)
+        ax=ax, add_colorbar=False)
+    plt.gca().set_xlabel('x-position', fontsize=24)
+    plt.gca().set_ylabel('y-position', fontsize=24)
+
     n_frames = posterior_density.shape[0]
 
     def _update_plot(time_ind):
@@ -113,14 +118,18 @@ def make_movie(position, posterior_density, position_info, map_position,
         map_line.set_data(map_position[time_slice, 0],
                           map_position[time_slice, 1])
 
-        spikes_dot.set_offsets(place_field_max[spikes[time_ind] > 0])
+        # spikes_dot.set_offsets(place_field_max[spikes[time_ind] > 0])
 
         im = posterior_density.isel(time=time_ind).plot(
             x='x_position', y='y_position', vmin=0.0, vmax=vmax,
             ax=ax, add_colorbar=False)
+        plt.gca().set_xlabel('x-position')
+        plt.gca().set_ylabel('y-position')
 
         return position_dot, im
 
+    plt.gca().set_xlabel('x-position', fontsize=24)
+    plt.gca().set_ylabel('y-position', fontsize=24)
     movie = animation.FuncAnimation(fig, _update_plot, frames=n_frames,
                                     interval=50, blit=True)
     if movie_name is not None:
