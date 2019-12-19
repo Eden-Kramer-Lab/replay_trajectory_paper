@@ -133,17 +133,17 @@ def get_is_classified(probability, probablity_threshold):
 
     '''
     is_classified = probability > probablity_threshold
-    is_classified.loc[dict(state='hover-continuous-mix')] = (
-        is_classified.sel(state='hover-continuous-mix') &
-        ~is_classified.sel(state='hover') &
-        ~is_classified.sel(state='continuous') &
-        (probability.sel(state='fragmented') < (1 - probablity_threshold) / 2))
+    is_classified.loc[dict(state='Hover-Continuous-Mix')] = (
+        is_classified.sel(state='Hover-Continuous-Mix') &
+        ~is_classified.sel(state='Hover') &
+        ~is_classified.sel(state='Continuous') &
+        (probability.sel(state='Fragmented') < (1 - probablity_threshold) / 2))
 
-    is_classified.loc[dict(state='fragmented-continuous-mix')] = (
-        is_classified.sel(state='fragmented-continuous-mix') &
-        ~is_classified.sel(state='fragmented') &
-        ~is_classified.sel(state='continuous') &
-        (probability.sel(state='hover') < (1 - probablity_threshold) / 2))
+    is_classified.loc[dict(state='Fragmented-Continuous-mix')] = (
+        is_classified.sel(state='Fragmented-Continuous-mix') &
+        ~is_classified.sel(state='Fragmented') &
+        ~is_classified.sel(state='Continuous') &
+        (probability.sel(state='Hover') < (1 - probablity_threshold) / 2))
     is_classified = is_classified.rename('is_classified')
     is_classified = is_classified.where(~np.isnan(probability))
 
