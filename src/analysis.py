@@ -108,13 +108,13 @@ def get_probability(results):
     return xr.concat(
         (probability,
          probability
-            .sel(state=['hover', 'continuous'])
+            .sel(state=['Hover', 'Continuous'])
             .sum('state', skipna=False)
-            .assign_coords(state='hover-continuous-mix'),
+            .assign_coords(state='Hover-Continuous-Mix'),
          probability
-            .sel(state=['fragmented', 'continuous'])
+            .sel(state=['Fragmented', 'Continuous'])
             .sum('state', skipna=False)
-            .assign_coords(state='fragmented-continuous-mix'),
+            .assign_coords(state='Fragmented-Continuous-Mix'),
          ), dim='state')
 
 
@@ -139,8 +139,8 @@ def get_is_classified(probability, probablity_threshold):
         ~is_classified.sel(state='Continuous') &
         (probability.sel(state='Fragmented') < (1 - probablity_threshold) / 2))
 
-    is_classified.loc[dict(state='Fragmented-Continuous-mix')] = (
-        is_classified.sel(state='Fragmented-Continuous-mix') &
+    is_classified.loc[dict(state='Fragmented-Continuous-Mix')] = (
+        is_classified.sel(state='Fragmented-Continuous-Mix') &
         ~is_classified.sel(state='Fragmented') &
         ~is_classified.sel(state='Continuous') &
         (probability.sel(state='Hover') < (1 - probablity_threshold) / 2))
