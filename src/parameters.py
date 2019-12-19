@@ -1,6 +1,7 @@
 from os.path import abspath, dirname, join, pardir
 
 import numpy as np
+
 from loren_frank_data_processing import Animal
 from replay_trajectory_classification.misc import NumbaKDE
 
@@ -43,7 +44,7 @@ model_kwargs = {
 }
 knot_spacing = 5
 spike_model_penalty = 0.5
-discrete_diag = 1 - 1E-3
+discrete_diag = 0.98 # 1 /
 continuous_transition_types = (
     [['w_track_1D_random_walk_minus_identity', 'w_track_1D_inverse_random_walk', 'identity'],  # noqa
      ['uniform',                               'w_track_1D_inverse_random_walk', 'uniform'],   # noqa
@@ -62,8 +63,8 @@ TRANSITION_TO_CATEGORY = {
 
 PROBABILITY_THRESHOLD = 0.8
 
-STATE_ORDER = ['Hover', 'Hover-Continuous-Mix', 'Continuous',
-               'Fragmented-Continuous-Mix', 'Fragmented']
+STATE_ORDER = ['Continuous', 'Fragmented', 'Hover', 'Hover-Continuous-Mix',
+               'Fragmented-Continuous-mix']
 
 # Plotting Colors
 STATE_COLORS = {
