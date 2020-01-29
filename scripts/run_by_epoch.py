@@ -10,13 +10,13 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 from dask.distributed import Client
+from loren_frank_data_processing import save_xarray
+from loren_frank_data_processing.position import make_track_graph
 from replay_trajectory_classification import (ClusterlessClassifier,
                                               SortedSpikesClassifier)
 from scipy.ndimage import label
 from tqdm.auto import tqdm
 
-from loren_frank_data_processing import save_xarray
-from loren_frank_data_processing.position import make_track_graph
 from src.analysis import (get_linear_position_order, get_place_field_max,
                           get_replay_info, reshape_to_segments)
 from src.load_data import load_data
@@ -44,7 +44,7 @@ def sorted_spikes_analysis_1D(epoch_key, plot_ripple_figures=False):
     data = load_data(epoch_key)
 
     is_training = data['position_info'].speed > 4
-    position = data['position_info'].loc[:, 'linear_position2']
+    position = data['position_info'].loc[:, 'linear_position']
     track_labels = data['position_info'].arm_name
     try:
         logging.info('Found existing results. Loading...')
@@ -71,10 +71,10 @@ def sorted_spikes_analysis_1D(epoch_key, plot_ripple_figures=False):
             x='position', col='neuron', col_wrap=4)
         arm_grouper = (data['position_info']
                        .groupby('arm_name')
-                       .linear_position2)
+                       .linear_position)
         max_df = arm_grouper.max()
         min_df = arm_grouper.min()
-        plt.xlim((0, data['position_info'].linear_position2.max()))
+        plt.xlim((0, data['position_info'].linear_position.max()))
         max_rate = (classifier.place_fields_.values.max() *
                     data['sampling_frequency'])
         for ax in g.axes.flat:
@@ -312,7 +312,7 @@ def clusterless_analysis_1D(epoch_key, plot_ripple_figures=False):
     data = load_data(epoch_key)
 
     is_training = data['position_info'].speed > 4
-    position = data['position_info'].loc[:, 'linear_position2']
+    position = data['position_info'].loc[:, 'linear_position']
     track_labels = data['position_info'].arm_name
 
     try:
