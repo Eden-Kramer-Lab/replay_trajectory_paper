@@ -58,7 +58,7 @@ def plot_2D_position_with_color_time(time, position, ax=None, cmap='plasma',
     cbar = ColorbarBase(cax, cmap=cmap, norm=norm,
                         spacing='proportional',
                         orientation='horizontal')
-    cbar.set_label('time')
+    cbar.set_label('Time')
 
     return line, ax
 
