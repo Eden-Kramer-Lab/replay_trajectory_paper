@@ -63,8 +63,8 @@ TRANSITION_TO_CATEGORY = {
 
 PROBABILITY_THRESHOLD = 0.8
 
-STATE_ORDER = ['Continuous', 'Fragmented', 'Hover', 'Hover-Continuous-Mix',
-               'Fragmented-Continuous-mix']
+STATE_ORDER = ['Hover', 'Hover-Continuous-Mix', 'Continuous',
+               'Fragmented-Continuous-Mix', 'Fragmented']
 
 # Plotting Colors
 STATE_COLORS = {
