@@ -2,15 +2,14 @@ from logging import getLogger
 
 import numpy as np
 import pandas as pd
-from ripple_detection import (Kay_ripple_detector, filter_ripple_band,
-                              get_multiunit_population_firing_rate)
-
 from loren_frank_data_processing import (get_all_multiunit_indicators,
                                          get_all_spike_indicators,
                                          get_interpolated_position_dataframe,
                                          get_LFPs, get_trial_time,
                                          make_neuron_dataframe,
                                          make_tetrode_dataframe)
+from ripple_detection import (Kay_ripple_detector, filter_ripple_band,
+                              get_multiunit_population_firing_rate)
 
 from .parameters import _BRAIN_AREAS, _MARKS, ANIMALS, SAMPLING_FREQUENCY
 
@@ -24,8 +23,7 @@ def get_ripple_times(epoch_key, sampling_frequency=1500,
         .dropna(subset=['linear_distance', 'linear_speed']))
     speed = position_info['speed']
     time = position_info.index
-    tetrode_info = make_tetrode_dataframe(ANIMALS).xs(
-        epoch_key, drop_level=False)
+    tetrode_info = make_tetrode_dataframe(ANIMALS, epoch_key=epoch_key)
     if ~np.all(np.isnan(tetrode_info.validripple.astype(float))):
         tetrode_keys = tetrode_info.loc[
             (tetrode_info.validripple == 1)].index
@@ -61,8 +59,7 @@ def load_data(epoch_key, brain_areas=None):
 
     time = position_info.index
 
-    tetrode_info = make_tetrode_dataframe(ANIMALS).xs(
-        epoch_key, drop_level=False)
+    tetrode_info = make_tetrode_dataframe(ANIMALS, epoch_key=epoch_key)
     is_brain_areas = (
         tetrode_info.area.astype(str).str.upper().isin(brain_areas))
     tetrode_keys = tetrode_info.loc[is_brain_areas].index
