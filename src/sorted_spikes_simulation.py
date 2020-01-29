@@ -1,9 +1,7 @@
 import numpy as np
-
-from replay_trajectory_classification.simulate import (simulate_linear_distance,
-                                                       simulate_neuron_with_place_field,
-                                                       simulate_place_field_firing_rate,
-                                                       simulate_time)
+from replay_trajectory_classification.simulate import (
+    simulate_linear_distance, simulate_neuron_with_place_field,
+    simulate_place_field_firing_rate, simulate_time)
 
 SAMPLING_FREQUENCY = 1000
 TRACK_HEIGHT = 180
