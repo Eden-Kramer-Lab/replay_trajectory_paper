@@ -34,9 +34,8 @@ _MARKS = ['channel_1_max', 'channel_2_max', 'channel_3_max', 'channel_4_max']
 _BRAIN_AREAS = ['CA1', 'CA2', 'CA3']
 
 # Classifier Parameters
-place_bin_size = 2.0
-# 10 m/s = 2 cm / 2 ms
-movement_var = 4.0
+place_bin_size = 3.0
+movement_var = 6.0
 replay_speed = 1
 model = NumbaKDE
 model_kwargs = {
