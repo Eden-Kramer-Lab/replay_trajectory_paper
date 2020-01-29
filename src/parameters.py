@@ -1,7 +1,6 @@
 from os.path import abspath, dirname, join, pardir
 
 import numpy as np
-
 from loren_frank_data_processing import Animal
 from replay_trajectory_classification.misc import NumbaKDE
 
@@ -43,7 +42,7 @@ model_kwargs = {
 }
 knot_spacing = 5
 spike_model_penalty = 0.5
-discrete_diag = 0.98 # 1 /
+discrete_diag = 0.98
 continuous_transition_types = (
     [['w_track_1D_random_walk', 'uniform', 'identity'],  # noqa
      ['uniform',                'uniform', 'uniform'],   # noqa
