@@ -2,7 +2,6 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 import xarray as xr
-
 from loren_frank_data_processing.track_segment_classification import (
     get_track_segments_from_graph, project_points_to_segment)
 
@@ -50,8 +49,8 @@ def get_replay_info(results, ripple_spikes, ripple_times, position_info,
         'ripple_number').y_position.mean()
     duration['actual_linear_distance'] = ripple_position_info.groupby(
         'ripple_number').linear_distance.mean()
-    duration['actual_linear_position2'] = ripple_position_info.groupby(
-        'ripple_number').linear_position2.mean()
+    duration['actual_linear_position'] = ripple_position_info.groupby(
+        'ripple_number').linear_position.mean()
     duration['actual_speed'] = ripple_position_info.groupby(
         'ripple_number').speed.mean()
     duration['actual_velocity_center_well'] = ripple_position_info.groupby(
@@ -70,8 +69,8 @@ def get_replay_info(results, ripple_spikes, ripple_times, position_info,
     replay_info['day'] = int(day)
     replay_info['epoch'] = int(epoch)
 
-    max_df = position_info.groupby('arm_name').linear_position2.max()
-    min_df = position_info.groupby('arm_name').linear_position2.min()
+    max_df = position_info.groupby('arm_name').linear_position.max()
+    min_df = position_info.groupby('arm_name').linear_position.min()
 
     replay_info['center_well_position'] = min_df['Center Arm']
     replay_info['choice_position'] = max_df['Center Arm']
@@ -309,7 +308,7 @@ def get_linear_position_order(position_info, place_field_max):
         min_ind = np.sqrt(
             np.sum(np.abs(place_max - position) ** 2, axis=1)).idxmin()
         linear_place_field_max.append(
-            position_info.loc[min_ind, 'linear_position2'])
+            position_info.loc[min_ind, 'linear_position'])
 
     linear_place_field_max = np.asarray(linear_place_field_max)
     return np.argsort(linear_place_field_max), linear_place_field_max
@@ -376,7 +375,7 @@ def calculate_replay_distance(track_graph, map_estimate, actual_positions,
     n_position_dims = map_estimate.shape[1]
     if n_position_dims == 1:
         closest_ind = _get_closest_ind(
-            map_estimate, position_info.linear_position2)
+            map_estimate, position_info.linear_position)
     else:
         closest_ind = _get_closest_ind(
             map_estimate, position_info.loc[:, ['x_position', 'y_position']])
