@@ -2,7 +2,7 @@
 NCORES=16
 NWORKERS=16
 SORTED_WALLTIME='5:00:00'
-CLUSTERLESS_WALLTIME='30:00:00'
+CLUSTERLESS_WALLTIME='14:00:00'
 
 python queue_cluster_jobs.py --data_type 'sorted_spikes' --n_cores $NCORES --n_workers $NWORKERS --wall_time $SORTED_WALLTIME --plot_ripple_figures
 python queue_cluster_jobs.py --data_type 'clusterless' --n_cores $NCORES --n_workers $NWORKERS --wall_time $CLUSTERLESS_WALLTIME --plot_ripple_figures
