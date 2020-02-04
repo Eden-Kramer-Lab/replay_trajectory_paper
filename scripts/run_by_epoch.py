@@ -9,14 +9,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import xarray as xr
-from dask.distributed import Client
+from scipy.ndimage import label
+from tqdm.auto import tqdm
+
 from loren_frank_data_processing import save_xarray
 from loren_frank_data_processing.position import make_track_graph
 from replay_trajectory_classification import (ClusterlessClassifier,
                                               SortedSpikesClassifier)
-from scipy.ndimage import label
-from tqdm.auto import tqdm
-
 from src.analysis import (get_linear_position_order, get_place_field_max,
                           get_replay_info, reshape_to_segments)
 from src.load_data import load_data
@@ -599,15 +598,9 @@ def main():
                    stdout=PIPE, universal_newlines=True).stdout
     logging.info('Git Hash: {git_hash}'.format(git_hash=git_hash.rstrip()))
 
-    client_params = dict(n_workers=args.n_workers,
-                         threads_per_worker=args.threads_per_worker,
-                         processes=True,
-                         memory_limit='25GB')
-    with Client(**client_params) as client:
-        logging.info(client)
-        # Analysis Code
-        run_analysis[(args.data_type, args.dim)](
-            epoch_key, plot_ripple_figures=args.plot_ripple_figures)
+    # Analysis Code
+    run_analysis[(args.data_type, args.dim)](
+        epoch_key, plot_ripple_figures=args.plot_ripple_figures)
 
 
 if __name__ == '__main__':
