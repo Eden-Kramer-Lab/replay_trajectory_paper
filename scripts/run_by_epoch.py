@@ -13,7 +13,8 @@ from scipy.ndimage import label
 from tqdm.auto import tqdm
 
 from loren_frank_data_processing import save_xarray
-from loren_frank_data_processing.position import make_track_graph
+from loren_frank_data_processing.position import (EDGE_ORDER, EDGE_SPACING,
+                                                  make_track_graph)
 from replay_trajectory_classification import (ClusterlessClassifier,
                                               SortedSpikesClassifier)
 from src.analysis import (get_linear_position_order, get_place_field_max,
@@ -44,7 +45,7 @@ def sorted_spikes_analysis_1D(epoch_key, plot_ripple_figures=False):
 
     is_training = data['position_info'].speed > 4
     position = data['position_info'].loc[:, 'linear_position']
-    track_labels = data['position_info'].arm_name
+    track_graph, center_well_id = make_track_graph(epoch_key, ANIMALS)
     try:
         logging.info('Found existing results. Loading...')
         results = xr.open_dataset(
@@ -62,7 +63,8 @@ def sorted_spikes_analysis_1D(epoch_key, plot_ripple_figures=False):
             spike_model_penalty=spike_model_penalty, knot_spacing=knot_spacing,
             continuous_transition_types=continuous_transition_types).fit(
                 position, data['spikes'], is_training=is_training,
-                track_labels=track_labels)
+                track_graph=track_graph, center_well_id=center_well_id,
+                edge_order=EDGE_ORDER, edge_spacing=EDGE_SPACING)
         logging.info(classifier)
 
         # Plot Place Fields
@@ -124,7 +126,6 @@ def sorted_spikes_analysis_1D(epoch_key, plot_ripple_figures=False):
                     group=f'/{data_type}/{dim}/classifier/ripples/')
 
     logging.info('Saving replay_info...')
-    track_graph, _ = make_track_graph(epoch_key, ANIMALS)
     replay_info = get_replay_info(
         results, ripple_spikes, data['ripple_times'], data['position_info'],
         track_graph, SAMPLING_FREQUENCY, PROBABILITY_THRESHOLD, epoch_key)
@@ -266,7 +267,8 @@ def sorted_spikes_analysis_2D(epoch_key, plot_ripple_figures=False):
 
     if plot_ripple_figures:
         place_field_max = get_place_field_max(classifier)
-        linear_position_order, linear_place_field_max = get_linear_position_order(
+        (linear_position_order,
+         linear_place_field_max) = get_linear_position_order(
             data['position_info'], place_field_max)
         plot_neuron_place_field_2D_1D_position(
             data['position_info'], place_field_max, linear_place_field_max,
@@ -312,7 +314,7 @@ def clusterless_analysis_1D(epoch_key, plot_ripple_figures=False):
 
     is_training = data['position_info'].speed > 4
     position = data['position_info'].loc[:, 'linear_position']
-    track_labels = data['position_info'].arm_name
+    track_graph, center_well_id = make_track_graph(epoch_key, ANIMALS)
 
     try:
         logging.info('Found existing results. Loading...')
@@ -334,7 +336,8 @@ def clusterless_analysis_1D(epoch_key, plot_ripple_figures=False):
             continuous_transition_types=continuous_transition_types,
             model=model, model_kwargs=model_kwargs).fit(
                 position, data['multiunit'], is_training=is_training,
-                track_labels=track_labels)
+                track_graph=track_graph, center_well_id=center_well_id,
+                edge_order=EDGE_ORDER, edge_spacing=EDGE_SPACING)
         logging.info(classifier)
 
         # Decode
@@ -374,7 +377,6 @@ def clusterless_analysis_1D(epoch_key, plot_ripple_figures=False):
                     group=f'/{data_type}/{dim}/classifier/ripples/')
 
     logging.info('Saving replay_info...')
-    track_graph, _ = make_track_graph(epoch_key, ANIMALS)
     replay_info = get_replay_info(
         results, ripple_spikes, data['ripple_times'], data['position_info'],
         track_graph, SAMPLING_FREQUENCY, PROBABILITY_THRESHOLD, epoch_key)
@@ -509,7 +511,8 @@ def clusterless_analysis_2D(epoch_key, plot_ripple_figures=False):
 
     if plot_ripple_figures:
         place_field_max = get_place_field_max(classifier)
-        linear_position_order, linear_place_field_max = get_linear_position_order(
+        (linear_position_order,
+         linear_place_field_max) = get_linear_position_order(
             data['position_info'], place_field_max)
         plot_neuron_place_field_2D_1D_position(
             data['position_info'], place_field_max, linear_place_field_max,
