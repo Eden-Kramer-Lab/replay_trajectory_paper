@@ -3,13 +3,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from matplotlib.collections import LineCollection
-from matplotlib.colorbar import ColorbarBase, make_axes
-
 from loren_frank_data_processing.position import (get_position_dataframe,
                                                   make_track_graph)
 from loren_frank_data_processing.track_segment_classification import (
     get_track_segments_from_graph, plot_track, project_points_to_segment)
+from matplotlib.collections import LineCollection
+from matplotlib.colorbar import ColorbarBase, make_axes
+
 from src.analysis import maximum_a_posteriori_estimate
 from src.parameters import STATE_COLORS, STATE_ORDER
 
@@ -58,9 +58,9 @@ def plot_2D_position_with_color_time(time, position, ax=None, cmap='plasma',
     cbar = ColorbarBase(cax, cmap=cmap, norm=norm,
                         spacing='proportional',
                         orientation='horizontal')
-    cbar.set_label('time')
+    cbar.set_label('Time')
 
-    return line, ax
+    return line, ax, cbar
 
 
 def plot_all_positions(position_info, ax=None):
@@ -229,10 +229,10 @@ def plot_ripple_decode_1D(posterior, ripple_position, ripple_spikes,
     axes[2].set_xticks((min_time, max_time))
     axes[-1].set_xlabel('Time [ms]')
 
-    max_df = position_info.groupby('arm_name').linear_position2.max()
-    min_df = position_info.groupby('arm_name').linear_position2.min()
-    axes[2].set_ylim((0, position_info.linear_position2.max()))
-    axes[2].set_yticks((0, position_info.linear_position2.max()))
+    max_df = position_info.groupby('arm_name').linear_position.max()
+    min_df = position_info.groupby('arm_name').linear_position.min()
+    axes[2].set_ylim((0, position_info.linear_position.max()))
+    axes[2].set_yticks((0, position_info.linear_position.max()))
 
     for arm_name, max_position in max_df.iteritems():
         axes[2].axhline(max_position, color='lightgrey',
@@ -266,7 +266,7 @@ def plot_neuron_place_field_2D_1D_position(
         axes[1].scatter(ind, linear, s=200, alpha=0.3)
         axes[1].text(ind, linear, linear_position_order[ind], fontsize=15,
                      horizontalalignment='center', verticalalignment='center')
-    max_df = (position_info.groupby('arm_name').linear_position2.max()
+    max_df = (position_info.groupby('arm_name').linear_position.max()
               .iteritems())
     for arm_name, max_position in max_df:
         axes[1].axhline(max_position, color='lightgrey', zorder=0,
@@ -274,7 +274,7 @@ def plot_neuron_place_field_2D_1D_position(
         axes[1].text(0, max_position - 0.2, arm_name, color='lightgrey',
                      horizontalalignment='left', verticalalignment='top',
                      fontsize=12)
-    axes[1].set_ylim((-3.0, position_info.linear_position2.max() + 3.0))
+    axes[1].set_ylim((-3.0, position_info.linear_position.max() + 3.0))
     axes[1].set_ylabel('linear position')
     axes[1].set_xlabel('Neuron ID')
 
@@ -322,7 +322,7 @@ def plot_linear_position_of_animal(replay_info, ax=None):
         ax = plt.gca()
     pos = pd.concat(
         [replay_info.loc[replay_info[state]]
-         .actual_linear_position2.rename(state)
+         .actual_linear_position.rename(state)
          for state in STATE_ORDER], axis=1)
     sns.violinplot(data=pos, order=STATE_ORDER, orient='horizontal',
                    palette=STATE_COLORS, cut=0, inner=None, bw=0.05, ax=ax)
@@ -336,7 +336,7 @@ def plot_normalized_linear_position_of_animal(replay_info, ax=None):
         ax = plt.gca()
     pos = pd.concat(
         [(replay_info.loc[replay_info[state]]
-          .actual_linear_position2.rename(state)) /
+          .actual_linear_position.rename(state)) /
          replay_info.loc[replay_info[state]].left_well_position.values
          for state in STATE_ORDER], axis=1)
     sns.violinplot(data=pos, order=STATE_ORDER, orient='horizontal',
@@ -461,12 +461,12 @@ def plot_actual_position_vs_replay_position(replay_info, kind='scatter',
 
     for ax, state in zip(axes.flat, STATE_ORDER):
         if kind == 'scatter':
-            ax.scatter(replay_info['actual_linear_position2'],
+            ax.scatter(replay_info['actual_linear_position'],
                        replay_info[f'{state}_replay_linear_position'],
                        color=STATE_COLORS[state], s=20)
         elif kind == 'hexbin':
             cmap = sns.light_palette(STATE_COLORS[state], as_cmap=True)
-            h = ax.hexbin(replay_info['actual_linear_position2'],
+            h = ax.hexbin(replay_info['actual_linear_position'],
                           replay_info[f'{state}_replay_linear_position'],
                           gridsize=10, extent=extent, vmin=0.0, vmax=vmax,
                           cmap=cmap)
@@ -475,10 +475,10 @@ def plot_actual_position_vs_replay_position(replay_info, kind='scatter',
         elif kind == 'kdeplot':
             cmap = sns.light_palette(STATE_COLORS[state], as_cmap=True)
             temp_df = (replay_info
-                       .loc[:, ['actual_linear_position2',
+                       .loc[:, ['actual_linear_position',
                                 f'{state}_replay_linear_position']]
                        .dropna())
-            sns.kdeplot(temp_df['actual_linear_position2'],
+            sns.kdeplot(temp_df['actual_linear_position'],
                         temp_df[f'{state}_replay_linear_position'],
                         clip=extent, vmin=0.0, cmap=cmap, ax=ax,
                         bw=(10, 10), shade=True, gridsize=30,
@@ -506,11 +506,11 @@ def plot_norm_actual_position_vs_replay_position(replay_info, kind='scatter',
                              sharey=True)
     for ax, state in zip(axes.flat, STATE_ORDER):
         temp_df = (replay_info
-                   .loc[:, ['actual_linear_position2',
+                   .loc[:, ['actual_linear_position',
                             f'{state}_replay_linear_position',
                             'left_well_position']]
                    .dropna())
-        actual_position = (temp_df.actual_linear_position2 /
+        actual_position = (temp_df.actual_linear_position /
                            temp_df.left_well_position.values)
         replay_position = (temp_df[f'{state}_replay_linear_position'] /
                            temp_df.left_well_position.values)

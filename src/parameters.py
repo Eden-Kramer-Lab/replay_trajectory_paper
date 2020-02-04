@@ -1,7 +1,6 @@
 from os.path import abspath, dirname, join, pardir
 
 import numpy as np
-
 from loren_frank_data_processing import Animal
 from replay_trajectory_classification.misc import NumbaKDE
 
@@ -34,9 +33,8 @@ _MARKS = ['channel_1_max', 'channel_2_max', 'channel_3_max', 'channel_4_max']
 _BRAIN_AREAS = ['CA1', 'CA2', 'CA3']
 
 # Classifier Parameters
-place_bin_size = 2.0
-# 10 m/s = 2 cm / 2 ms
-movement_var = 4.0
+place_bin_size = 3.0
+movement_var = 6.0
 replay_speed = 1
 model = NumbaKDE
 model_kwargs = {
@@ -44,11 +42,11 @@ model_kwargs = {
 }
 knot_spacing = 5
 spike_model_penalty = 0.5
-discrete_diag = 0.98 # 1 /
+discrete_diag = 0.98
 continuous_transition_types = (
-    [['w_track_1D_random_walk_minus_identity', 'w_track_1D_inverse_random_walk', 'identity'],  # noqa
-     ['uniform',                               'w_track_1D_inverse_random_walk', 'uniform'],   # noqa
-     ['w_track_1D_random_walk_minus_identity', 'w_track_1D_inverse_random_walk', 'identity']])  # noqa
+    [['w_track_1D_random_walk', 'uniform', 'identity'],  # noqa
+     ['uniform',                'uniform', 'uniform'],   # noqa
+     ['w_track_1D_random_walk', 'uniform', 'identity']])  # noqa
 
 TRANSITION_TO_CATEGORY = {
     'identity': 'Hover',
@@ -63,8 +61,8 @@ TRANSITION_TO_CATEGORY = {
 
 PROBABILITY_THRESHOLD = 0.8
 
-STATE_ORDER = ['Continuous', 'Fragmented', 'Hover', 'Hover-Continuous-Mix',
-               'Fragmented-Continuous-mix']
+STATE_ORDER = ['Hover', 'Hover-Continuous-Mix', 'Continuous',
+               'Fragmented-Continuous-Mix', 'Fragmented']
 
 # Plotting Colors
 STATE_COLORS = {
