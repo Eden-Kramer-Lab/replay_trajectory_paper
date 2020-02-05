@@ -39,7 +39,7 @@ movement_var = 6.0
 replay_speed = 1
 model = NumbaKDE
 model_kwargs = {
-    'bandwidth': np.array([24.0, 24.0, 24.0, 24.0, 5.0, 5.0])
+    'bandwidth': np.array([24.0, 24.0, 24.0, 24.0, 6.0, 6.0])
 }
 knot_spacing = 5
 spike_model_penalty = 0.5
@@ -51,10 +51,9 @@ continuous_transition_types = (
 
 TRANSITION_TO_CATEGORY = {
     'identity': 'Hover',
-    'uniform': 'Fragmented',
-    'w_track_1D_inverse_random_walk': 'Fragmented',
-    'inverse_random_walk': 'Fragmented',
     'random_walk': 'Continuous',
+    'uniform': 'Fragmented',
+    'inverse_random_walk': 'Fragmented',
     'random_walk_minus_identity': 'Continuous',
 }
 
