@@ -2,6 +2,7 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 import xarray as xr
+
 from loren_frank_data_processing.track_segment_classification import (
     get_track_segments_from_graph, project_points_to_segment)
 
@@ -296,7 +297,7 @@ def get_place_field_max(classifier):
             classifier.place_fields_.position[max_ind].values.tolist())
     except AttributeError:
         return np.asarray(
-            [classifier.place_bin_centers_[gpi.result().argmax()]
+            [classifier.place_bin_centers_[gpi.argmax()]
              for gpi in classifier.ground_process_intensities_])
 
 
