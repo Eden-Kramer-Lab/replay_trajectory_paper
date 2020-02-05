@@ -46,6 +46,10 @@ def sorted_spikes_analysis_1D(epoch_key, plot_ripple_figures=False):
     is_training = data['position_info'].speed > 4
     position = data['position_info'].loc[:, 'linear_position']
     track_graph, center_well_id = make_track_graph(epoch_key, ANIMALS)
+
+    model_name = os.path.join(
+        PROCESSED_DATA_DIR,
+        f'{animal}_{day:02}_{epoch:02}_{data_type}_{dim}_model.pkl')
     try:
         results = xr.open_dataset(
             os.path.join(
@@ -54,6 +58,8 @@ def sorted_spikes_analysis_1D(epoch_key, plot_ripple_figures=False):
         logging.info('Found existing results. Loading...')
         ripple_times = data['ripple_times'].loc[:, ['start_time', 'end_time']]
         ripple_spikes = reshape_to_segments(data['spikes'], ripple_times)
+        classifier = SortedSpikesClassifier.load_model(model_name)
+        logging.info(classifier)
     except (FileNotFoundError, OSError):
         logging.info('Fitting classifier...')
         classifier = SortedSpikesClassifier(
@@ -65,6 +71,7 @@ def sorted_spikes_analysis_1D(epoch_key, plot_ripple_figures=False):
                 position, data['spikes'], is_training=is_training,
                 track_graph=track_graph, center_well_id=center_well_id,
                 edge_order=EDGE_ORDER, edge_spacing=EDGE_SPACING)
+        classifier.save_model(model_name)
         logging.info(classifier)
 
         # Plot Place Fields
@@ -189,6 +196,10 @@ def sorted_spikes_analysis_2D(epoch_key, plot_ripple_figures=False):
 
     is_training = data['position_info'].speed > 4
     position = data['position_info'].loc[:, ['x_position', 'y_position']]
+
+    model_name = os.path.join(
+        PROCESSED_DATA_DIR,
+        f'{animal}_{day:02}_{epoch:02}_{data_type}_{dim}_model.pkl')
     try:
         results = xr.open_dataset(
             os.path.join(
@@ -197,6 +208,8 @@ def sorted_spikes_analysis_2D(epoch_key, plot_ripple_figures=False):
         logging.info('Found existing results. Loading...')
         ripple_times = data['ripple_times'].loc[:, ['start_time', 'end_time']]
         ripple_spikes = reshape_to_segments(data['spikes'], ripple_times)
+        classifier = SortedSpikesClassifier.load_model(model_name)
+        logging.info(classifier)
     except (FileNotFoundError, OSError):
         logging.info('Fitting classifier...')
         classifier = SortedSpikesClassifier(
@@ -206,6 +219,7 @@ def sorted_spikes_analysis_2D(epoch_key, plot_ripple_figures=False):
             spike_model_penalty=spike_model_penalty, knot_spacing=knot_spacing,
             continuous_transition_types=continuous_transition_types).fit(
             position, data['spikes'], is_training=is_training)
+        classifier.save_model(model_name)
         logging.info(classifier)
 
         # Plot Place Fields
@@ -316,6 +330,9 @@ def clusterless_analysis_1D(epoch_key, plot_ripple_figures=False):
     position = data['position_info'].loc[:, 'linear_position']
     track_graph, center_well_id = make_track_graph(epoch_key, ANIMALS)
 
+    model_name = os.path.join(
+        PROCESSED_DATA_DIR,
+        f'{animal}_{day:02}_{epoch:02}_{data_type}_{dim}_model.pkl')
     try:
         results = xr.open_dataset(
             os.path.join(
@@ -327,6 +344,8 @@ def clusterless_analysis_1D(epoch_key, plot_ripple_figures=False):
                   .to_dataframe(name='spikes').unstack())
         spikes.columns = data['tetrode_info'].tetrode_id
         ripple_spikes = reshape_to_segments(spikes, ripple_times)
+        classifier = ClusterlessClassifier.load_model(model_name)
+        logging.info(classifier)
     except (FileNotFoundError, OSError):
         logging.info('Fitting classifier...')
         classifier = ClusterlessClassifier(
@@ -338,6 +357,7 @@ def clusterless_analysis_1D(epoch_key, plot_ripple_figures=False):
                 position, data['multiunit'], is_training=is_training,
                 track_graph=track_graph, center_well_id=center_well_id,
                 edge_order=EDGE_ORDER, edge_spacing=EDGE_SPACING)
+        classifier.save_model(model_name)
         logging.info(classifier)
 
         # Decode
@@ -439,6 +459,10 @@ def clusterless_analysis_2D(epoch_key, plot_ripple_figures=False):
     data = load_data(epoch_key)
     position = data['position_info'].loc[:, ['x_position', 'y_position']]
     is_training = data['position_info'].speed > 4
+
+    model_name = os.path.join(
+        PROCESSED_DATA_DIR,
+        f'{animal}_{day:02}_{epoch:02}_{data_type}_{dim}_model.pkl')
     try:
         results = xr.open_dataset(
             os.path.join(
@@ -450,6 +474,8 @@ def clusterless_analysis_2D(epoch_key, plot_ripple_figures=False):
                   .to_dataframe(name='spikes').unstack())
         spikes.columns = data['tetrode_info'].tetrode_id
         ripple_spikes = reshape_to_segments(spikes, ripple_times)
+        classifier = ClusterlessClassifier.load_model(model_name)
+        logging.info(classifier)
     except (FileNotFoundError, OSError):
         logging.info('Fitting classifier...')
         classifier = ClusterlessClassifier(
@@ -459,6 +485,7 @@ def clusterless_analysis_2D(epoch_key, plot_ripple_figures=False):
             continuous_transition_types=continuous_transition_types,
             model=model, model_kwargs=model_kwargs).fit(
             position, data['multiunit'], is_training=is_training)
+        classifier.save_model(model_name)
         logging.info(classifier)
         # Decode
         ripple_times = data['ripple_times'].loc[:, ['start_time', 'end_time']]
