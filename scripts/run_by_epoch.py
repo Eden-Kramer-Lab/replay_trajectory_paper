@@ -47,11 +47,11 @@ def sorted_spikes_analysis_1D(epoch_key, plot_ripple_figures=False):
     position = data['position_info'].loc[:, 'linear_position']
     track_graph, center_well_id = make_track_graph(epoch_key, ANIMALS)
     try:
-        logging.info('Found existing results. Loading...')
         results = xr.open_dataset(
             os.path.join(
                 PROCESSED_DATA_DIR, f'{animal}_{day:02}_{epoch:02}.nc'),
             group=f'/{data_type}/{dim}/classifier/ripples/')
+        logging.info('Found existing results. Loading...')
         ripple_times = data['ripple_times'].loc[:, ['start_time', 'end_time']]
         ripple_spikes = reshape_to_segments(data['spikes'], ripple_times)
     except (FileNotFoundError, OSError):
@@ -190,11 +190,11 @@ def sorted_spikes_analysis_2D(epoch_key, plot_ripple_figures=False):
     is_training = data['position_info'].speed > 4
     position = data['position_info'].loc[:, ['x_position', 'y_position']]
     try:
-        logging.info('Found existing results. Loading...')
         results = xr.open_dataset(
             os.path.join(
                 PROCESSED_DATA_DIR, f'{animal}_{day:02}_{epoch:02}.nc'),
             group=f'/{data_type}/{dim}/classifier/ripples/')
+        logging.info('Found existing results. Loading...')
         ripple_times = data['ripple_times'].loc[:, ['start_time', 'end_time']]
         ripple_spikes = reshape_to_segments(data['spikes'], ripple_times)
     except (FileNotFoundError, OSError):
@@ -317,11 +317,11 @@ def clusterless_analysis_1D(epoch_key, plot_ripple_figures=False):
     track_graph, center_well_id = make_track_graph(epoch_key, ANIMALS)
 
     try:
-        logging.info('Found existing results. Loading...')
         results = xr.open_dataset(
             os.path.join(
                 PROCESSED_DATA_DIR, f'{animal}_{day:02}_{epoch:02}.nc'),
             group=f'/{data_type}/{dim}/classifier/ripples/')
+        logging.info('Found existing results. Loading...')
         ripple_times = data['ripple_times'].loc[:, ['start_time', 'end_time']]
         spikes = (((data['multiunit'].sum('features') > 0) * 1.0)
                   .to_dataframe(name='spikes').unstack())
@@ -440,11 +440,11 @@ def clusterless_analysis_2D(epoch_key, plot_ripple_figures=False):
     position = data['position_info'].loc[:, ['x_position', 'y_position']]
     is_training = data['position_info'].speed > 4
     try:
-        logging.info('Found existing results. Loading...')
         results = xr.open_dataset(
             os.path.join(
                 PROCESSED_DATA_DIR, f'{animal}_{day:02}_{epoch:02}.nc'),
             group=f'/{data_type}/{dim}/classifier/ripples/')
+        logging.info('Found existing results. Loading...')
         ripple_times = data['ripple_times'].loc[:, ['start_time', 'end_time']]
         spikes = (((data['multiunit'].sum('features') > 0) * 1.0)
                   .to_dataframe(name='spikes').unstack())
