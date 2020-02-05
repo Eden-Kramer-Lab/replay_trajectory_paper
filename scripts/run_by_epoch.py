@@ -160,7 +160,7 @@ def sorted_spikes_analysis_1D(epoch_key, plot_ripple_figures=False):
                 results
                 .acausal_posterior
                 .sel(ripple_number=ripple_number)
-                .dropna('time')
+                .dropna('time', how='all')
                 .assign_coords(
                     time=lambda ds: 1000 * ds.time / np.timedelta64(1, 's')))
             plot_ripple_decode_1D(
@@ -285,7 +285,7 @@ def sorted_spikes_analysis_2D(epoch_key, plot_ripple_figures=False):
                 results
                 .acausal_posterior
                 .sel(ripple_number=ripple_number)
-                .dropna('time')
+                .dropna('time', how='all')
                 .assign_coords(
                     time=lambda ds: 1000 * ds.time / np.timedelta64(1, 's'),))
             plot_ripple_decode_2D(
@@ -411,7 +411,7 @@ def clusterless_analysis_1D(epoch_key, plot_ripple_figures=False):
                 results
                 .acausal_posterior
                 .sel(ripple_number=ripple_number)
-                .dropna('time')
+                .dropna('time', how='all')
                 .assign_coords(
                     time=lambda ds: 1000 * ds.time / np.timedelta64(1, 's')))
             plot_ripple_decode_1D(
@@ -529,7 +529,7 @@ def clusterless_analysis_2D(epoch_key, plot_ripple_figures=False):
                 results
                 .acausal_posterior
                 .sel(ripple_number=ripple_number)
-                .dropna('time')
+                .dropna('time', how='all')
                 .assign_coords(
                     time=lambda ds: 1000 * ds.time / np.timedelta64(1, 's')))
             plot_ripple_decode_2D(
