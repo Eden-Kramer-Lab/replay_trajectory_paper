@@ -157,19 +157,19 @@ def get_replay_distance_metrics(results, ripple_position_info, ripple_spikes,
     posterior = (results
                  .sel(ripple_number=ripple_number)
                  .acausal_posterior
-                 .dropna('time')
+                 .dropna('time', how='all')
                  .assign_coords(
                      time=lambda ds: 1000 * ds.time / np.timedelta64(1, 's')))
     is_classified = (
         is_classified
         .sel(ripple_number=ripple_number)
-        .dropna('time')
+        .dropna('time', how='all')
         .assign_coords(
             time=lambda ds: 1000 * ds.time / np.timedelta64(1, 's')))
     probability = (
         probability
         .sel(ripple_number=ripple_number)
-        .dropna('time')
+        .dropna('time', how='all')
         .assign_coords(
             time=lambda ds: 1000 * ds.time / np.timedelta64(1, 's'))
     )
