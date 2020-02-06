@@ -163,26 +163,32 @@ def sorted_spikes_analysis_1D(epoch_key, plot_ripple_figures=False):
         ripple_position = reshape_to_segments(position, ripple_times)
 
         for ripple_number in tqdm(ripple_times.index, desc='ripple figures'):
-            posterior = (
-                results
-                .acausal_posterior
-                .sel(ripple_number=ripple_number)
-                .dropna('time', how='all')
-                .assign_coords(
-                    time=lambda ds: 1000 * ds.time / np.timedelta64(1, 's')))
-            plot_ripple_decode_1D(
-                posterior, ripple_position.loc[ripple_number],
-                ripple_spikes.loc[ripple_number], linear_position_order,
-                data['position_info'])
-            plt.suptitle(
-                f'ripple number = {animal}_{day:02d}_{epoch:02d}_'
-                f'{ripple_number:04d}')
-            fig_name = (f'{animal}_{day:02d}_{epoch:02d}_{ripple_number:04d}_'
-                        f'{data_type}_{dim}_acasual_classification.png')
-            fig_name = os.path.join(
-                FIGURE_DIR, 'ripple_classifications', fig_name)
-            plt.savefig(fig_name, bbox_inches='tight')
-            plt.close(plt.gcf())
+            try:
+                posterior = (
+                    results
+                    .acausal_posterior
+                    .sel(ripple_number=ripple_number)
+                    .dropna('time', how='all')
+                    .assign_coords(
+                        time=lambda ds: 1000 * ds.time /
+                        np.timedelta64(1, 's')))
+                plot_ripple_decode_1D(
+                    posterior, ripple_position.loc[ripple_number],
+                    ripple_spikes.loc[ripple_number], linear_position_order,
+                    data['position_info'])
+                plt.suptitle(
+                    f'ripple number = {animal}_{day:02d}_{epoch:02d}_'
+                    f'{ripple_number:04d}')
+                fig_name = (
+                    f'{animal}_{day:02d}_{epoch:02d}_{ripple_number:04d}_'
+                    f'{data_type}_{dim}_acasual_classification.png')
+                fig_name = os.path.join(
+                    FIGURE_DIR, 'ripple_classifications', fig_name)
+                plt.savefig(fig_name, bbox_inches='tight')
+                plt.close(plt.gcf())
+            except ValueError:
+                logging.warn(f'No figure for ripple number {ripple_number}...')
+                continue
 
     logging.info('Done...')
 
@@ -295,27 +301,32 @@ def sorted_spikes_analysis_2D(epoch_key, plot_ripple_figures=False):
         ripple_position = reshape_to_segments(position, ripple_times)
 
         for ripple_number in tqdm(ripple_times.index, desc='ripple figures'):
-            posterior = (
-                results
-                .acausal_posterior
-                .sel(ripple_number=ripple_number)
-                .dropna('time', how='all')
-                .assign_coords(
-                    time=lambda ds: 1000 * ds.time / np.timedelta64(1, 's'),))
-            plot_ripple_decode_2D(
-                posterior, ripple_position.loc[ripple_number],
-                ripple_spikes.loc[ripple_number], linear_position_order,
-                data['position_info'], spike_label='Cells')
-            plt.suptitle(
-                f'ripple number = {animal}_{day:02d}_{epoch:02d}_'
-                f'{ripple_number:04d}')
-            fig_name = (f'{animal}_{day:02d}_{epoch:02d}_{ripple_number:04d}_'
-                        f'{data_type}_{dim}_acasual_classification.png')
-            fig_name = os.path.join(
-                FIGURE_DIR, 'ripple_classifications', fig_name)
-            plt.savefig(fig_name, bbox_inches='tight')
-            plt.close(plt.gcf())
-
+            try:
+                posterior = (
+                    results
+                    .acausal_posterior
+                    .sel(ripple_number=ripple_number)
+                    .dropna('time', how='all')
+                    .assign_coords(
+                        time=lambda ds: 1000 * ds.time /
+                        np.timedelta64(1, 's'),))
+                plot_ripple_decode_2D(
+                    posterior, ripple_position.loc[ripple_number],
+                    ripple_spikes.loc[ripple_number], linear_position_order,
+                    data['position_info'], spike_label='Cells')
+                plt.suptitle(
+                    f'ripple number = {animal}_{day:02d}_{epoch:02d}_'
+                    f'{ripple_number:04d}')
+                fig_name = (
+                    f'{animal}_{day:02d}_{epoch:02d}_{ripple_number:04d}_'
+                    f'{data_type}_{dim}_acasual_classification.png')
+                fig_name = os.path.join(
+                    FIGURE_DIR, 'ripple_classifications', fig_name)
+                plt.savefig(fig_name, bbox_inches='tight')
+                plt.close(plt.gcf())
+            except ValueError:
+                logging.warn(f'No figure for ripple number {ripple_number}...')
+                pass
     logging.info('Done...')
 
 
@@ -427,26 +438,32 @@ def clusterless_analysis_1D(epoch_key, plot_ripple_figures=False):
         ripple_position = reshape_to_segments(position, ripple_times)
 
         for ripple_number in tqdm(ripple_times.index, desc='ripple figures'):
-            posterior = (
-                results
-                .acausal_posterior
-                .sel(ripple_number=ripple_number)
-                .dropna('time', how='all')
-                .assign_coords(
-                    time=lambda ds: 1000 * ds.time / np.timedelta64(1, 's')))
-            plot_ripple_decode_1D(
-                posterior, ripple_position.loc[ripple_number],
-                ripple_spikes.loc[ripple_number], linear_position_order,
-                data['position_info'], spike_label='Tetrodes')
-            plt.suptitle(
-                f'ripple number = {animal}_{day:02d}_{epoch:02d}_'
-                f'{ripple_number:04d}')
-            fig_name = (f'{animal}_{day:02d}_{epoch:02d}_{ripple_number:04d}_'
-                        f'{data_type}_{dim}_acasual_classification.png')
-            fig_name = os.path.join(
-                FIGURE_DIR, 'ripple_classifications', fig_name)
-            plt.savefig(fig_name, bbox_inches='tight')
-            plt.close(plt.gcf())
+            try:
+                posterior = (
+                    results
+                    .acausal_posterior
+                    .sel(ripple_number=ripple_number)
+                    .dropna('time', how='all')
+                    .assign_coords(
+                        time=lambda ds: 1000 * ds.time /
+                        np.timedelta64(1, 's')))
+                plot_ripple_decode_1D(
+                    posterior, ripple_position.loc[ripple_number],
+                    ripple_spikes.loc[ripple_number], linear_position_order,
+                    data['position_info'], spike_label='Tetrodes')
+                plt.suptitle(
+                    f'ripple number = {animal}_{day:02d}_{epoch:02d}_'
+                    f'{ripple_number:04d}')
+                fig_name = (
+                    f'{animal}_{day:02d}_{epoch:02d}_{ripple_number:04d}_'
+                    f'{data_type}_{dim}_acasual_classification.png')
+                fig_name = os.path.join(
+                    FIGURE_DIR, 'ripple_classifications', fig_name)
+                plt.savefig(fig_name, bbox_inches='tight')
+                plt.close(plt.gcf())
+            except ValueError:
+                logging.warn(f'No figure for ripple number {ripple_number}...')
+                continue
 
     logging.info('Done...')
 
@@ -552,26 +569,32 @@ def clusterless_analysis_2D(epoch_key, plot_ripple_figures=False):
         ripple_position = reshape_to_segments(position, ripple_times)
 
         for ripple_number in tqdm(ripple_times.index, desc='ripple figures'):
-            posterior = (
-                results
-                .acausal_posterior
-                .sel(ripple_number=ripple_number)
-                .dropna('time', how='all')
-                .assign_coords(
-                    time=lambda ds: 1000 * ds.time / np.timedelta64(1, 's')))
-            plot_ripple_decode_2D(
-                posterior, ripple_position.loc[ripple_number],
-                ripple_spikes.loc[ripple_number], position,
-                linear_position_order, spike_label='Tetrodes')
-            plt.suptitle(
-                f'ripple number = {animal}_{day:02d}_{epoch:02d}_'
-                f'{ripple_number:04d}')
-            fig_name = (f'{animal}_{day:02d}_{epoch:02d}_{ripple_number:04d}_'
-                        f'{data_type}_{dim}_acasual_classification.png')
-            fig_name = os.path.join(
-                FIGURE_DIR, 'ripple_classifications', fig_name)
-            plt.savefig(fig_name, bbox_inches='tight')
-            plt.close(plt.gcf())
+            try:
+                posterior = (
+                    results
+                    .acausal_posterior
+                    .sel(ripple_number=ripple_number)
+                    .dropna('time', how='all')
+                    .assign_coords(
+                        time=lambda ds: 1000 * ds.time /
+                        np.timedelta64(1, 's')))
+                plot_ripple_decode_2D(
+                    posterior, ripple_position.loc[ripple_number],
+                    ripple_spikes.loc[ripple_number], position,
+                    linear_position_order, spike_label='Tetrodes')
+                plt.suptitle(
+                    f'ripple number = {animal}_{day:02d}_{epoch:02d}_'
+                    f'{ripple_number:04d}')
+                fig_name = (
+                    f'{animal}_{day:02d}_{epoch:02d}_{ripple_number:04d}_'
+                    f'{data_type}_{dim}_acasual_classification.png')
+                fig_name = os.path.join(
+                    FIGURE_DIR, 'ripple_classifications', fig_name)
+                plt.savefig(fig_name, bbox_inches='tight')
+                plt.close(plt.gcf())
+            except ValueError:
+                logging.warn(f'No figure for ripple number {ripple_number}...')
+                continue
 
     logging.info('Done...')
 
