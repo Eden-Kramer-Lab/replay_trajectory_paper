@@ -2,13 +2,14 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 import xarray as xr
+
 from loren_frank_data_processing.track_segment_classification import (
     get_track_segments_from_graph, project_points_to_segment)
 
 
 def get_replay_info(results, ripple_spikes, ripple_times, position_info,
                     track_graph, sampling_frequency, probability_threshold,
-                    epoch_key):
+                    epoch_key, classifier):
     '''
 
     Parameters
@@ -69,18 +70,23 @@ def get_replay_info(results, ripple_spikes, ripple_times, position_info,
     replay_info['day'] = int(day)
     replay_info['epoch'] = int(epoch)
 
-    max_df = position_info.groupby('arm_name').linear_position.max()
-    min_df = position_info.groupby('arm_name').linear_position.min()
+    min_max = (
+        classifier
+        ._nodes_df[classifier._nodes_df.is_bin_edge]
+        .groupby('edge_id')
+        .aggregate(['min', 'max']))
 
-    replay_info['center_well_position'] = min_df['Center Arm']
-    replay_info['choice_position'] = max_df['Center Arm']
+    replay_info['center_well_position'] = min_max.loc[0].linear_position.min()
+    replay_info['choice_position'] = min_max.loc[0].linear_position.max()
 
-    replay_info['left_arm_start'] = min_df['Left Arm']
-    replay_info['left_well_position'] = max_df['Left Arm']
+    replay_info['left_arm_start'] = min_max.loc[1].linear_position.min()
+    replay_info['left_well_position'] = min_max.loc[3].linear_position.max()
 
-    replay_info['right_arm_start'] = min_df['Right Arm']
-    replay_info['right_well_position'] = max_df['Right Arm']
-    replay_info['max_linear_distance'] = position_info.linear_distance.max()
+    replay_info['right_arm_start'] = min_max.loc[2].linear_position.min()
+    replay_info['right_well_position'] = min_max.loc[4].linear_position.max()
+    center_well_id = 0
+    replay_info['max_linear_distance'] = list(
+        classifier.distance_between_nodes_[center_well_id].values())[-1]
 
     return replay_info
 
@@ -99,10 +105,15 @@ def get_probability(results):
 
     '''
     try:
-        probability = results.acausal_posterior.sum(
-            ['x_position', 'y_position'], skipna=False)
+        probability = (results
+                       .acausal_posterior
+                       .dropna('position', how='all')
+                       .sum(['x_position', 'y_position'], skipna=False))
     except ValueError:
-        probability = results.acausal_posterior.sum('position', skipna=False)
+        probability = (results
+                       .acausal_posterior
+                       .dropna('position', how='all')
+                       .sum('position', skipna=False))
 
     return xr.concat(
         (probability,
@@ -156,19 +167,19 @@ def get_replay_distance_metrics(results, ripple_position_info, ripple_spikes,
     posterior = (results
                  .sel(ripple_number=ripple_number)
                  .acausal_posterior
-                 .dropna('time')
+                 .dropna('time', how='all')
                  .assign_coords(
                      time=lambda ds: 1000 * ds.time / np.timedelta64(1, 's')))
     is_classified = (
         is_classified
         .sel(ripple_number=ripple_number)
-        .dropna('time')
+        .dropna('time', how='all')
         .assign_coords(
             time=lambda ds: 1000 * ds.time / np.timedelta64(1, 's')))
     probability = (
         probability
         .sel(ripple_number=ripple_number)
-        .dropna('time')
+        .dropna('time', how='all')
         .assign_coords(
             time=lambda ds: 1000 * ds.time / np.timedelta64(1, 's'))
     )
@@ -296,7 +307,7 @@ def get_place_field_max(classifier):
             classifier.place_fields_.position[max_ind].values.tolist())
     except AttributeError:
         return np.asarray(
-            [classifier.place_bin_centers_[gpi.result().argmax()]
+            [classifier.place_bin_centers_[gpi.argmax()]
              for gpi in classifier.ground_process_intensities_])
 
 
