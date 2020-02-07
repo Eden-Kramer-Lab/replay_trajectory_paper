@@ -100,10 +100,15 @@ def get_probability(results):
 
     '''
     try:
-        probability = results.acausal_posterior.sum(
-            ['x_position', 'y_position'], skipna=False)
+        probability = (results
+                       .acausal_posterior
+                       .dropna('position', how='all')
+                       .sum(['x_position', 'y_position'], skipna=False))
     except ValueError:
-        probability = results.acausal_posterior.sum('position', skipna=False)
+        probability = (results
+                       .acausal_posterior
+                       .dropna('position', how='all')
+                       .sum('position', skipna=False))
 
     return xr.concat(
         (probability,
