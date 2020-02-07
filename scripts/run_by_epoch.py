@@ -135,7 +135,8 @@ def sorted_spikes_analysis_1D(epoch_key, plot_ripple_figures=False):
     logging.info('Saving replay_info...')
     replay_info = get_replay_info(
         results, ripple_spikes, data['ripple_times'], data['position_info'],
-        track_graph, SAMPLING_FREQUENCY, PROBABILITY_THRESHOLD, epoch_key)
+        track_graph, SAMPLING_FREQUENCY, PROBABILITY_THRESHOLD, epoch_key,
+        classifier)
     epoch_identifier = f'{animal}_{day:02d}_{epoch:02d}_{data_type}_{dim}'
     replay_info_filename = os.path.join(
         PROCESSED_DATA_DIR, f'{epoch_identifier}_replay_info.csv')
