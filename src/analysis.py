@@ -9,7 +9,7 @@ from loren_frank_data_processing.track_segment_classification import (
 
 def get_replay_info(results, ripple_spikes, ripple_times, position_info,
                     track_graph, sampling_frequency, probability_threshold,
-                    epoch_key):
+                    epoch_key, classifier):
     '''
 
     Parameters
@@ -70,18 +70,23 @@ def get_replay_info(results, ripple_spikes, ripple_times, position_info,
     replay_info['day'] = int(day)
     replay_info['epoch'] = int(epoch)
 
-    max_df = position_info.groupby('arm_name').linear_position.max()
-    min_df = position_info.groupby('arm_name').linear_position.min()
+    min_max = (
+        classifier
+        ._nodes_df[classifier._nodes_df.is_bin_edge]
+        .groupby('edge_id')
+        .aggregate(['min', 'max']))
 
-    replay_info['center_well_position'] = min_df['Center Arm']
-    replay_info['choice_position'] = max_df['Center Arm']
+    replay_info['center_well_position'] = min_max.loc[0].linear_position.min()
+    replay_info['choice_position'] = min_max.loc[0].linear_position.max()
 
-    replay_info['left_arm_start'] = min_df['Left Arm']
-    replay_info['left_well_position'] = max_df['Left Arm']
+    replay_info['left_arm_start'] = min_max.loc[1].linear_position.min()
+    replay_info['left_well_position'] = min_max.loc[3].linear_position.max()
 
-    replay_info['right_arm_start'] = min_df['Right Arm']
-    replay_info['right_well_position'] = max_df['Right Arm']
-    replay_info['max_linear_distance'] = position_info.linear_distance.max()
+    replay_info['right_arm_start'] = min_max.loc[2].linear_position.min()
+    replay_info['right_well_position'] = min_max.loc[4].linear_position.max()
+    center_well_id = 0
+    replay_info['max_linear_distance'] = list(
+        classifier.distance_between_nodes_[center_well_id].values())[-1]
 
     return replay_info
 
