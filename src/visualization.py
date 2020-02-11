@@ -60,6 +60,12 @@ def plot_2D_position_with_color_time(time, position, ax=None, cmap='plasma',
                         orientation='horizontal')
     cbar.set_label('Time')
 
+    total_distance_traveled = np.linalg.norm(
+        np.diff(position, axis=0), axis=1).sum()
+    if np.isclose(total_distance_traveled, 0.0):
+        ax.scatter(position[:, 0], position[:, 1],
+                   c=colors, zorder=1000, s=70, marker='s')
+
     return line, ax, cbar
 
 
