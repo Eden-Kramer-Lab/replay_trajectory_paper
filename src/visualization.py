@@ -44,7 +44,7 @@ def plot_2D_position_with_color_time(time, position, ax=None, cmap='plasma',
     segments = np.concatenate([points[:-1], points[1:]], axis=1)
 
     # Create a continuous norm to map from data points to colors
-    norm = plt.Normalize(time.min(), time.max())
+    norm = plt.Normalize(vmin=time.min(), vmax=time.max())
     cmap = plt.get_cmap(cmap)
     colors = cmap(norm(time))
     if alpha is not None:
