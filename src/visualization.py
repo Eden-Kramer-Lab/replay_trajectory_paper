@@ -44,13 +44,14 @@ def plot_2D_position_with_color_time(time, position, ax=None, cmap='plasma',
     segments = np.concatenate([points[:-1], points[1:]], axis=1)
 
     # Create a continuous norm to map from data points to colors
-    norm = plt.Normalize(time.min(), time.max())
+    norm = plt.Normalize(vmin=time.min(), vmax=time.max())
     cmap = plt.get_cmap(cmap)
     colors = cmap(norm(time))
     if alpha is not None:
         colors[:, -1] = alpha
+
     lc = LineCollection(segments, colors=colors, zorder=100)
-    lc.set_linewidth(4)
+    lc.set_linewidth(6)
     line = ax.add_collection(lc)
 
     # Set the values used for colormapping
@@ -59,6 +60,12 @@ def plot_2D_position_with_color_time(time, position, ax=None, cmap='plasma',
                         spacing='proportional',
                         orientation='horizontal')
     cbar.set_label('Time')
+
+    total_distance_traveled = np.linalg.norm(
+        np.diff(position, axis=0), axis=1).sum()
+    if np.isclose(total_distance_traveled, 0.0):
+        ax.scatter(position[:, 0], position[:, 1],
+                   c=colors, zorder=1000, s=70, marker='s')
 
     return line, ax, cbar
 
