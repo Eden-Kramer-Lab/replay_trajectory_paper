@@ -259,7 +259,7 @@ def get_replay_distance_metrics(results, ripple_position_info, ripple_spikes,
                 ripple_spikes.sum(axis=0) > 0).sum()
             metrics[f'{state}_n_total_spikes'] = (
                 ripple_spikes.sum(axis=0)).sum()
-            metrics[f'{state}_popultion_rate'] = (
+            metrics[f'{state}_population_rate'] = (
                 sampling_frequency * metrics[f'{state}_n_total_spikes'] /
                 above_threshold.sum())
 
