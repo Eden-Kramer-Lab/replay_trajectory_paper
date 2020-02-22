@@ -773,3 +773,60 @@ def make_linearization_movie(epoch_key, animals, max_distance_from_well=5,
                                        interval=50, blit=True)
     line_ani.save(
         f'{animal}_{day:02}_{epoch:02}_linearization.mp4', writer=writer)
+
+
+def plot_1D_wtrack_landmarks(data, max_time, ax=None):
+    if ax is None:
+        ax = plt.gca()
+    arm_min_max = (
+        data["position_info"].groupby(
+            "arm_name").linear_position.aggregate(["min", "max"])
+    )
+    ax.text(
+        max_time + 1,
+        arm_min_max.loc["Center Arm", "min"],
+        "C",
+        ha="left",
+        va="bottom",
+        weight="bold",
+    )
+    ax.text(
+        max_time + 1,
+        arm_min_max.loc["Center Arm", "max"],
+        "*",
+        ha="left",
+        va="top",
+        weight="bold",
+    )
+    ax.text(
+        max_time + 1,
+        arm_min_max.loc["Right Arm", "max"],
+        "R",
+        ha="left",
+        va="top",
+        weight="bold",
+    )
+    ax.text(
+        max_time + 1,
+        arm_min_max.loc["Right Arm", "min"],
+        "*",
+        ha="left",
+        va="center",
+        weight="bold",
+    )
+    ax.text(
+        max_time + 1,
+        arm_min_max.loc["Left Arm", "max"],
+        "L",
+        ha="left",
+        va="top",
+        weight="bold",
+    )
+    ax.text(
+        max_time + 1,
+        arm_min_max.loc["Left Arm", "min"],
+        "*",
+        ha="left",
+        va="center",
+        weight="bold",
+    )
