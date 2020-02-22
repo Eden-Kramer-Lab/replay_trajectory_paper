@@ -187,7 +187,7 @@ def sorted_spikes_analysis_1D(epoch_key, plot_ripple_figures=False):
                     FIGURE_DIR, 'ripple_classifications', fig_name)
                 plt.savefig(fig_name, bbox_inches='tight')
                 plt.close(plt.gcf())
-            except ValueError:
+            except (ValueError, IndexError):
                 logging.warn(f'No figure for ripple number {ripple_number}...')
                 continue
 
@@ -326,7 +326,7 @@ def sorted_spikes_analysis_2D(epoch_key, plot_ripple_figures=False):
                     FIGURE_DIR, 'ripple_classifications', fig_name)
                 plt.savefig(fig_name, bbox_inches='tight')
                 plt.close(plt.gcf())
-            except ValueError:
+            except (ValueError, IndexError):
                 logging.warn(f'No figure for ripple number {ripple_number}...')
                 pass
     logging.info('Done...')
@@ -464,7 +464,7 @@ def clusterless_analysis_1D(epoch_key, plot_ripple_figures=False):
                     FIGURE_DIR, 'ripple_classifications', fig_name)
                 plt.savefig(fig_name, bbox_inches='tight')
                 plt.close(plt.gcf())
-            except ValueError:
+            except (ValueError, IndexError):
                 logging.warn(f'No figure for ripple number {ripple_number}...')
                 continue
 
@@ -596,7 +596,7 @@ def clusterless_analysis_2D(epoch_key, plot_ripple_figures=False):
                     FIGURE_DIR, 'ripple_classifications', fig_name)
                 plt.savefig(fig_name, bbox_inches='tight')
                 plt.close(plt.gcf())
-            except ValueError:
+            except (ValueError, IndexError):
                 logging.warn(f'No figure for ripple number {ripple_number}...')
                 continue
 
