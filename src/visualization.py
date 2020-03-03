@@ -383,8 +383,6 @@ def plot_replay_total_distance(replay_info, kind='strip', ax=None, **kwargs):
         ax = plt.gca()
     _plot_category(replay_info, 'replay_total_distance',
                    kind=kind, ax=ax, **kwargs)
-    if kind == 'violin':
-        ax.set_xscale('log')
     ax.set_xlabel('Replay total distance travelled [cm]')
 
 
