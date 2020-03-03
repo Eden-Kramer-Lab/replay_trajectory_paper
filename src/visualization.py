@@ -315,6 +315,9 @@ def _plot_category(replay_info, category, kind='strip', ax=None,
     elif kind == 'violin':
         sns.violinplot(data=data, order=STATE_ORDER, orient='horizontal',
                        palette=STATE_COLORS, ax=ax, cut=0, **kwargs)
+    elif kind == "box":
+        sns.boxplot(data=data, order=STATE_ORDER, orient='horizontal',
+                    palette=STATE_COLORS, ax=ax, **kwargs)
     sns.despine(left=True, ax=ax)
 
 
@@ -619,6 +622,9 @@ def plot_n_unique_spiking(replay_info, ax=None, kind='strip',
     elif kind == 'strip':
         sns.stripplot(data=data, order=STATE_ORDER, orient='horizontal',
                       palette=STATE_COLORS, ax=ax)
+    elif kind == 'box':
+        sns.boxplot(data=data, order=STATE_ORDER, orient='horizontal',
+                    palette=STATE_COLORS, ax=ax)
     sns.despine(left=True, ax=ax)
     ax.set_xlabel(f'Number of {data_type} participating per ripple')
     ax.set_xlim((1, np.nanmax(data.values) + 1))
