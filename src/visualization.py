@@ -599,18 +599,11 @@ def plot_max_probability(replay_info, ax=None, kind='strip', **kwargs):
     ax.set_xlabel('Maximum probability of state for each ripple')
 
 
-def plot_population_rate(replay_info, ax=None):
+def plot_population_rate(replay_info, ax=None, kind='violin', **kwargs):
     if ax is None:
         ax = plt.gca()
-    data = pd.concat(
-        [replay_info.loc[replay_info[state]].n_total_spikes.rename(state) /
-         replay_info.loc[replay_info[state]].duration.values
-         for state in STATE_ORDER], axis=1)
-    sns.violinplot(data=data, order=STATE_ORDER,
-                   orient='horizontal',
-                   palette=STATE_COLORS, cut=0)
-    plt.xlabel('Population firing rate per ripple [spikes / s]')
-    sns.despine(left=True)
+    _plot_category(replay_info, 'popultion_rate', kind=kind, ax=ax, **kwargs)
+    ax.set_xlabel('Multiunit Population Rate [spikes / s]')
 
 
 def plot_n_unique_spiking(replay_info, ax=None, kind='strip',
