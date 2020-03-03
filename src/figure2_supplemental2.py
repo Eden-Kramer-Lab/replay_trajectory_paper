@@ -50,7 +50,7 @@ def plot_clusterless_1D_results(multiunit_times, data, results,
     axes[0].set_xlim((0, ripple_duration))
     axes[0].set_xticks((0, ripple_duration))
 
-    axes[0].set_yticks((0, n_tetrodes))
+    axes[0].set_yticks((1, n_tetrodes))
     axes[0].set_ylabel("Tetrodes")
 
     # axis 1
@@ -67,7 +67,7 @@ def plot_clusterless_1D_results(multiunit_times, data, results,
 
     axes[1].set_ylim((0, 1.01))
     axes[1].set_yticks((0, 1))
-    axes[1].set_ylabel("Probability")
+    axes[1].set_ylabel("Prob.")
     probability2 = get_probability(results)
     is_classified = get_is_classified(probability2, PROBABILITY_THRESHOLD)
 
@@ -136,7 +136,7 @@ def plot_clusterless_1D_results(multiunit_times, data, results,
     if is_save_figure:
         animal, day, epoch = epoch_key
         fig_name = (
-            "figure3_"
+            "figure2-supplemental2_"
             f"{animal}_{day:02d}_{epoch:02d}_{ripple_number:04d}_"
             f"clusterless_1D_acasual_classification"
         )
@@ -167,7 +167,7 @@ def plot_1D_projected_to_2D(epoch_key, ripple_number, data, results,
     ]
 
     fig, ax = plt.subplots(1, 1, figsize=(
-        ONE_COLUMN, ONE_COLUMN), constrained_layout=True)
+        ONE_COLUMN * 0.75, ONE_COLUMN * 0.75), constrained_layout=True)
     ax.plot(
         position_2D.values[:, 0],
         position_2D.values[:, 1],
@@ -185,6 +185,7 @@ def plot_1D_projected_to_2D(epoch_key, ripple_number, data, results,
     )
     cbar.set_label("Time [ms]")
     cbar.outline.set_visible(False)
+    cbar.remove()
 
     ax.scatter(
         ripple_position_info["projected_x_position"],
@@ -216,7 +217,7 @@ def plot_1D_projected_to_2D(epoch_key, ripple_number, data, results,
     if is_save_figure:
         animal, day, epoch = epoch_key
         fig_name = (
-            "figure3_1D_projected_to_2D_"
+            "figure2-supplemental2_1D_projected_to_2D_"
             f"{animal}_{day:02d}_{epoch:02d}_{ripple_number:04d}_"
             f"{data_type}_1D_acasual_classification"
         )

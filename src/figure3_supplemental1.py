@@ -136,7 +136,7 @@ def plot_clusterless_1D_results(multiunit_times, data, results,
     if is_save_figure:
         animal, day, epoch = epoch_key
         fig_name = (
-            "figure3_"
+            "figure3_supplemental1_"
             f"{animal}_{day:02d}_{epoch:02d}_{ripple_number:04d}_"
             f"clusterless_1D_acasual_classification"
         )
