@@ -35,9 +35,13 @@ def set_figure_defaults():
             font_scale=1.4)
 
 
-def save_figure(figure_name):
+def save_figure(figure_name, facecolor=None, transparent=True):
     figure_name = os.path.join(FIGURE_DIR, figure_name)
-    plt.savefig(f'{figure_name}.pdf', transparent=True,
-                dpi=300, bbox_inches='tight')
-    plt.savefig(f'{figure_name}.png', transparent=True,
+    if facecolor is None:
+        plt.savefig(f'{figure_name}.pdf', transparent=transparent,
+                    dpi=300, bbox_inches='tight')
+    else:
+        plt.savefig(f'{figure_name}.pdf', transparent=transparent,
+                    dpi=300, bbox_inches='tight', facecolor=facecolor)
+    plt.savefig(f'{figure_name}.png', transparent=transparent,
                 dpi=300, bbox_inches='tight')
