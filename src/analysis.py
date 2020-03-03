@@ -373,7 +373,6 @@ def calculate_replay_distance(track_graph, map_estimate, actual_positions,
     -------
     replay_distance_from_actual_position : ndarray, shape (n_time,)
     replay_distance_from_center_well : ndarray, shape (n_time,)
-    replay_linear_position : ndarray, shape (n_time,)
 
     '''
 
