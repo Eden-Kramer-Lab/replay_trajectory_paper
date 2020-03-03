@@ -287,8 +287,10 @@ def plot_neuron_place_field_2D_1D_position(
 
 
 def plot_category_counts(replay_info):
-    upset = UpSet(replay_info.set_index(STATE_ORDER),
-                  sum_over=False, sort_sets_by=None)
+    upset = UpSet(replay_info.set_index(STATE_ORDER[::-1]),
+                  sum_over=False, sort_sets_by=None, show_counts=False,
+                  sort_by='cardinality', intersection_plot_elements=6,
+                  element_size=32)
     return upset.plot()
 
 
