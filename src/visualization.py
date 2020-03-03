@@ -644,7 +644,7 @@ def plot_linear_position_markers(replay_info, ax=None, is_vertical=True,
                    color=color, zorder=zorder, linestyle=linestyle,
                    alpha=alpha)
         ax.text(replay_info.center_well_position.mean() + jitter, y_max,
-                'center', horizontalalignment=horizontalalignment,
+                'Center', horizontalalignment=horizontalalignment,
                 verticalalignment=verticalalignment, fontsize=fontsize,
                 color=color)
 
@@ -654,13 +654,20 @@ def plot_linear_position_markers(replay_info, ax=None, is_vertical=True,
         ax.axvline(replay_info.right_arm_start.mean(),
                    color=color, zorder=zorder, linestyle=linestyle,
                    alpha=alpha)
+        ax.axvspan(replay_info.choice_position.mean(),
+                   replay_info.right_arm_start.mean(), color='white',
+                   zorder=zorder - 1)
+
         ax.axvline(replay_info.right_well_position.mean(),
                    color=color, zorder=zorder, linestyle=linestyle,
                    alpha=alpha)
-        ax.text(replay_info.left_arm_start.mean() + jitter, y_max, 'left',
+        ax.text(replay_info.left_arm_start.mean() + jitter, y_max, 'Left',
                 horizontalalignment=horizontalalignment,
                 verticalalignment=verticalalignment,
-                fontsize=fontsize, color=color)
+                fontsize=fontsize, color=color, zorder=zorder)
+        ax.axvspan(replay_info.right_well_position.mean(),
+                   replay_info.left_arm_start.mean(), color='white',
+                   zorder=zorder - 1)
 
         ax.axvline(replay_info.left_arm_start.mean(),
                    color=color, zorder=zorder, linestyle=linestyle,
@@ -668,7 +675,7 @@ def plot_linear_position_markers(replay_info, ax=None, is_vertical=True,
         ax.axvline(replay_info.left_well_position.mean(),
                    color=color, zorder=zorder, linestyle=linestyle,
                    alpha=alpha)
-        ax.text(replay_info.right_arm_start.mean() + jitter, y_max, 'right',
+        ax.text(replay_info.right_arm_start.mean() + jitter, y_max, 'Right',
                 horizontalalignment=horizontalalignment,
                 verticalalignment=verticalalignment,
                 fontsize=fontsize, color=color)
