@@ -2,19 +2,40 @@ from logging import getLogger
 
 import numpy as np
 import pandas as pd
-
 from loren_frank_data_processing import (get_all_multiunit_indicators,
                                          get_all_spike_indicators,
                                          get_interpolated_position_dataframe,
                                          get_LFPs, get_trial_time,
                                          make_neuron_dataframe,
                                          make_tetrode_dataframe)
-from ripple_detection import (Kay_ripple_detector, filter_ripple_band,
+from ripple_detection import (Kay_ripple_detector,
                               get_multiunit_population_firing_rate)
+from ripple_detection.core import _get_ripplefilter_kernel
+from scipy.signal import filtfilt
 
 from .parameters import _BRAIN_AREAS, _MARKS, ANIMALS, SAMPLING_FREQUENCY
 
 logger = getLogger(__name__)
+
+
+def filter_ripple_band(data, sampling_frequency=1500):
+    '''Returns a bandpass filtered signal between 150-250 Hz
+
+    Parameters
+    ----------
+    data : array_like, shape (n_time,)
+
+    Returns
+    -------
+    filtered_data : array_like, shape (n_time,)
+
+    '''
+    filter_numerator, filter_denominator = _get_ripplefilter_kernel()
+    is_nan = np.isnan(data)
+    filtered_data = np.full_like(data, np.nan)
+    filtered_data[~is_nan] = filtfilt(
+        filter_numerator, filter_denominator, data[~is_nan], axis=0)
+    return filtered_data
 
 
 def get_ripple_times(epoch_key, sampling_frequency=1500,
@@ -35,10 +56,18 @@ def get_ripple_times(epoch_key, sampling_frequency=1500,
         tetrode_keys = tetrode_info.loc[is_brain_areas].index
 
     lfps = get_LFPs(tetrode_keys, ANIMALS).reindex(time)
-    return Kay_ripple_detector(
+    ripple_filtered_lfps = pd.DataFrame(
+        np.stack([filter_ripple_band(
+            lfps.values[:, ind], sampling_frequency=1500)
+            for ind in np.arange(lfps.shape[1])], axis=1),
+        index=lfps.index)
+
+    ripple_times = Kay_ripple_detector(
         time, lfps.values, speed.values, sampling_frequency,
         zscore_threshold=2.0, close_ripple_threshold=np.timedelta64(0, 'ms'),
         minimum_duration=np.timedelta64(15, 'ms'))
+
+    return ripple_times, ripple_filtered_lfps, lfps
 
 
 def load_data(epoch_key, brain_areas=None):
@@ -93,12 +122,8 @@ def load_data(epoch_key, brain_areas=None):
         columns=['firing_rate'])
 
     logger.info('Finding ripple times...')
-    ripple_times = get_ripple_times(epoch_key)
-
-    ripple_band_lfps = pd.DataFrame(
-        np.stack([filter_ripple_band(lfps.values[:, ind])
-                  for ind in np.arange(lfps.shape[1])], axis=1),
-        index=lfps.index)
+    ripple_times, ripple_filtered_lfps, ripple_lfps = get_ripple_times(
+        epoch_key)
 
     ripple_times = ripple_times.assign(
         duration=lambda df: (df.end_time - df.start_time).dt.total_seconds())
@@ -110,7 +135,8 @@ def load_data(epoch_key, brain_areas=None):
         'multiunit': multiunit,
         'lfps': lfps,
         'tetrode_info': tetrode_info,
-        'ripple_band_lfps': ripple_band_lfps,
+        'ripple_filtered_lfps': ripple_filtered_lfps,
+        'ripple_lfps': ripple_lfps,
         'multiunit_firing_rate': multiunit_firing_rate,
         'sampling_frequency': SAMPLING_FREQUENCY,
     }
