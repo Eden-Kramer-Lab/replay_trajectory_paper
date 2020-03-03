@@ -15,7 +15,7 @@ MILLISECONDS_TO_SECONDS = 1000
 
 def plot_clusterless_1D_results(multiunit_times, data, results,
                                 classifier, epoch_key,
-                                ripple_number):
+                                ripple_number, is_save_figure=True):
     time_slice = slice(
         *data["ripple_times"].loc[ripple_number, ["start_time", "end_time"]]
     )
@@ -132,18 +132,20 @@ def plot_clusterless_1D_results(multiunit_times, data, results,
     sns.despine()
 
     # Save Plot
-    animal, day, epoch = epoch_key
-    fig_name = (
-        "figure3_"
-        f"{animal}_{day:02d}_{epoch:02d}_{ripple_number:04d}_"
-        f"clusterless_1D_acasual_classification"
-    )
-    save_figure(fig_name)
+    if is_save_figure:
+        animal, day, epoch = epoch_key
+        fig_name = (
+            "figure3_"
+            f"{animal}_{day:02d}_{epoch:02d}_{ripple_number:04d}_"
+            f"clusterless_1D_acasual_classification"
+        )
+        save_figure(fig_name)
 
 
 def plot_1D_projected_to_2D(epoch_key, ripple_number, data, results,
                             classifier, data_type="clusterless",
-                            posterior_time_cmap="cool"):
+                            posterior_time_cmap="cool",
+                            is_save_figure=True):
     animal, day, epoch = epoch_key
 
     position_2D = data["position_info"].loc[:, ["x_position", "y_position"]]
@@ -209,10 +211,12 @@ def plot_1D_projected_to_2D(epoch_key, ripple_number, data, results,
 
     ax.axis("square")
     sns.despine()
-    animal, day, epoch = epoch_key
-    fig_name = (
-        "figure3_1D_projected_to_2D_"
-        f"{animal}_{day:02d}_{epoch:02d}_{ripple_number:04d}_"
-        f"{data_type}_1D_acasual_classification"
-    )
-    save_figure(fig_name)
+    
+    if is_save_figure:
+        animal, day, epoch = epoch_key
+        fig_name = (
+            "figure3_1D_projected_to_2D_"
+            f"{animal}_{day:02d}_{epoch:02d}_{ripple_number:04d}_"
+            f"{data_type}_1D_acasual_classification"
+        )
+        save_figure(fig_name)
