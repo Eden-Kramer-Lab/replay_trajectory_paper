@@ -125,58 +125,6 @@ A small L2 penalization term $-\lambda\norm{\beta_{i}}_{2}^{2}$ used to prevent 
 \subsection*{Software and Code availability}
 Python code used for analysis and generating figures in the paper is available at: \url{https://github.com/Eden-Kramer-Lab/replay_trajectory_paper}. Code for the classifier is available in a separate software repository to facilitate code reuse at: \url{https://github.com/Eden-Kramer-Lab/replay_trajectory_classification}. All code is open-source and licensed under the MIT Software License. Classifier code can be easily installed as a python package with all requisite dependencies using pip or conda. See software repositories for specific details.
 
-\subsection*{Filter Derivation}
-\begin{enumerate}
-\item Use Bayes theorem to define the posterior in terms of a data-derived likelihood and a prior ($ posterior \propto likelihood * prior $)
-$$
-p(x_{k}, I_{k} \mid y_{1:k}) \propto p(y_{k} \mid x_{k}, I_{k}) * p(x_{k}, I_{k} \mid y_{1:k-1})
-$$
-
-\item Use Chapman-Kolmogorov to define prior in terms of previous time step's posterior and state transitions
-$$
-\begin{align*}
-p(x_{k}, I_{k} \mid y_{1:k-1}) &= \sum_{I_{k-1}} \int p(x_{k}, x_{k-1}, I_{k}, I_{k-1} \mid y_{1:k-1}) * dx_{k-1}
-\\ &= \sum_{I_{k-1}} \int p(x_{k}, I_{k} \mid x_{k-1}, I_{k-1}, y_{k-1}) * p(x_{k-1}, I_{k-1} \mid y_{1:k-1}) * dx_{k-1}
-\\ &= \sum_{I_{k-1}} \int p(x_{k}, I_{k} \mid x_{k-1}, I_{k-1}) * p(x_{k-1}, I_{k-1} \mid y_{1:k-1}) * dx_{k-1}
-\\ &= \sum_{I_{k-1}} \int p(x_{k} \mid x_{k-1}, I_{k}, I_{k-1}) * Pr(I_{k} \mid I_{k-1}) * p(x_{k-1}, I_{k-1} \mid y_{1:k-1}) * dx_{k-1}
-\end{align*}$$
-
-where:
-$p(x_{k-1}, I_{k-1} \mid y_{1:k-1})$ is the previous posterior,
-$Pr(I_{k} \mid I_{k-1})$ is the discrete state transition, and $p(x_{k} \mid x_{k-1}, I_{k}, I_{k-1})$ is the continuous state transition
-
-\item Final Filter
-$$
-p(x_{k}, I_{k} \mid y_{1:k}) \propto p(y_{k} \mid x_{k}, I_{k}) * \sum_{I_{k-1}} \int p(x_{k} \mid x_{k-1}, I_{k}, I_{k-1}) * Pr(I_{k} \mid I_{k-1}) * p(x_{k-1}, I_{k-1} \mid y_{1:k-1}) * dx_{k-1}
-$$
-\end{enumerate}
-
-\subsection*{Smoother Derivation}
-
-\begin{enumerate}
-\item
-$$
-\begin{align*}
-p(x_{k}, I_{k} \mid y_{1:T}) &= \sum_{I_{k+1}} \int p(x_{k}, x_{k+1}, I_{k}, I_{k+1} \mid y_{1:T}) * dx_{k+1}
-\\ &= \sum_{I_{k+1}} \int p(x_{k}, I_{k} \mid x_{k+1}, I_{k+1}, y_{1:T}) * p(x_{k+1}, I_{k+1} \mid y_{1:T}) * dx_{k+1}
-\\ &= \sum_{I_{k+1}} \int p(x_{k}, I_{k} \mid x_{k+1}, I_{k+1}, y_{1:k}) * p(x_{k+1}, I_{k+1} \mid y_{1:T}) * dx_{k+1}
-\\ &= \sum_{I_{k+1}} \int \frac{p(x_{k+1}, I_{k+1} \mid x_{k}, I_{k}, y_{1:k}) * p(x_{k}, I_{k} \mid y_{1:k})}{p(x_{k+1}, I_{k+1} \mid y_{1:k})} * p(x_{k+1}, I_{k+1} \mid y_{1:T}) * dx_{k+1} 
-\\ &= \sum_{I_{k+1}} \int \frac{p(x_{k+1}, I_{k+1} \mid x_{k}, I_{k}) * p(x_{k}, I_{k} \mid y_{1:k})}{p(x_{k+1}, I_{k+1} \mid y_{1:k})} * p(x_{k+1}, I_{k+1} \mid y_{1:T}) * dx_{k+1}
-\\ &= p(x_{k}, I_{k} \mid y_{1:k}) * \sum_{I_{k+1}} \int \frac{p(x_{k+1}, I_{k+1} \mid x_{k}, I_{k})}{p(x_{k+1}, I_{k+1} \mid y_{1:k})} * p(x_{k+1}, I_{k+1} \mid y_{1:T}) * dx_{k+1} 
-\\ &= p(x_{k}, I_{k} \mid y_{1:k}) * \sum_{I_{k+1}} \int \frac{p(x_{k+1} \mid x_{k}, I_{k+1}, I_{k}) * Pr(I_{k+1} \mid I_{k}, x_{k})}{p(x_{k+1}, I_{k+1} \mid y_{1:k})} * p(x_{k+1}, I_{k+1} \mid y_{1:T}) * dx_{k+1}
-\end{align*}$$
-
-\item
-$$
-\begin{align*}
-p(x_{k+1}, I_{k+1} \mid y_{1:k}) &= \sum_{I_{k}} \int p(x_{k+1}, I_{k+1}, x_{k}, I_{k} \mid y_{1:k}) * dx_{k}
-\\ &= \sum_{I_{k}} \int p(x_{k+1}, I_{k+1} \mid x_{k}, I_{k}, y_{1:k}) * p(x_{k}, I_{k} \mid y_{1:k}) * dx_{k}
-\\ &= \sum_{I_{k}} \int p(x_{k+1}, I_{k+1} \mid x_{k}, I_{k}) * p(x_{k}, I_{k} \mid y_{1:k}) * dx_{k}
-\\ &= \sum_{I_{k}} \int p(x_{k+1} \mid x_{k}, I_{k+1}, I_{k}) * Pr(I_{k+1} \mid I_{k}) * p(x_{k}, I_{k} \mid y_{1:k}) * dx_{k}
-\end{align*}$$
-
-\end{enumerate}
-
 \newpage
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
