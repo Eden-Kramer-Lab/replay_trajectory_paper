@@ -2,22 +2,23 @@
 \usepackage{blindtext}
 \pdfoptionalwaysusepdfpagebox=5
 \DeclareMathOperator*{\E}{\mathbb{E}}
-\newcommand\norm[1]{\left\lVert#1\right\rVert}
+\newcommand{\norm}[1]{\left\lVert #1 \right\rVert}
 
 % Please give the surname of the lead author for the running footer
 \leadauthor{Denovellis} 
 
 \begin{document}
 
-\title{Categorizing the trajectory dynamics of replay}
+\title{A state space model for discovering the trajectory dynamics of replay}
 \shorttitle{Replay Dynamics}
 
 % Use letters for affiliations, numbers to show equal authorship (if applicable) and to indicate the corresponding author
-\author[1,\Letter]{Eric L. Denovellis}
+\author[4]{Eric L. Denovellis}
 \author[2, 3]{Anna K. Gillespie}
 \author[2, 3]{Michael E. Coulter}
-\author[2, 3, 4]{Loren M. Frank}
 \author[1]{Uri T. Eden}
+\author[2, 3, 4, \Letter]{Loren M. Frank}
+
 
 \affil[1]{Department of Mathematics and Statistics, Boston University, Boston, Massachusetts}
 \affil[2]{Department of Physiology, University of California, San Francisco, San Francisco, California}
@@ -42,12 +43,18 @@ Hippocampus | Replay | State Space
 \end{keywords}
 
 \begin{corrauthor}
-%\texttt{edeno{@}bu.edu}
-edeno\at bu.edu
+%\texttt{loren{@}phy.ucsf.edu}
+loren\at phy.ucsf.edu
 \end{corrauthor}
 
 \section*{Introduction}
-\Blindtext
+The hippocampus is a brain area that is important for short term learning and memory. Neurons in the hippocampus preferentially fire in response to specific locations in an environment, which results in sequences of cells firing as an animal moves through an environment that reflect the trajectory of the animal. When the animal is asleep or immobile, cells also fire in sequence, forming trajectory-like representations that can recapitulate sequences previously observed when the animal was running. These sequences are thought to be important for memory consolidation or prospective decision making. (cite some examples). Therefore, characterizing the dynamics of hippocampal sequences is important for understanding memory consolidation and prospective decision making.
+
+Current methods analyze hippocampal sequences by assuming a constant velocity trajectory (Davidson et al. 2009), corresponding to a single dynamic. This is done by computing the probability of position at each time using the place field information from the population of neurons and then fitting a line to maximize the probability of position over time. If the probabilities near the best fit line are high relative to shuffled distribution, the replay is analyzed. Often, trajectories that travel less than a certain distance (Pfeiffer and Foster 2013, Pfeiffer and Foster 2015) are excluded.
+
+However, there is a growing evidence that trajectories that have more complex dynamics. Farooq and Dragoi (2019) found that juvenile rats . For example, Pfeiffer and Foster (2015) found that trajectories alternated between stationary hovering trajectories and continuous movement trajectories on a gamma timescale. 
+
+Our mathematical model precisely specifies the dyna
 
 \section*{Results}
 
@@ -68,7 +75,7 @@ Figure \ref{fig:computerNo} shows an example of how to insert a column-wide figu
 \begin{figure}%[tbhp]
 \centering
 \includegraphics[width=1.0\linewidth]{figures/Figure3.pdf}
-\caption{Model can classify each category of trajectory dynamic (and combinations of dynamics) on simulated data. Each panel shows (from top to bottom) the simulated cell population activity, the probability of the three trajectory dynamics at each time, and the decoded posterior probability of position at each time. \textbf{a.} Continuous. \textbf{b.} Hover. \textbf{c.} Fragmented. \textbf{d.} Hover-Continuous-Hover. \textbf{e.} Fragmented-Continuous-Fragmented. \textbf{f.} Fragmented-Hover-Fragmented.}
+\caption{Model can classify each category of trajectory dynamic (and combinations of dynamics) on simulated data. Each panel has three plots that show (from top to bottom) the simulated cell population activity, the probability of the three trajectory dynamics at each time, and the decoded posterior probability of position at each time. \textbf{a.} Continuous. \textbf{b.} Hover. \textbf{c.} Fragmented. \textbf{d.} Hover-Continuous-Hover. \textbf{e.} Fragmented-Continuous-Fragmented. \textbf{f.} Fragmented-Hover-Fragmented.}
 \label{fig:computerNo}
 \end{figure}
 
@@ -88,29 +95,35 @@ blablaba \ref{fig:computerNo}
 \blindtext
 \end{acknowledgements}
 
-\section*{Bibliography}
+\section*{References}
 \bibliography{zHenriquesLab-Mendeley}
 
 \onecolumn
 \newpage
 
-\section*{Materials and Methods}
+\section*{Methods}
 \subsection*{The Model}
 The 
-\subsection*{Encoding}
-In order to encode each cell's place preference, a generalized linear model was fit to each neuron's spiking activity during movement (defined as time periods when the running speed is greater than 4 cm/s). The model used log link function. 
 
-$$\lambda(t) = \exp{(\sum_{i} f_{i}(position)\beta_{i})}$$
+\subsection*{Encoding - Clusterless}
+In order to encode how each tetrode's unsorted spiking activity relates to position, we use a marked point process framework. For each multiunit spike during movement (defined as time periods when the running speed is greater than 4 cm/s), the associated waveform features (the marks) and position are recorded in a (n-spikes, n-features + n-position-dimensions) array. In our case, the waveform features correspond to the max amplitude observed on each tetrode wire at the time of the multiunit spike. This array is used as the training samples in a kernel density estimator during the decoding step.
 
-A small L2 penalization term $-\lambda\norm{\beta_{i}}_{2}^{2}$ used to prevent model fitting instability when spiking activity is very low. A third degree B-splines basis over position (or tensor products of the B-splines when position is two dimensional) is used to allow firing activity to smoothly vary over position and to reduce the total number of model parameters.
-\subsection*{Decoding}
+\subsection*{Encoding - Sorted Spikes}
+In order to encode how each cell's spiking activity relates to position (the place field), we fit a generalized linear model (GLM) with a Poisson response distribution to each cell's spiking activity during movement (defined as time periods when the running speed is greater than 4 cm/s). We estimate the parameters $\beta$, which consist of $\beta_{0}$, the average firing rate over time, and $\beta_{i}$, weights for third degree B-splines basis functions $f_{i}$ over position (or tensor products of the B-splines when position is two dimensional). B-spline basis functions are used because place field firing activity is assumed to vary smoothly over position and this prior knowledge can be exploited to reduce the total number of model parameters needed. Each basis function is spaced every 5 cm over the range of the position and zero constrained so that the change encoded by the parameters is relative to the baseline firing rate. We use a log link function to convert the linear combination of parameters to an instantaneous firing rate over time $\lambda(t)$ to ensure the rate is always positive. 
+
+$$log(\lambda(t)) = \beta_{0} + \sum_{i} f_{i}(position)\beta_{i}$$
+
+A small L2 penalization term $-\lambda\norm{\beta_{i}}_{2}^{2}$ used to prevent model fitting instability when spiking activity is very low. We set this to 0.5 for all cells. Fitting is done by maximizing the penalized likelihood using a Newton-Raphson algorithm.
+
+\subsection*{Decoding - Clusterless}
+
 
 \subsection*{Simulated Data}
 
 \subsection*{Data}
 
 \subsection*{Software and Code availability}
-Python code used for analysis and generating figures in the paper is available at: \url{https://github.com/Eden-Kramer-Lab/replay_trajectory_paper}. Code for the classifier is available in a separate software repository to facilitate code reuse at: \url{https://github.com/Eden-Kramer-Lab/replay_trajectory_classification}. All code is open-source and licensed under the MIT Software License.
+Python code used for analysis and generating figures in the paper is available at: \url{https://github.com/Eden-Kramer-Lab/replay_trajectory_paper}. Code for the classifier is available in a separate software repository to facilitate code reuse at: \url{https://github.com/Eden-Kramer-Lab/replay_trajectory_classification}. All code is open-source and licensed under the MIT Software License. Classifier code can be easily installed as a python package with all requisite dependencies using pip or conda. See software repositories for specific details.
 
 \subsection*{Filter Derivation}
 \begin{enumerate}
@@ -147,7 +160,6 @@ $$
 p(x_{k}, I_{k} \mid y_{1:T}) &= \sum_{I_{k+1}} \int p(x_{k}, x_{k+1}, I_{k}, I_{k+1} \mid y_{1:T}) * dx_{k+1}
 \\ &= \sum_{I_{k+1}} \int p(x_{k}, I_{k} \mid x_{k+1}, I_{k+1}, y_{1:T}) * p(x_{k+1}, I_{k+1} \mid y_{1:T}) * dx_{k+1}
 \\ &= \sum_{I_{k+1}} \int p(x_{k}, I_{k} \mid x_{k+1}, I_{k+1}, y_{1:k}) * p(x_{k+1}, I_{k+1} \mid y_{1:T}) * dx_{k+1}
-\\ &= \sum_{I_{k+1}} \int \frac{p(x_{k}, I_{k}, x_{k+1}, I_{k+1} \mid y_{1:k})}{p(x_{k+1}, I_{k+1} \mid y_{1:k})} * p(x_{k+1}, I_{k+1} \mid y_{1:T}) * dx_{k+1}
 \\ &= \sum_{I_{k+1}} \int \frac{p(x_{k+1}, I_{k+1} \mid x_{k}, I_{k}, y_{1:k}) * p(x_{k}, I_{k} \mid y_{1:k})}{p(x_{k+1}, I_{k+1} \mid y_{1:k})} * p(x_{k+1}, I_{k+1} \mid y_{1:T}) * dx_{k+1} 
 \\ &= \sum_{I_{k+1}} \int \frac{p(x_{k+1}, I_{k+1} \mid x_{k}, I_{k}) * p(x_{k}, I_{k} \mid y_{1:k})}{p(x_{k+1}, I_{k+1} \mid y_{1:k})} * p(x_{k+1}, I_{k+1} \mid y_{1:T}) * dx_{k+1}
 \\ &= p(x_{k}, I_{k} \mid y_{1:k}) * \sum_{I_{k+1}} \int \frac{p(x_{k+1}, I_{k+1} \mid x_{k}, I_{k})}{p(x_{k+1}, I_{k+1} \mid y_{1:k})} * p(x_{k+1}, I_{k+1} \mid y_{1:T}) * dx_{k+1} 
@@ -173,6 +185,13 @@ p(x_{k+1}, I_{k+1} \mid y_{1:k}) &= \sum_{I_{k}} \int p(x_{k+1}, I_{k+1}, x_{k},
 \captionsetup*{format=largeformat}
 \section{Something about something} \label{note:Note1} 
 \Blindtext
+
+\begin{figure*}%[tbhp]
+\centering
+\includegraphics[width=1.0\linewidth]{figures/Supplemental_Figure3.pdf}
+\caption{Increasing the probability of transitioning within category.}
+\label{fig:Supplemental Figure 3}
+\end{figure*}
 
 %TC:endignore
 %the command above ignores this section for word count
