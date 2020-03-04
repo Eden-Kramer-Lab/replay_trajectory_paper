@@ -1,5 +1,4 @@
 import numpy as np
-
 from replay_trajectory_classification.simulate import (
     simulate_linear_distance, simulate_neuron_with_place_field,
     simulate_place_field_firing_rate, simulate_time)
@@ -147,5 +146,57 @@ def make_fragmented_continuous_fragmented_replay(
 
     test_spikes = np.concatenate((test_spikes1, test_spikes2, test_spikes3))
     replay_time = np.arange(test_spikes.shape[0]) / sampling_frequency
+
+    return replay_time, test_spikes
+
+
+def make_hover_continuous_fragmented_replay(
+        sampling_frequency=SAMPLING_FREQUENCY):
+    _, test_spikes1 = make_hover_replay(hover_neuron_ind=1)
+    _, test_spikes2 = make_continuous_replay()
+    _, test_spikes3 = make_fragmented_replay()
+    _, test_spikes4 = make_fragmented_replay()
+    _, test_spikes5 = make_fragmented_replay()
+
+    test_spikes = np.concatenate((test_spikes1, test_spikes2, test_spikes3,
+                                  test_spikes4, test_spikes5))
+    replay_time = np.arange(test_spikes.shape[0]) / sampling_frequency
+
+    return replay_time, test_spikes
+
+
+def make_constant_velocity_replay(replay_speed=1000,
+                                  sampling_frequency=SAMPLING_FREQUENCY,
+                                  place_field_means=PLACE_FIELD_MEANS):
+    '''
+    Parameters
+    ----------
+    replay_speed : float
+        In cm/s
+    sampling_frequency : int
+    place_field_means : numpy.ndarray
+
+
+    Returns
+    -------
+    replay_time
+    test_spikes
+
+    '''
+    try:
+        n_neurons = place_field_means.size
+        min_pos, max_pos = place_field_means.min(), place_field_means.max()
+
+        spike_time_ind = np.linspace(
+            min_pos, max_pos / replay_speed,
+            n_neurons) * sampling_frequency
+        spike_time_ind = spike_time_ind.astype(int)
+
+        replay_time = np.arange(
+            0, spike_time_ind.max() + 1) / sampling_frequency
+        test_spikes = np.zeros((replay_time.size, n_neurons))
+        test_spikes[(spike_time_ind, np.arange(n_neurons))] = 1
+    except IndexError:
+        replay_time, test_spikes = make_hover_replay()
 
     return replay_time, test_spikes

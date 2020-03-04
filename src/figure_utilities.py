@@ -32,10 +32,16 @@ def set_figure_defaults():
         'axes.labelpad': 0.1,
     }
     sns.set(style='white', context='paper', rc=rc_params,
-            font_scale=1.3)
+            font_scale=1.4)
 
 
-def save_figure(figure_name, figure_format='pdf'):
+def save_figure(figure_name, facecolor=None, transparent=True):
     figure_name = os.path.join(FIGURE_DIR, figure_name)
-    plt.savefig(f'{figure_name}.{figure_format}', transparent=True,
+    if facecolor is None:
+        plt.savefig(f'{figure_name}.pdf', transparent=transparent,
+                    dpi=300, bbox_inches='tight')
+    else:
+        plt.savefig(f'{figure_name}.pdf', transparent=transparent,
+                    dpi=300, bbox_inches='tight', facecolor=facecolor)
+    plt.savefig(f'{figure_name}.png', transparent=transparent,
                 dpi=300, bbox_inches='tight')

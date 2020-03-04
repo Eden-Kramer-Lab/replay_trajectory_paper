@@ -44,13 +44,14 @@ def plot_2D_position_with_color_time(time, position, ax=None, cmap='plasma',
     segments = np.concatenate([points[:-1], points[1:]], axis=1)
 
     # Create a continuous norm to map from data points to colors
-    norm = plt.Normalize(time.min(), time.max())
+    norm = plt.Normalize(vmin=time.min(), vmax=time.max())
     cmap = plt.get_cmap(cmap)
     colors = cmap(norm(time))
     if alpha is not None:
         colors[:, -1] = alpha
+
     lc = LineCollection(segments, colors=colors, zorder=100)
-    lc.set_linewidth(4)
+    lc.set_linewidth(6)
     line = ax.add_collection(lc)
 
     # Set the values used for colormapping
@@ -58,16 +59,22 @@ def plot_2D_position_with_color_time(time, position, ax=None, cmap='plasma',
     cbar = ColorbarBase(cax, cmap=cmap, norm=norm,
                         spacing='proportional',
                         orientation='horizontal')
-    cbar.set_label('time')
+    cbar.set_label('Time')
 
-    return line, ax
+    total_distance_traveled = np.linalg.norm(
+        np.diff(position, axis=0), axis=1).sum()
+    if np.isclose(total_distance_traveled, 0.0):
+        ax.scatter(position[:, 0], position[:, 1],
+                   c=colors, zorder=1000, s=70, marker='s')
+
+    return line, ax, cbar
 
 
 def plot_all_positions(position_info, ax=None):
     if ax is None:
         ax = plt.gca()
     ax.plot(position_info.x_position.values, position_info.y_position.values,
-            color='lightgrey', alpha=0.5, label='all positions')
+            color='lightgrey', alpha=0.6, label='All positions')
 
 
 def make_movie(position, posterior_density, position_info, map_position,
@@ -76,29 +83,34 @@ def make_movie(position, posterior_density, position_info, map_position,
     Writer = animation.writers['ffmpeg']
     writer = Writer(fps=15, metadata=dict(artist='Me'), bitrate=1800)
 
-    fig, ax = plt.subplots(1, 1, figsize=(7, 7))
+    fig, ax = plt.subplots(1, 1, figsize=(12, 10))
+    plt.gca().set_xlabel('x-position', fontsize=24)
+    plt.gca().set_ylabel('y-position', fontsize=24)
     plot_all_positions(position_info, ax=ax)
-
+    plt.gca().set_xlabel('x-position', fontsize=24)
+    plt.gca().set_ylabel('y-position', fontsize=24)
     ax.set_xlim(position_info.x_position.min() - 1,
                 position_info.x_position.max() + 1)
     ax.set_ylim(position_info.y_position.min() + 1,
                 position_info.y_position.max() + 1)
-    ax.set_xlabel('x-position')
-    ax.set_ylabel('y-position')
 
-    position_dot = plt.scatter([], [], s=80, zorder=102, color='b',
-                               label='actual position')
-    position_line, = plt.plot([], [], 'b-', linewidth=3)
-    map_dot = plt.scatter([], [], s=80, zorder=102, color='r',
-                          label='replay position')
+    position_dot = plt.scatter([], [], s=200, zorder=102, color='black',
+                               label='Actual position')
+    position_line, = plt.plot([], [], '-', linewidth=3, color='black')
+
+    map_dot = plt.scatter([], [], s=200, zorder=102, color='r',
+                          label='Decoded position')
     map_line, = plt.plot([], [], 'r-', linewidth=3)
-    spikes_dot = plt.scatter([], [], s=40, zorder=104, color='k',
-                             label='spikes')
+    # spikes_dot = plt.scatter([], [], s=40, zorder=104, color='k',
+    #                          label='spikes')
     vmax = np.percentile(posterior_density.values, 99)
-    ax.legend()
+    # ax.legend(loc='upper right')
     posterior_density.isel(time=0).plot(
         x='x_position', y='y_position', vmin=0.0, vmax=vmax,
-        ax=ax)
+        ax=ax, add_colorbar=False)
+    plt.gca().set_xlabel('x-position', fontsize=24)
+    plt.gca().set_ylabel('y-position', fontsize=24)
+
     n_frames = posterior_density.shape[0]
 
     def _update_plot(time_ind):
@@ -113,14 +125,18 @@ def make_movie(position, posterior_density, position_info, map_position,
         map_line.set_data(map_position[time_slice, 0],
                           map_position[time_slice, 1])
 
-        spikes_dot.set_offsets(place_field_max[spikes[time_ind] > 0])
+        # spikes_dot.set_offsets(place_field_max[spikes[time_ind] > 0])
 
         im = posterior_density.isel(time=time_ind).plot(
             x='x_position', y='y_position', vmin=0.0, vmax=vmax,
             ax=ax, add_colorbar=False)
+        plt.gca().set_xlabel('x-position')
+        plt.gca().set_ylabel('y-position')
 
         return position_dot, im
 
+    plt.gca().set_xlabel('x-position', fontsize=24)
+    plt.gca().set_ylabel('y-position', fontsize=24)
     movie = animation.FuncAnimation(fig, _update_plot, frames=n_frames,
                                     interval=50, blit=True)
     if movie_name is not None:
@@ -220,10 +236,10 @@ def plot_ripple_decode_1D(posterior, ripple_position, ripple_spikes,
     axes[2].set_xticks((min_time, max_time))
     axes[-1].set_xlabel('Time [ms]')
 
-    max_df = position_info.groupby('arm_name').linear_position2.max()
-    min_df = position_info.groupby('arm_name').linear_position2.min()
-    axes[2].set_ylim((0, position_info.linear_position2.max()))
-    axes[2].set_yticks((0, position_info.linear_position2.max()))
+    max_df = position_info.groupby('arm_name').linear_position.max()
+    min_df = position_info.groupby('arm_name').linear_position.min()
+    axes[2].set_ylim((0, position_info.linear_position.max()))
+    axes[2].set_yticks((0, position_info.linear_position.max()))
 
     for arm_name, max_position in max_df.iteritems():
         axes[2].axhline(max_position, color='lightgrey',
@@ -257,7 +273,7 @@ def plot_neuron_place_field_2D_1D_position(
         axes[1].scatter(ind, linear, s=200, alpha=0.3)
         axes[1].text(ind, linear, linear_position_order[ind], fontsize=15,
                      horizontalalignment='center', verticalalignment='center')
-    max_df = (position_info.groupby('arm_name').linear_position2.max()
+    max_df = (position_info.groupby('arm_name').linear_position.max()
               .iteritems())
     for arm_name, max_position in max_df:
         axes[1].axhline(max_position, color='lightgrey', zorder=0,
@@ -265,14 +281,16 @@ def plot_neuron_place_field_2D_1D_position(
         axes[1].text(0, max_position - 0.2, arm_name, color='lightgrey',
                      horizontalalignment='left', verticalalignment='top',
                      fontsize=12)
-    axes[1].set_ylim((-3.0, position_info.linear_position2.max() + 3.0))
+    axes[1].set_ylim((-3.0, position_info.linear_position.max() + 3.0))
     axes[1].set_ylabel('linear position')
     axes[1].set_xlabel('Neuron ID')
 
 
 def plot_category_counts(replay_info):
-    upset = UpSet(replay_info.set_index(STATE_ORDER),
-                  sum_over=False, sort_sets_by=None)
+    upset = UpSet(replay_info.set_index(STATE_ORDER[::-1]),
+                  sum_over=False, sort_sets_by=None, show_counts=False,
+                  sort_by='cardinality', intersection_plot_elements=6,
+                  element_size=32)
     return upset.plot()
 
 
@@ -297,6 +315,9 @@ def _plot_category(replay_info, category, kind='strip', ax=None,
     elif kind == 'violin':
         sns.violinplot(data=data, order=STATE_ORDER, orient='horizontal',
                        palette=STATE_COLORS, ax=ax, cut=0, **kwargs)
+    elif kind == "box":
+        sns.boxplot(data=data, order=STATE_ORDER, orient='horizontal',
+                    palette=STATE_COLORS, ax=ax, **kwargs)
     sns.despine(left=True, ax=ax)
 
 
@@ -313,7 +334,7 @@ def plot_linear_position_of_animal(replay_info, ax=None):
         ax = plt.gca()
     pos = pd.concat(
         [replay_info.loc[replay_info[state]]
-         .actual_linear_position2.rename(state)
+         .actual_linear_position.rename(state)
          for state in STATE_ORDER], axis=1)
     sns.violinplot(data=pos, order=STATE_ORDER, orient='horizontal',
                    palette=STATE_COLORS, cut=0, inner=None, bw=0.05, ax=ax)
@@ -327,7 +348,7 @@ def plot_normalized_linear_position_of_animal(replay_info, ax=None):
         ax = plt.gca()
     pos = pd.concat(
         [(replay_info.loc[replay_info[state]]
-          .actual_linear_position2.rename(state)) /
+          .actual_linear_position.rename(state)) /
          replay_info.loc[replay_info[state]].left_well_position.values
          for state in STATE_ORDER], axis=1)
     sns.violinplot(data=pos, order=STATE_ORDER, orient='horizontal',
@@ -365,8 +386,6 @@ def plot_replay_total_distance(replay_info, kind='strip', ax=None, **kwargs):
         ax = plt.gca()
     _plot_category(replay_info, 'replay_total_distance',
                    kind=kind, ax=ax, **kwargs)
-    if kind == 'violin':
-        ax.set_xscale('log')
     ax.set_xlabel('Replay total distance travelled [cm]')
 
 
@@ -452,12 +471,12 @@ def plot_actual_position_vs_replay_position(replay_info, kind='scatter',
 
     for ax, state in zip(axes.flat, STATE_ORDER):
         if kind == 'scatter':
-            ax.scatter(replay_info['actual_linear_position2'],
+            ax.scatter(replay_info['actual_linear_position'],
                        replay_info[f'{state}_replay_linear_position'],
                        color=STATE_COLORS[state], s=20)
         elif kind == 'hexbin':
             cmap = sns.light_palette(STATE_COLORS[state], as_cmap=True)
-            h = ax.hexbin(replay_info['actual_linear_position2'],
+            h = ax.hexbin(replay_info['actual_linear_position'],
                           replay_info[f'{state}_replay_linear_position'],
                           gridsize=10, extent=extent, vmin=0.0, vmax=vmax,
                           cmap=cmap)
@@ -466,10 +485,10 @@ def plot_actual_position_vs_replay_position(replay_info, kind='scatter',
         elif kind == 'kdeplot':
             cmap = sns.light_palette(STATE_COLORS[state], as_cmap=True)
             temp_df = (replay_info
-                       .loc[:, ['actual_linear_position2',
+                       .loc[:, ['actual_linear_position',
                                 f'{state}_replay_linear_position']]
                        .dropna())
-            sns.kdeplot(temp_df['actual_linear_position2'],
+            sns.kdeplot(temp_df['actual_linear_position'],
                         temp_df[f'{state}_replay_linear_position'],
                         clip=extent, vmin=0.0, cmap=cmap, ax=ax,
                         bw=(10, 10), shade=True, gridsize=30,
@@ -497,11 +516,11 @@ def plot_norm_actual_position_vs_replay_position(replay_info, kind='scatter',
                              sharey=True)
     for ax, state in zip(axes.flat, STATE_ORDER):
         temp_df = (replay_info
-                   .loc[:, ['actual_linear_position2',
+                   .loc[:, ['actual_linear_position',
                             f'{state}_replay_linear_position',
                             'left_well_position']]
                    .dropna())
-        actual_position = (temp_df.actual_linear_position2 /
+        actual_position = (temp_df.actual_linear_position /
                            temp_df.left_well_position.values)
         replay_position = (temp_df[f'{state}_replay_linear_position'] /
                            temp_df.left_well_position.values)
@@ -583,18 +602,11 @@ def plot_max_probability(replay_info, ax=None, kind='strip', **kwargs):
     ax.set_xlabel('Maximum probability of state for each ripple')
 
 
-def plot_population_rate(replay_info, ax=None):
+def plot_population_rate(replay_info, ax=None, kind='violin', **kwargs):
     if ax is None:
         ax = plt.gca()
-    data = pd.concat(
-        [replay_info.loc[replay_info[state]].n_total_spikes.rename(state) /
-         replay_info.loc[replay_info[state]].duration.values
-         for state in STATE_ORDER], axis=1)
-    sns.violinplot(data=data, order=STATE_ORDER,
-                   orient='horizontal',
-                   palette=STATE_COLORS, cut=0)
-    plt.xlabel('Population firing rate per ripple [spikes / s]')
-    sns.despine(left=True)
+    _plot_category(replay_info, 'popultion_rate', kind=kind, ax=ax, **kwargs)
+    ax.set_xlabel('Multiunit Population Rate [spikes / s]')
 
 
 def plot_n_unique_spiking(replay_info, ax=None, kind='strip',
@@ -610,6 +622,9 @@ def plot_n_unique_spiking(replay_info, ax=None, kind='strip',
     elif kind == 'strip':
         sns.stripplot(data=data, order=STATE_ORDER, orient='horizontal',
                       palette=STATE_COLORS, ax=ax)
+    elif kind == 'box':
+        sns.boxplot(data=data, order=STATE_ORDER, orient='horizontal',
+                    palette=STATE_COLORS, ax=ax)
     sns.despine(left=True, ax=ax)
     ax.set_xlabel(f'Number of {data_type} participating per ripple')
     ax.set_xlim((1, np.nanmax(data.values) + 1))
@@ -635,7 +650,7 @@ def plot_linear_position_markers(replay_info, ax=None, is_vertical=True,
                    color=color, zorder=zorder, linestyle=linestyle,
                    alpha=alpha)
         ax.text(replay_info.center_well_position.mean() + jitter, y_max,
-                'center', horizontalalignment=horizontalalignment,
+                'Center', horizontalalignment=horizontalalignment,
                 verticalalignment=verticalalignment, fontsize=fontsize,
                 color=color)
 
@@ -645,13 +660,20 @@ def plot_linear_position_markers(replay_info, ax=None, is_vertical=True,
         ax.axvline(replay_info.right_arm_start.mean(),
                    color=color, zorder=zorder, linestyle=linestyle,
                    alpha=alpha)
+        ax.axvspan(replay_info.choice_position.mean(),
+                   replay_info.right_arm_start.mean(), color='white',
+                   zorder=zorder - 1)
+
         ax.axvline(replay_info.right_well_position.mean(),
                    color=color, zorder=zorder, linestyle=linestyle,
                    alpha=alpha)
-        ax.text(replay_info.left_arm_start.mean() + jitter, y_max, 'left',
+        ax.text(replay_info.left_arm_start.mean() + jitter, y_max, 'Left',
                 horizontalalignment=horizontalalignment,
                 verticalalignment=verticalalignment,
-                fontsize=fontsize, color=color)
+                fontsize=fontsize, color=color, zorder=zorder)
+        ax.axvspan(replay_info.right_well_position.mean(),
+                   replay_info.left_arm_start.mean(), color='white',
+                   zorder=zorder - 1)
 
         ax.axvline(replay_info.left_arm_start.mean(),
                    color=color, zorder=zorder, linestyle=linestyle,
@@ -659,7 +681,7 @@ def plot_linear_position_markers(replay_info, ax=None, is_vertical=True,
         ax.axvline(replay_info.left_well_position.mean(),
                    color=color, zorder=zorder, linestyle=linestyle,
                    alpha=alpha)
-        ax.text(replay_info.right_arm_start.mean() + jitter, y_max, 'right',
+        ax.text(replay_info.right_arm_start.mean() + jitter, y_max, 'Right',
                 horizontalalignment=horizontalalignment,
                 verticalalignment=verticalalignment,
                 fontsize=fontsize, color=color)
@@ -757,3 +779,60 @@ def make_linearization_movie(epoch_key, animals, max_distance_from_well=5,
                                        interval=50, blit=True)
     line_ani.save(
         f'{animal}_{day:02}_{epoch:02}_linearization.mp4', writer=writer)
+
+
+def plot_1D_wtrack_landmarks(data, max_time, ax=None):
+    if ax is None:
+        ax = plt.gca()
+    arm_min_max = (
+        data["position_info"].groupby(
+            "arm_name").linear_position.aggregate(["min", "max"])
+    )
+    ax.text(
+        max_time + 1,
+        arm_min_max.loc["Center Arm", "min"],
+        "C",
+        ha="left",
+        va="bottom",
+        weight="bold",
+    )
+    ax.text(
+        max_time + 1,
+        arm_min_max.loc["Center Arm", "max"],
+        "*",
+        ha="left",
+        va="top",
+        weight="bold",
+    )
+    ax.text(
+        max_time + 1,
+        arm_min_max.loc["Right Arm", "max"],
+        "R",
+        ha="left",
+        va="top",
+        weight="bold",
+    )
+    ax.text(
+        max_time + 1,
+        arm_min_max.loc["Right Arm", "min"],
+        "*",
+        ha="left",
+        va="center",
+        weight="bold",
+    )
+    ax.text(
+        max_time + 1,
+        arm_min_max.loc["Left Arm", "max"],
+        "L",
+        ha="left",
+        va="top",
+        weight="bold",
+    )
+    ax.text(
+        max_time + 1,
+        arm_min_max.loc["Left Arm", "min"],
+        "*",
+        ha="left",
+        va="center",
+        weight="bold",
+    )

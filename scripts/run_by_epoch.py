@@ -7,12 +7,14 @@ from subprocess import PIPE, run
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import xarray as xr
-from dask.distributed import Client
+from scipy.ndimage import label
 from tqdm.auto import tqdm
 
 from loren_frank_data_processing import save_xarray
-from loren_frank_data_processing.position import make_track_graph
+from loren_frank_data_processing.position import (EDGE_ORDER, EDGE_SPACING,
+                                                  make_track_graph)
 from replay_trajectory_classification import (ClusterlessClassifier,
                                               SortedSpikesClassifier)
 from src.analysis import (get_linear_position_order, get_place_field_max,
@@ -42,16 +44,22 @@ def sorted_spikes_analysis_1D(epoch_key, plot_ripple_figures=False):
     data = load_data(epoch_key)
 
     is_training = data['position_info'].speed > 4
-    position = data['position_info'].loc[:, 'linear_position2']
-    track_labels = data['position_info'].arm_name
+    position = data['position_info'].loc[:, 'linear_position']
+    track_graph, center_well_id = make_track_graph(epoch_key, ANIMALS)
+
+    model_name = os.path.join(
+        PROCESSED_DATA_DIR,
+        f'{animal}_{day:02}_{epoch:02}_{data_type}_{dim}_model.pkl')
     try:
-        logging.info('Found existing results. Loading...')
         results = xr.open_dataset(
             os.path.join(
                 PROCESSED_DATA_DIR, f'{animal}_{day:02}_{epoch:02}.nc'),
             group=f'/{data_type}/{dim}/classifier/ripples/')
+        logging.info('Found existing results. Loading...')
         ripple_times = data['ripple_times'].loc[:, ['start_time', 'end_time']]
         ripple_spikes = reshape_to_segments(data['spikes'], ripple_times)
+        classifier = SortedSpikesClassifier.load_model(model_name)
+        logging.info(classifier)
     except (FileNotFoundError, OSError):
         logging.info('Fitting classifier...')
         classifier = SortedSpikesClassifier(
@@ -61,7 +69,9 @@ def sorted_spikes_analysis_1D(epoch_key, plot_ripple_figures=False):
             spike_model_penalty=spike_model_penalty, knot_spacing=knot_spacing,
             continuous_transition_types=continuous_transition_types).fit(
                 position, data['spikes'], is_training=is_training,
-                track_labels=track_labels)
+                track_graph=track_graph, center_well_id=center_well_id,
+                edge_order=EDGE_ORDER, edge_spacing=EDGE_SPACING)
+        classifier.save_model(model_name)
         logging.info(classifier)
 
         # Plot Place Fields
@@ -69,10 +79,10 @@ def sorted_spikes_analysis_1D(epoch_key, plot_ripple_figures=False):
             x='position', col='neuron', col_wrap=4)
         arm_grouper = (data['position_info']
                        .groupby('arm_name')
-                       .linear_position2)
+                       .linear_position)
         max_df = arm_grouper.max()
         min_df = arm_grouper.min()
-        plt.xlim((0, data['position_info'].linear_position2.max()))
+        plt.xlim((0, data['position_info'].linear_position.max()))
         max_rate = (classifier.place_fields_.values.max() *
                     data['sampling_frequency'])
         for ax in g.axes.flat:
@@ -93,29 +103,40 @@ def sorted_spikes_analysis_1D(epoch_key, plot_ripple_figures=False):
         plt.close(g.fig)
 
         # Decode
-        ripple_times = data['ripple_times'].loc[:, ['start_time', 'end_time']]
-        ripple_spikes = reshape_to_segments(data['spikes'], ripple_times)
-        results = []
-        for ripple_number in tqdm(data['ripple_times'].index, desc='ripple'):
-            ripple_time = (ripple_spikes.loc[ripple_number].index -
-                           ripple_spikes.loc[ripple_number].index[0])
-            results.append(
-                classifier.predict(ripple_spikes.loc[ripple_number],
-                                   time=ripple_time))
+        is_test = ~is_training
+
+        test_groups = pd.DataFrame(
+            {'test_groups': label(is_test.values)[0]}, index=is_test.index)
+        immobility_results = []
+        for _, df in tqdm(test_groups.loc[is_test].groupby('test_groups'),
+                          desc='immobility'):
+            start_time, end_time = df.iloc[0].name, df.iloc[-1].name
+            test_spikes = data['spikes'].loc[start_time:end_time]
+            immobility_results.append(
+                classifier.predict(test_spikes, time=test_spikes.index))
+        immobility_results = xr.concat(immobility_results, dim='time')
+
+        results = [(immobility_results
+                    .sel(time=slice(df.start_time, df.end_time))
+                    .assign_coords(time=lambda ds: ds.time - ds.time[0]))
+                   for _, df in data['ripple_times'].iterrows()]
+
         results = (xr.concat(results, dim=data['ripple_times'].index)
                    .assign_coords(state=lambda ds: ds.state.to_index()
                                   .map(TRANSITION_TO_CATEGORY)))
 
         logging.info('Saving results...')
+        ripple_times = data['ripple_times'].loc[:, ['start_time', 'end_time']]
+        ripple_spikes = reshape_to_segments(data['spikes'], ripple_times)
         save_xarray(PROCESSED_DATA_DIR, epoch_key,
                     results.drop(['likelihood', 'causal_posterior']),
                     group=f'/{data_type}/{dim}/classifier/ripples/')
 
     logging.info('Saving replay_info...')
-    track_graph, _ = make_track_graph(epoch_key, ANIMALS)
     replay_info = get_replay_info(
         results, ripple_spikes, data['ripple_times'], data['position_info'],
-        track_graph, SAMPLING_FREQUENCY, PROBABILITY_THRESHOLD, epoch_key)
+        track_graph, SAMPLING_FREQUENCY, PROBABILITY_THRESHOLD, epoch_key,
+        classifier)
     epoch_identifier = f'{animal}_{day:02d}_{epoch:02d}_{data_type}_{dim}'
     replay_info_filename = os.path.join(
         PROCESSED_DATA_DIR, f'{epoch_identifier}_replay_info.csv')
@@ -140,30 +161,35 @@ def sorted_spikes_analysis_1D(epoch_key, plot_ripple_figures=False):
     if plot_ripple_figures:
         place_field_max = get_place_field_max(classifier)
         linear_position_order = place_field_max.argsort(axis=0).squeeze()
-
         ripple_position = reshape_to_segments(position, ripple_times)
 
         for ripple_number in tqdm(ripple_times.index, desc='ripple figures'):
-            posterior = (
-                results
-                .acausal_posterior
-                .sel(ripple_number=ripple_number)
-                .dropna('time')
-                .assign_coords(
-                    time=lambda ds: 1000 * ds.time / np.timedelta64(1, 's')))
-            plot_ripple_decode_1D(
-                posterior, ripple_position.loc[ripple_number],
-                ripple_spikes.loc[ripple_number], linear_position_order,
-                data['position_info'])
-            plt.suptitle(
-                f'ripple number = {animal}_{day:02d}_{epoch:02d}_'
-                f'{ripple_number:04d}')
-            fig_name = (f'{animal}_{day:02d}_{epoch:02d}_{ripple_number:04d}_'
-                        f'{data_type}_{dim}_acasual_classification.png')
-            fig_name = os.path.join(
-                FIGURE_DIR, 'ripple_classifications', fig_name)
-            plt.savefig(fig_name, bbox_inches='tight')
-            plt.close(plt.gcf())
+            try:
+                posterior = (
+                    results
+                    .acausal_posterior
+                    .sel(ripple_number=ripple_number)
+                    .dropna('time', how='all')
+                    .assign_coords(
+                        time=lambda ds: 1000 * ds.time /
+                        np.timedelta64(1, 's')))
+                plot_ripple_decode_1D(
+                    posterior, ripple_position.loc[ripple_number],
+                    ripple_spikes.loc[ripple_number], linear_position_order,
+                    data['position_info'])
+                plt.suptitle(
+                    f'ripple number = {animal}_{day:02d}_{epoch:02d}_'
+                    f'{ripple_number:04d}')
+                fig_name = (
+                    f'{animal}_{day:02d}_{epoch:02d}_{ripple_number:04d}_'
+                    f'{data_type}_{dim}_acasual_classification.png')
+                fig_name = os.path.join(
+                    FIGURE_DIR, 'ripple_classifications', fig_name)
+                plt.savefig(fig_name, bbox_inches='tight')
+                plt.close(plt.gcf())
+            except (ValueError, IndexError):
+                logging.warn(f'No figure for ripple number {ripple_number}...')
+                continue
 
     logging.info('Done...')
 
@@ -177,14 +203,20 @@ def sorted_spikes_analysis_2D(epoch_key, plot_ripple_figures=False):
 
     is_training = data['position_info'].speed > 4
     position = data['position_info'].loc[:, ['x_position', 'y_position']]
+
+    model_name = os.path.join(
+        PROCESSED_DATA_DIR,
+        f'{animal}_{day:02}_{epoch:02}_{data_type}_{dim}_model.pkl')
     try:
-        logging.info('Found existing results. Loading...')
         results = xr.open_dataset(
             os.path.join(
                 PROCESSED_DATA_DIR, f'{animal}_{day:02}_{epoch:02}.nc'),
             group=f'/{data_type}/{dim}/classifier/ripples/')
+        logging.info('Found existing results. Loading...')
         ripple_times = data['ripple_times'].loc[:, ['start_time', 'end_time']]
         ripple_spikes = reshape_to_segments(data['spikes'], ripple_times)
+        classifier = SortedSpikesClassifier.load_model(model_name)
+        logging.info(classifier)
     except (FileNotFoundError, OSError):
         logging.info('Fitting classifier...')
         classifier = SortedSpikesClassifier(
@@ -194,6 +226,7 @@ def sorted_spikes_analysis_2D(epoch_key, plot_ripple_figures=False):
             spike_model_penalty=spike_model_penalty, knot_spacing=knot_spacing,
             continuous_transition_types=continuous_transition_types).fit(
             position, data['spikes'], is_training=is_training)
+        classifier.save_model(model_name)
         logging.info(classifier)
 
         # Plot Place Fields
@@ -231,7 +264,8 @@ def sorted_spikes_analysis_2D(epoch_key, plot_ripple_figures=False):
     track_graph, _ = make_track_graph(epoch_key, ANIMALS)
     replay_info = get_replay_info(
         results, ripple_spikes, data['ripple_times'], data['position_info'],
-        track_graph, SAMPLING_FREQUENCY, PROBABILITY_THRESHOLD, epoch_key)
+        track_graph, SAMPLING_FREQUENCY, PROBABILITY_THRESHOLD, epoch_key,
+        classifier)
     epoch_identifier = f'{animal}_{day:02d}_{epoch:02d}_{data_type}_{dim}'
     replay_info_filename = os.path.join(
         PROCESSED_DATA_DIR, f'{epoch_identifier}_replay_info.csv')
@@ -255,7 +289,8 @@ def sorted_spikes_analysis_2D(epoch_key, plot_ripple_figures=False):
 
     if plot_ripple_figures:
         place_field_max = get_place_field_max(classifier)
-        linear_position_order, linear_place_field_max = get_linear_position_order(
+        (linear_position_order,
+         linear_place_field_max) = get_linear_position_order(
             data['position_info'], place_field_max)
         plot_neuron_place_field_2D_1D_position(
             data['position_info'], place_field_max, linear_place_field_max,
@@ -268,27 +303,32 @@ def sorted_spikes_analysis_2D(epoch_key, plot_ripple_figures=False):
         ripple_position = reshape_to_segments(position, ripple_times)
 
         for ripple_number in tqdm(ripple_times.index, desc='ripple figures'):
-            posterior = (
-                results
-                .acausal_posterior
-                .sel(ripple_number=ripple_number)
-                .dropna('time')
-                .assign_coords(
-                    time=lambda ds: 1000 * ds.time / np.timedelta64(1, 's'),))
-            plot_ripple_decode_2D(
-                posterior, ripple_position.loc[ripple_number],
-                ripple_spikes.loc[ripple_number], linear_position_order,
-                data['position_info'], spike_label='Cells')
-            plt.suptitle(
-                f'ripple number = {animal}_{day:02d}_{epoch:02d}_'
-                f'{ripple_number:04d}')
-            fig_name = (f'{animal}_{day:02d}_{epoch:02d}_{ripple_number:04d}_'
-                        f'{data_type}_{dim}_acasual_classification.png')
-            fig_name = os.path.join(
-                FIGURE_DIR, 'ripple_classifications', fig_name)
-            plt.savefig(fig_name, bbox_inches='tight')
-            plt.close(plt.gcf())
-
+            try:
+                posterior = (
+                    results
+                    .acausal_posterior
+                    .sel(ripple_number=ripple_number)
+                    .dropna('time', how='all')
+                    .assign_coords(
+                        time=lambda ds: 1000 * ds.time /
+                        np.timedelta64(1, 's'),))
+                plot_ripple_decode_2D(
+                    posterior, ripple_position.loc[ripple_number],
+                    ripple_spikes.loc[ripple_number], linear_position_order,
+                    data['position_info'], spike_label='Cells')
+                plt.suptitle(
+                    f'ripple number = {animal}_{day:02d}_{epoch:02d}_'
+                    f'{ripple_number:04d}')
+                fig_name = (
+                    f'{animal}_{day:02d}_{epoch:02d}_{ripple_number:04d}_'
+                    f'{data_type}_{dim}_acasual_classification.png')
+                fig_name = os.path.join(
+                    FIGURE_DIR, 'ripple_classifications', fig_name)
+                plt.savefig(fig_name, bbox_inches='tight')
+                plt.close(plt.gcf())
+            except (ValueError, IndexError):
+                logging.warn(f'No figure for ripple number {ripple_number}...')
+                pass
     logging.info('Done...')
 
 
@@ -300,20 +340,25 @@ def clusterless_analysis_1D(epoch_key, plot_ripple_figures=False):
     data = load_data(epoch_key)
 
     is_training = data['position_info'].speed > 4
-    position = data['position_info'].loc[:, 'linear_position2']
-    track_labels = data['position_info'].arm_name
+    position = data['position_info'].loc[:, 'linear_position']
+    track_graph, center_well_id = make_track_graph(epoch_key, ANIMALS)
 
+    model_name = os.path.join(
+        PROCESSED_DATA_DIR,
+        f'{animal}_{day:02}_{epoch:02}_{data_type}_{dim}_model.pkl')
     try:
-        logging.info('Found existing results. Loading...')
         results = xr.open_dataset(
             os.path.join(
                 PROCESSED_DATA_DIR, f'{animal}_{day:02}_{epoch:02}.nc'),
             group=f'/{data_type}/{dim}/classifier/ripples/')
+        logging.info('Found existing results. Loading...')
         ripple_times = data['ripple_times'].loc[:, ['start_time', 'end_time']]
         spikes = (((data['multiunit'].sum('features') > 0) * 1.0)
                   .to_dataframe(name='spikes').unstack())
         spikes.columns = data['tetrode_info'].tetrode_id
         ripple_spikes = reshape_to_segments(spikes, ripple_times)
+        classifier = ClusterlessClassifier.load_model(model_name)
+        logging.info(classifier)
     except (FileNotFoundError, OSError):
         logging.info('Fitting classifier...')
         classifier = ClusterlessClassifier(
@@ -323,26 +368,41 @@ def clusterless_analysis_1D(epoch_key, plot_ripple_figures=False):
             continuous_transition_types=continuous_transition_types,
             model=model, model_kwargs=model_kwargs).fit(
                 position, data['multiunit'], is_training=is_training,
-                track_labels=track_labels)
+                track_graph=track_graph, center_well_id=center_well_id,
+                edge_order=EDGE_ORDER, edge_spacing=EDGE_SPACING)
+        classifier.save_model(model_name)
         logging.info(classifier)
 
         # Decode
+        is_test = ~is_training
+
+        test_groups = pd.DataFrame(
+            {'test_groups': label(is_test.values)[0]}, index=is_test.index)
+        immobility_results = []
+        for _, df in tqdm(test_groups.loc[is_test].groupby('test_groups'),
+                          desc='immobility'):
+            start_time, end_time = df.iloc[0].name, df.iloc[-1].name
+            test_multiunit = data['multiunit'].sel(
+                time=slice(start_time, end_time))
+            immobility_results.append(
+                classifier.predict(test_multiunit, time=test_multiunit.time))
+
+        immobility_results = xr.concat(immobility_results, dim='time')
+
+        results = [(immobility_results
+                    .sel(time=slice(df.start_time, df.end_time))
+                    .assign_coords(time=lambda ds: ds.time - ds.time[0]))
+                   for _, df in data['ripple_times'].iterrows()]
+
+        results = (xr.concat(results, dim=data['ripple_times'].index)
+                   .assign_coords(state=lambda ds: ds.state.to_index()
+                                  .map(TRANSITION_TO_CATEGORY)))
+
         ripple_times = data['ripple_times'].loc[:, ['start_time', 'end_time']]
         spikes = (((data['multiunit'].sum('features') > 0) * 1.0)
                   .to_dataframe(name='spikes').unstack())
         spikes.columns = data['tetrode_info'].tetrode_id
         ripple_spikes = reshape_to_segments(spikes, ripple_times)
-
-        results = []
-        for ripple_number in tqdm(data['ripple_times'].index, desc='ripple'):
-            time_slice = slice(*data['ripple_times'].loc[
-                ripple_number, ['start_time', 'end_time']])
-            m = data['multiunit'].sel(time=time_slice)
-            results.append(classifier.predict(m, m.time - m.time[0]))
-        results = xr.concat(results, dim=data['ripple_times'].index)
-        results = results.assign_coords(
-            state=lambda ds: ds.state.to_index()
-            .map(TRANSITION_TO_CATEGORY))
 
         logging.info('Saving results...')
         save_xarray(PROCESSED_DATA_DIR, epoch_key,
@@ -350,10 +410,10 @@ def clusterless_analysis_1D(epoch_key, plot_ripple_figures=False):
                     group=f'/{data_type}/{dim}/classifier/ripples/')
 
     logging.info('Saving replay_info...')
-    track_graph, _ = make_track_graph(epoch_key, ANIMALS)
     replay_info = get_replay_info(
         results, ripple_spikes, data['ripple_times'], data['position_info'],
-        track_graph, SAMPLING_FREQUENCY, PROBABILITY_THRESHOLD, epoch_key)
+        track_graph, SAMPLING_FREQUENCY, PROBABILITY_THRESHOLD, epoch_key,
+        classifier)
     epoch_identifier = f'{animal}_{day:02d}_{epoch:02d}_{data_type}_{dim}'
     replay_info_filename = os.path.join(
         PROCESSED_DATA_DIR, f'{epoch_identifier}_replay_info.csv')
@@ -381,26 +441,32 @@ def clusterless_analysis_1D(epoch_key, plot_ripple_figures=False):
         ripple_position = reshape_to_segments(position, ripple_times)
 
         for ripple_number in tqdm(ripple_times.index, desc='ripple figures'):
-            posterior = (
-                results
-                .acausal_posterior
-                .sel(ripple_number=ripple_number)
-                .dropna('time')
-                .assign_coords(
-                    time=lambda ds: 1000 * ds.time / np.timedelta64(1, 's')))
-            plot_ripple_decode_1D(
-                posterior, ripple_position.loc[ripple_number],
-                ripple_spikes.loc[ripple_number], linear_position_order,
-                data['position_info'], spike_label='Tetrodes')
-            plt.suptitle(
-                f'ripple number = {animal}_{day:02d}_{epoch:02d}_'
-                f'{ripple_number:04d}')
-            fig_name = (f'{animal}_{day:02d}_{epoch:02d}_{ripple_number:04d}_'
-                        f'{data_type}_{dim}_acasual_classification.png')
-            fig_name = os.path.join(
-                FIGURE_DIR, 'ripple_classifications', fig_name)
-            plt.savefig(fig_name, bbox_inches='tight')
-            plt.close(plt.gcf())
+            try:
+                posterior = (
+                    results
+                    .acausal_posterior
+                    .sel(ripple_number=ripple_number)
+                    .dropna('time', how='all')
+                    .assign_coords(
+                        time=lambda ds: 1000 * ds.time /
+                        np.timedelta64(1, 's')))
+                plot_ripple_decode_1D(
+                    posterior, ripple_position.loc[ripple_number],
+                    ripple_spikes.loc[ripple_number], linear_position_order,
+                    data['position_info'], spike_label='Tetrodes')
+                plt.suptitle(
+                    f'ripple number = {animal}_{day:02d}_{epoch:02d}_'
+                    f'{ripple_number:04d}')
+                fig_name = (
+                    f'{animal}_{day:02d}_{epoch:02d}_{ripple_number:04d}_'
+                    f'{data_type}_{dim}_acasual_classification.png')
+                fig_name = os.path.join(
+                    FIGURE_DIR, 'ripple_classifications', fig_name)
+                plt.savefig(fig_name, bbox_inches='tight')
+                plt.close(plt.gcf())
+            except (ValueError, IndexError):
+                logging.warn(f'No figure for ripple number {ripple_number}...')
+                continue
 
     logging.info('Done...')
 
@@ -413,17 +479,23 @@ def clusterless_analysis_2D(epoch_key, plot_ripple_figures=False):
     data = load_data(epoch_key)
     position = data['position_info'].loc[:, ['x_position', 'y_position']]
     is_training = data['position_info'].speed > 4
+
+    model_name = os.path.join(
+        PROCESSED_DATA_DIR,
+        f'{animal}_{day:02}_{epoch:02}_{data_type}_{dim}_model.pkl')
     try:
-        logging.info('Found existing results. Loading...')
         results = xr.open_dataset(
             os.path.join(
                 PROCESSED_DATA_DIR, f'{animal}_{day:02}_{epoch:02}.nc'),
             group=f'/{data_type}/{dim}/classifier/ripples/')
+        logging.info('Found existing results. Loading...')
         ripple_times = data['ripple_times'].loc[:, ['start_time', 'end_time']]
         spikes = (((data['multiunit'].sum('features') > 0) * 1.0)
                   .to_dataframe(name='spikes').unstack())
         spikes.columns = data['tetrode_info'].tetrode_id
         ripple_spikes = reshape_to_segments(spikes, ripple_times)
+        classifier = ClusterlessClassifier.load_model(model_name)
+        logging.info(classifier)
     except (FileNotFoundError, OSError):
         logging.info('Fitting classifier...')
         classifier = ClusterlessClassifier(
@@ -433,6 +505,7 @@ def clusterless_analysis_2D(epoch_key, plot_ripple_figures=False):
             continuous_transition_types=continuous_transition_types,
             model=model, model_kwargs=model_kwargs).fit(
             position, data['multiunit'], is_training=is_training)
+        classifier.save_model(model_name)
         logging.info(classifier)
         # Decode
         ripple_times = data['ripple_times'].loc[:, ['start_time', 'end_time']]
@@ -461,7 +534,8 @@ def clusterless_analysis_2D(epoch_key, plot_ripple_figures=False):
     track_graph, _ = make_track_graph(epoch_key, ANIMALS)
     replay_info = get_replay_info(
         results, ripple_spikes, data['ripple_times'], data['position_info'],
-        track_graph, SAMPLING_FREQUENCY, PROBABILITY_THRESHOLD, epoch_key)
+        track_graph, SAMPLING_FREQUENCY, PROBABILITY_THRESHOLD, epoch_key,
+        classifier)
     epoch_identifier = f'{animal}_{day:02d}_{epoch:02d}_{data_type}_{dim}'
     replay_info_filename = os.path.join(
         PROCESSED_DATA_DIR, f'{epoch_identifier}_replay_info.csv')
@@ -485,7 +559,8 @@ def clusterless_analysis_2D(epoch_key, plot_ripple_figures=False):
 
     if plot_ripple_figures:
         place_field_max = get_place_field_max(classifier)
-        linear_position_order, linear_place_field_max = get_linear_position_order(
+        (linear_position_order,
+         linear_place_field_max) = get_linear_position_order(
             data['position_info'], place_field_max)
         plot_neuron_place_field_2D_1D_position(
             data['position_info'], place_field_max, linear_place_field_max,
@@ -498,26 +573,32 @@ def clusterless_analysis_2D(epoch_key, plot_ripple_figures=False):
         ripple_position = reshape_to_segments(position, ripple_times)
 
         for ripple_number in tqdm(ripple_times.index, desc='ripple figures'):
-            posterior = (
-                results
-                .acausal_posterior
-                .sel(ripple_number=ripple_number)
-                .dropna('time')
-                .assign_coords(
-                    time=lambda ds: 1000 * ds.time / np.timedelta64(1, 's')))
-            plot_ripple_decode_2D(
-                posterior, ripple_position.loc[ripple_number],
-                ripple_spikes.loc[ripple_number], position,
-                linear_position_order, spike_label='Tetrodes')
-            plt.suptitle(
-                f'ripple number = {animal}_{day:02d}_{epoch:02d}_'
-                f'{ripple_number:04d}')
-            fig_name = (f'{animal}_{day:02d}_{epoch:02d}_{ripple_number:04d}_'
-                        f'{data_type}_{dim}_acasual_classification.png')
-            fig_name = os.path.join(
-                FIGURE_DIR, 'ripple_classifications', fig_name)
-            plt.savefig(fig_name, bbox_inches='tight')
-            plt.close(plt.gcf())
+            try:
+                posterior = (
+                    results
+                    .acausal_posterior
+                    .sel(ripple_number=ripple_number)
+                    .dropna('time', how='all')
+                    .assign_coords(
+                        time=lambda ds: 1000 * ds.time /
+                        np.timedelta64(1, 's')))
+                plot_ripple_decode_2D(
+                    posterior, ripple_position.loc[ripple_number],
+                    ripple_spikes.loc[ripple_number], position,
+                    linear_position_order, spike_label='Tetrodes')
+                plt.suptitle(
+                    f'ripple number = {animal}_{day:02d}_{epoch:02d}_'
+                    f'{ripple_number:04d}')
+                fig_name = (
+                    f'{animal}_{day:02d}_{epoch:02d}_{ripple_number:04d}_'
+                    f'{data_type}_{dim}_acasual_classification.png')
+                fig_name = os.path.join(
+                    FIGURE_DIR, 'ripple_classifications', fig_name)
+                plt.savefig(fig_name, bbox_inches='tight')
+                plt.close(plt.gcf())
+            except (ValueError, IndexError):
+                logging.warn(f'No figure for ripple number {ripple_number}...')
+                continue
 
     logging.info('Done...')
 
@@ -574,15 +655,9 @@ def main():
                    stdout=PIPE, universal_newlines=True).stdout
     logging.info('Git Hash: {git_hash}'.format(git_hash=git_hash.rstrip()))
 
-    client_params = dict(n_workers=args.n_workers,
-                         threads_per_worker=args.threads_per_worker,
-                         processes=True,
-                         memory_limit='25GB')
-    with Client(**client_params) as client:
-        logging.info(client)
-        # Analysis Code
-        run_analysis[(args.data_type, args.dim)](
-            epoch_key, plot_ripple_figures=args.plot_ripple_figures)
+    # Analysis Code
+    run_analysis[(args.data_type, args.dim)](
+        epoch_key, plot_ripple_figures=args.plot_ripple_figures)
 
 
 if __name__ == '__main__':

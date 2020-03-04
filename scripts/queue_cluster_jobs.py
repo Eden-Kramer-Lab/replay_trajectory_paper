@@ -20,9 +20,9 @@ def get_command_line_arguments():
     parser.add_argument('--data_type', type=str, default='sorted_spikes')
     parser.add_argument('--dim', type=str, default='1D')
     parser.add_argument('--n_cores', type=int, default=16)
-    parser.add_argument('--wall_time', type=str, default='12:00:00')
+    parser.add_argument('--wall_time', type=str, default='14:00:00')
     parser.add_argument('--n_workers', type=int, default=16)
-    parser.add_argument('--threads_per_worker', type=int, default=1)
+    parser.add_argument('--threads_per_worker', type=int, default=16)
     parser.add_argument('--plot_ripple_figures', action='store_true')
     return parser.parse_args()
 

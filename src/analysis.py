@@ -2,14 +2,13 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 import xarray as xr
-
 from loren_frank_data_processing.track_segment_classification import (
     get_track_segments_from_graph, project_points_to_segment)
 
 
 def get_replay_info(results, ripple_spikes, ripple_times, position_info,
                     track_graph, sampling_frequency, probability_threshold,
-                    epoch_key):
+                    epoch_key, classifier):
     '''
 
     Parameters
@@ -50,8 +49,8 @@ def get_replay_info(results, ripple_spikes, ripple_times, position_info,
         'ripple_number').y_position.mean()
     duration['actual_linear_distance'] = ripple_position_info.groupby(
         'ripple_number').linear_distance.mean()
-    duration['actual_linear_position2'] = ripple_position_info.groupby(
-        'ripple_number').linear_position2.mean()
+    duration['actual_linear_position'] = ripple_position_info.groupby(
+        'ripple_number').linear_position.mean()
     duration['actual_speed'] = ripple_position_info.groupby(
         'ripple_number').speed.mean()
     duration['actual_velocity_center_well'] = ripple_position_info.groupby(
@@ -70,18 +69,23 @@ def get_replay_info(results, ripple_spikes, ripple_times, position_info,
     replay_info['day'] = int(day)
     replay_info['epoch'] = int(epoch)
 
-    max_df = position_info.groupby('arm_name').linear_position2.max()
-    min_df = position_info.groupby('arm_name').linear_position2.min()
+    min_max = (
+        classifier
+        ._nodes_df[classifier._nodes_df.is_bin_edge]
+        .groupby('edge_id')
+        .aggregate(['min', 'max']))
 
-    replay_info['center_well_position'] = min_df['Center Arm']
-    replay_info['choice_position'] = max_df['Center Arm']
+    replay_info['center_well_position'] = min_max.loc[0].linear_position.min()
+    replay_info['choice_position'] = min_max.loc[0].linear_position.max()
 
-    replay_info['left_arm_start'] = min_df['Left Arm']
-    replay_info['left_well_position'] = max_df['Left Arm']
+    replay_info['left_arm_start'] = min_max.loc[1].linear_position.min()
+    replay_info['left_well_position'] = min_max.loc[3].linear_position.max()
 
-    replay_info['right_arm_start'] = min_df['Right Arm']
-    replay_info['right_well_position'] = max_df['Right Arm']
-    replay_info['max_linear_distance'] = position_info.linear_distance.max()
+    replay_info['right_arm_start'] = min_max.loc[2].linear_position.min()
+    replay_info['right_well_position'] = min_max.loc[4].linear_position.max()
+    center_well_id = 0
+    replay_info['max_linear_distance'] = list(
+        classifier.distance_between_nodes_[center_well_id].values())[-1]
 
     return replay_info
 
@@ -100,21 +104,25 @@ def get_probability(results):
 
     '''
     try:
-        probability = results.acausal_posterior.sum(
-            ['x_position', 'y_position'], skipna=False)
+        probability = (results
+                       .acausal_posterior
+                       .sum(['x_position', 'y_position'], skipna=True))
     except ValueError:
-        probability = results.acausal_posterior.sum('position', skipna=False)
+        probability = (results
+                       .acausal_posterior
+                       .dropna('position', how='all')
+                       .sum('position', skipna=False))
 
     return xr.concat(
         (probability,
          probability
-            .sel(state=['hover', 'continuous'])
+            .sel(state=['Hover', 'Continuous'])
             .sum('state', skipna=False)
-            .assign_coords(state='hover-continuous-mix'),
+            .assign_coords(state='Hover-Continuous-Mix'),
          probability
-            .sel(state=['fragmented', 'continuous'])
+            .sel(state=['Fragmented', 'Continuous'])
             .sum('state', skipna=False)
-            .assign_coords(state='fragmented-continuous-mix'),
+            .assign_coords(state='Fragmented-Continuous-Mix'),
          ), dim='state')
 
 
@@ -133,17 +141,17 @@ def get_is_classified(probability, probablity_threshold):
 
     '''
     is_classified = probability > probablity_threshold
-    is_classified.loc[dict(state='hover-continuous-mix')] = (
-        is_classified.sel(state='hover-continuous-mix') &
-        ~is_classified.sel(state='hover') &
-        ~is_classified.sel(state='continuous') &
-        (probability.sel(state='fragmented') < (1 - probablity_threshold) / 2))
+    is_classified.loc[dict(state='Hover-Continuous-Mix')] = (
+        is_classified.sel(state='Hover-Continuous-Mix') &
+        ~is_classified.sel(state='Hover') &
+        ~is_classified.sel(state='Continuous') &
+        (probability.sel(state='Fragmented') < (1 - probablity_threshold) / 2))
 
-    is_classified.loc[dict(state='fragmented-continuous-mix')] = (
-        is_classified.sel(state='fragmented-continuous-mix') &
-        ~is_classified.sel(state='fragmented') &
-        ~is_classified.sel(state='continuous') &
-        (probability.sel(state='hover') < (1 - probablity_threshold) / 2))
+    is_classified.loc[dict(state='Fragmented-Continuous-Mix')] = (
+        is_classified.sel(state='Fragmented-Continuous-Mix') &
+        ~is_classified.sel(state='Fragmented') &
+        ~is_classified.sel(state='Continuous') &
+        (probability.sel(state='Hover') < (1 - probablity_threshold) / 2))
     is_classified = is_classified.rename('is_classified')
     is_classified = is_classified.where(~np.isnan(probability))
 
@@ -157,19 +165,19 @@ def get_replay_distance_metrics(results, ripple_position_info, ripple_spikes,
     posterior = (results
                  .sel(ripple_number=ripple_number)
                  .acausal_posterior
-                 .dropna('time')
+                 .dropna('time', how='all')
                  .assign_coords(
                      time=lambda ds: 1000 * ds.time / np.timedelta64(1, 's')))
     is_classified = (
         is_classified
         .sel(ripple_number=ripple_number)
-        .dropna('time')
+        .dropna('time', how='all')
         .assign_coords(
             time=lambda ds: 1000 * ds.time / np.timedelta64(1, 's')))
     probability = (
         probability
         .sel(ripple_number=ripple_number)
-        .dropna('time')
+        .dropna('time', how='all')
         .assign_coords(
             time=lambda ds: 1000 * ds.time / np.timedelta64(1, 's'))
     )
@@ -251,7 +259,7 @@ def get_replay_distance_metrics(results, ripple_position_info, ripple_spikes,
                 ripple_spikes.sum(axis=0) > 0).sum()
             metrics[f'{state}_n_total_spikes'] = (
                 ripple_spikes.sum(axis=0)).sum()
-            metrics[f'{state}_popultion_rate'] = (
+            metrics[f'{state}_population_rate'] = (
                 sampling_frequency * metrics[f'{state}_n_total_spikes'] /
                 above_threshold.sum())
 
@@ -297,7 +305,7 @@ def get_place_field_max(classifier):
             classifier.place_fields_.position[max_ind].values.tolist())
     except AttributeError:
         return np.asarray(
-            [classifier.place_bin_centers_[gpi.result().argmax()]
+            [classifier.place_bin_centers_[gpi.argmax()]
              for gpi in classifier.ground_process_intensities_])
 
 
@@ -309,7 +317,7 @@ def get_linear_position_order(position_info, place_field_max):
         min_ind = np.sqrt(
             np.sum(np.abs(place_max - position) ** 2, axis=1)).idxmin()
         linear_place_field_max.append(
-            position_info.loc[min_ind, 'linear_position2'])
+            position_info.loc[min_ind, 'linear_position'])
 
     linear_place_field_max = np.asarray(linear_place_field_max)
     return np.argsort(linear_place_field_max), linear_place_field_max
@@ -365,7 +373,6 @@ def calculate_replay_distance(track_graph, map_estimate, actual_positions,
     -------
     replay_distance_from_actual_position : ndarray, shape (n_time,)
     replay_distance_from_center_well : ndarray, shape (n_time,)
-    replay_linear_position : ndarray, shape (n_time,)
 
     '''
 
@@ -376,7 +383,7 @@ def calculate_replay_distance(track_graph, map_estimate, actual_positions,
     n_position_dims = map_estimate.shape[1]
     if n_position_dims == 1:
         closest_ind = _get_closest_ind(
-            map_estimate, position_info.linear_position2)
+            map_estimate, position_info.linear_position)
     else:
         closest_ind = _get_closest_ind(
             map_estimate, position_info.loc[:, ['x_position', 'y_position']])
@@ -411,23 +418,23 @@ def calculate_replay_distance(track_graph, map_estimate, actual_positions,
             # Add actual position node
             node_name = 'actual_position'
             node1, node2 = actual_edge_id
-            track_graph1.add_path([node1, node_name, node2])
+            nx.add_path(track_graph1, [node1, node_name, node2])
             track_graph1.remove_edge(node1, node2)
             track_graph1.nodes[node_name]['pos'] = tuple(actual_pos)
 
             # Add replay position node
             node_name = 'replay_position'
             node1, node2 = replay_edge_id
-            track_graph1.add_path([node1, node_name, node2])
+            nx.add_path(track_graph1, [node1, node_name, node2])
             track_graph1.remove_edge(node1, node2)
             track_graph1.nodes[node_name]['pos'] = tuple(replay_pos)
         else:
             node1, node2 = actual_edge_id
 
-            track_graph1.add_path(
-                [node1, 'actual_position', 'replay_position', node2])
-            track_graph1.add_path(
-                [node1, 'replay_position', 'actual_position', node2])
+            nx.add_path(track_graph1,
+                        [node1, 'actual_position', 'replay_position', node2])
+            nx.add_path(track_graph1,
+                        [node1, 'replay_position', 'actual_position', node2])
 
             track_graph1.nodes['actual_position']['pos'] = tuple(actual_pos)
             track_graph1.nodes['replay_position']['pos'] = tuple(replay_pos)
@@ -436,8 +443,8 @@ def calculate_replay_distance(track_graph, map_estimate, actual_positions,
         # Calculate distance between all nodes
         for edge in track_graph1.edges(data=True):
             track_graph1.edges[edge[:2]]['distance'] = np.linalg.norm(
-                track_graph1.node[edge[0]]['pos'] -
-                np.array(track_graph1.node[edge[1]]['pos']))
+                track_graph1.nodes[edge[0]]['pos'] -
+                np.array(track_graph1.nodes[edge[1]]['pos']))
 
         replay_distance_from_actual_position.append(
             nx.shortest_path_length(
