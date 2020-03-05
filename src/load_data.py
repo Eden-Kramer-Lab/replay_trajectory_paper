@@ -86,53 +86,47 @@ def load_data(epoch_key, brain_areas=None):
     position_info = (
         get_interpolated_position_dataframe(
             epoch_key, ANIMALS, _time_function)
-<< << << < HEAD
-        .dropna(subset=['linear_distance', 'linear_speed']))
-
-
-== == == =
         .dropna(subset=['linear_position', 'speed']))
->> >>>> > analyze - all - immobility
 
-    time=position_info.index
+    time = position_info.index
 
-    tetrode_info=make_tetrode_dataframe(ANIMALS, epoch_key = epoch_key)
-    is_brain_areas=(
+    tetrode_info = make_tetrode_dataframe(ANIMALS, epoch_key=epoch_key)
+    is_brain_areas = (
         tetrode_info.area.astype(str).str.upper().isin(brain_areas))
-    tetrode_keys=tetrode_info.loc[is_brain_areas].index
-    lfps=get_LFPs(tetrode_keys, ANIMALS)
-    lfps=lfps.resample('2ms').mean().fillna(method = 'pad').reindex(time)
+    tetrode_keys = tetrode_info.loc[is_brain_areas].index
+    lfps = get_LFPs(tetrode_keys, ANIMALS)
+    lfps = lfps.resample('2ms').mean().fillna(method='pad').reindex(time)
 
     try:
-        neuron_info=make_neuron_dataframe(ANIMALS).xs(
-            epoch_key, drop_level = False)
-        neuron_info=neuron_info.loc[
+        neuron_info = make_neuron_dataframe(ANIMALS).xs(
+            epoch_key, drop_level=False)
+        neuron_info = neuron_info.loc[
             (neuron_info.numspikes > 100) &
             neuron_info.area.isin(brain_areas) &
             (neuron_info.type == 'principal')]
         spikes = get_all_spike_indicators(
             neuron_info.index, ANIMALS, _time_function).reindex(time)
     except KeyError:
-        spikes=None
+        spikes = None
 
-    tetrode_info=tetrode_info.loc[is_brain_areas]
-    multiunit=(get_all_multiunit_indicators(
+    tetrode_info = tetrode_info.loc[is_brain_areas]
+    multiunit = (get_all_multiunit_indicators(
         tetrode_info.index, ANIMALS, _time_function)
         .sel(features=_MARKS)
         .reindex({'time': time}))
-    multiunit_spikes=(np.any(~np.isnan(multiunit.values), axis=1)
+    multiunit_spikes = (np.any(~np.isnan(multiunit.values), axis=1)
                         ).astype(np.float)
-    multiunit_firing_rate=pd.DataFrame(
+    multiunit_firing_rate = pd.DataFrame(
         get_multiunit_population_firing_rate(
-            multiunit_spikes, SAMPLING_FREQUENCY), index = time,
-        columns = ['firing_rate'])
+            multiunit_spikes, SAMPLING_FREQUENCY), index=time,
+        columns=['firing_rate'])
 
     logger.info('Finding ripple times...')
-    ripple_times, ripple_filtered_lfps, ripple_lfps=get_ripple_times(
+    ripple_times, ripple_filtered_lfps, ripple_lfps = get_ripple_times(
         epoch_key)
 
-    ripple_times=ripple_times.assign(
-        duration = lambda df: (df.end_time - df.start_time).dt.total_seconds())
+    ripple_times = ripple_times.assign(
+        duration=lambda df: (df.end_time - df.start_time).dt.total_seconds())
 
     return {
         'position_info': position_info,
