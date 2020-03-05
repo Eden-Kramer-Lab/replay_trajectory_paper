@@ -62,5 +62,10 @@ coverage.xml
 *.ai
 *.nc
 *.pkl
+*.docx
 *.pdf
-figures/edenovellis_2019_10_29_figures_and_figure_captions.docx
+!Figure1_v*.pdf
+!Figure2_v*.pdf
+!Figure3_v*.pdf
+!Figure4_v*.pdf
+!Figure5_v*.pdf

@@ -2,6 +2,8 @@ from logging import getLogger
 
 import numpy as np
 import pandas as pd
+from scipy.signal import filtfilt
+
 from loren_frank_data_processing import (get_all_multiunit_indicators,
                                          get_all_spike_indicators,
                                          get_interpolated_position_dataframe,
@@ -11,7 +13,6 @@ from loren_frank_data_processing import (get_all_multiunit_indicators,
 from ripple_detection import (Kay_ripple_detector,
                               get_multiunit_population_firing_rate)
 from ripple_detection.core import _get_ripplefilter_kernel
-from scipy.signal import filtfilt
 
 from .parameters import _BRAIN_AREAS, _MARKS, ANIMALS, SAMPLING_FREQUENCY
 
