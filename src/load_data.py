@@ -46,7 +46,8 @@ def get_ripple_times(epoch_key, sampling_frequency=1500,
         .dropna(subset=['linear_position', 'speed']))
     speed = position_info['speed']
     time = position_info.index
-    tetrode_info = make_tetrode_dataframe(ANIMALS, epoch_key=epoch_key)
+    tetrode_info = make_tetrode_dataframe(ANIMALS).xs(
+        epoch_key, drop_level=False)
     if ~np.all(np.isnan(tetrode_info.validripple.astype(float))):
         tetrode_keys = tetrode_info.loc[
             (tetrode_info.validripple == 1)].index
