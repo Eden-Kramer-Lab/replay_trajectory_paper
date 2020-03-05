@@ -1,6 +1,8 @@
-\documentclass[times, twoside, watermark]{zHenriquesLab-StyleBioRxiv}
+\documentclass[times, twoside]{zHenriquesLab-StyleBioRxiv}
 \usepackage{blindtext}
-\pdfoptionalwaysusepdfpagebox=5
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+
 \DeclareMathOperator*{\E}{\mathbb{E}}
 \newcommand{\norm}[1]{\left\lVert #1 \right\rVert}
 
@@ -50,49 +52,49 @@ loren\at phy.ucsf.edu
 \section*{Introduction}
 The hippocampus is a brain area that is important for short term learning and memory. Neurons in the hippocampus preferentially fire in response to specific locations in an environment, which results in sequences of cells firing as an animal moves through an environment that reflect the trajectory of the animal. When the animal is asleep or immobile, cells also fire in sequence, forming trajectory-like representations that can recapitulate sequences previously observed when the animal was running. These sequences are thought to be important for memory consolidation or prospective decision making. (cite some examples). Therefore, characterizing the dynamics of hippocampal sequences is important for understanding memory consolidation and prospective decision making.
 
-Current methods analyze hippocampal sequences by assuming a constant velocity trajectory (Davidson et al. 2009), corresponding to a single dynamic. This is done by computing the probability of position at each time using the place field information from the population of neurons and then fitting a line to maximize the probability of position over time. If the probabilities near the best fit line are high relative to shuffled distribution, the replay is analyzed. Often, trajectories that travel less than a certain distance (Pfeiffer and Foster 2013, Pfeiffer and Foster 2015) are excluded.
+Current methods analyze hippocampal sequences by assuming a constant velocity trajectory \cite{DavidsonHippocampalReplayExtended2009}, corresponding to a single dynamic. This is done by computing the probability of position at each time using the place field information from the population of neurons and then fitting a line to maximize the probability of position over time. If the probabilities near the best fit line are high relative to shuffled distribution, the replay is analyzed. Often, trajectories that travel less than a certain distance \cite{PfeifferAutoassociativedynamicsgeneration2015} are excluded.
 
-However, there is a growing evidence that trajectories that have more complex dynamics. Farooq and Dragoi (2019) found that juvenile rats . For example, Pfeiffer and Foster (2015) found that trajectories alternated between stationary hovering trajectories and continuous movement trajectories on a gamma timescale. 
+However, there is a growing evidence that trajectories that have more complex dynamics. Farooq and Dragoi \cite{FarooqEmergencepreconfiguredplastic2019} found that juvenile rats . For example, Pfeiffer and Foster \cite{PfeifferAutoassociativedynamicsgeneration2015} found that trajectories alternated between stationary hovering trajectories and continuous movement trajectories on a gamma timescale. 
 
 Our mathematical model precisely specifies the dyna
 
 \section*{Results}
 
-Just for kicks here's a citation \cite{DavidsonHippocampalReplayExtended2009}. And a reference to a supplement \cref{note:Note1}. And \nameref{note:Note1}.
-\Blindtext
-
 \begin{figure*}%[tbhp]
 \centering
-\includegraphics[width=.8\linewidth]{figures/Figure1/Figure1_v3.pdf}
+\includegraphics[width=0.80\linewidth]{figures/Figure1/Figure1_v3.pdf}
 \caption{Placeholder image of Iris with a long example caption to show justification setting.}
-\label{fig:computerNo}
+\label{Figure1}
 \end{figure*}
-
-\Blindtext
-
-Figure \ref{fig:computerNo} shows an example of how to insert a column-wide figure. To insert a figure wider than one column, please use the \verb|\begin{figure*}...\end{figure*}| environment. Figures wider than one column should be sized to 11.4 cm or 17.8 cm wide. Use \verb|\begin{SCfigure*}...\end{SCfigure*}| for a wide figure with side captions.
 
 \begin{figure*}%[tbhp]
 \centering
-\includegraphics[width=1.0\linewidth]{figures/Figure2/Figure2_v3.pdf}
-\caption{Model can classify each category of trajectory dynamic (and combinations of dynamics) on simulated data. Each panel has three plots that show (from top to bottom) the simulated cell population activity, the probability of the three trajectory dynamics at each time, and the decoded posterior probability of position at each time. \textbf{a.} Continuous. \textbf{b.} Hover. \textbf{c.} Fragmented. \textbf{d.} Hover-Continuous-Hover. \textbf{e.} Fragmented-Continuous-Fragmented. \textbf{f.} Fragmented-Hover-Fragmented.}
-\label{fig:computerNo}
+\includegraphics[width=0.80\linewidth]{figures/Figure2/Figure2_v3}
+\caption{Placeholder image of Iris with a long example caption to show justification setting.}
+\label{Figure2}
 \end{figure*}
+
+\begin{figure*}%[tbhp]
+\centering
+\includegraphics[width=0.80\linewidth]{figures/Figure3/Figure3_v3}
+\caption{Placeholder image of Iris with a long example caption to show justification setting.}
+\label{Figure3}
+\end{figure*}
+
+\begin{figure*}%[tbhp]
+\centering
+\includegraphics[width=0.80\linewidth]{figures/Figure4/Figure4_v2}
+\caption{Placeholder image of Iris with a long example caption to show justification setting.}
+\label{Figure4}
+\end{figure*}
+
 
 \section*{Discussion}
 
-blablaba \ref{fig:computerNo} 
-\blindtext
 
 \subsection*{Blabla} 
-\blindtext
-
-
-blablaba \ref{fig:computerNo}
-\blindtext
 
 \begin{acknowledgements}
-\blindtext
 \end{acknowledgements}
 
 \section*{References}
@@ -136,10 +138,32 @@ Python code used for analysis and generating figures in the paper is available a
 
 \begin{figure*}%[tbhp]
 \centering
-\includegraphics[width=1.0\linewidth]{figures/Figure1-supplemental1/Figure1_v1_supplemental1.pdf}
-\caption{Increasing the probability of transitioning within category.}
-\label{fig:Supplemental Figure 3}
+\includegraphics[width=0.80\linewidth]{figures/Figure1-supplemental1/Figure1_v1_supplemental1}
+\caption{Placeholder image of Iris with a long example caption to show justification setting.}
+\label{fig:Figure1-Figure supplement 1}
 \end{figure*}
+
+\begin{figure*}%[tbhp]
+\centering
+\includegraphics[width=0.80\linewidth]{figures/Figure2-supplemental1/Figure2_v2-supplemental1}
+\caption{Placeholder image of Iris with a long example caption to show justification setting.}
+\label{fig:Figure2-Figure supplement 1}
+\end{figure*}
+
+\begin{figure*}%[tbhp]
+\centering
+\includegraphics[width=0.80\linewidth]{figures/Figure2-supplemental2/Figure2_v2-supplemental2}
+\caption{Placeholder image of Iris with a long example caption to show justification setting.}
+\label{fig:Figure2-Figure supplement 2}
+\end{figure*}
+
+\begin{figure*}%[tbhp]
+\centering
+\includegraphics[width=0.80\linewidth]{figures/Figure3-supplemental1/Figure3_v2_supplemental1}
+\caption{Placeholder image of Iris with a long example caption to show justification setting.}
+\label{fig:Figure3-Figure supplement 1}
+\end{figure*}
+
 
 %TC:endignore
 %the command above ignores this section for word count
