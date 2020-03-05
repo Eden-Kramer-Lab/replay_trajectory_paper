@@ -1,7 +1,6 @@
 from os.path import abspath, dirname, join, pardir
 
 import numpy as np
-
 from loren_frank_data_processing import Animal
 from replay_trajectory_classification.misc import NumbaKDE
 
@@ -62,12 +61,19 @@ PROBABILITY_THRESHOLD = 0.8
 STATE_ORDER = ['Hover', 'Hover-Continuous-Mix', 'Continuous',
                'Fragmented-Continuous-Mix', 'Fragmented']
 
+SHORT_STATE_ORDER = ['Hover', 'Hover-Cont.-Mix', 'Cont.',
+                     'Frag.-Cont.-Mix', 'Frag.']
+
 # Plotting Colors
 STATE_COLORS = {
     'Hover': '#9f043a',
     'Fragmented': '#ff6944',
+    'Frag.': '#ff6944',
     'Continuous': '#521b65',
+    'Cont.': '#521b65',
     'Hover-Continuous-Mix': '#61c5e6',
+    'Hover-Cont.-Mix': '#61c5e6',
     'Fragmented-Continuous-Mix': '#2a586a',
+    'Frag.-Cont.-Mix': '#2a586a',
     '': '#c7c7c7',
 }

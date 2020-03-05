@@ -1,23 +1,36 @@
+
+import os
+
 import matplotlib.animation as animation
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from matplotlib.collections import LineCollection
-from matplotlib.colorbar import ColorbarBase, make_axes
-
 from loren_frank_data_processing.position import (get_position_dataframe,
                                                   make_track_graph)
 from loren_frank_data_processing.track_segment_classification import (
     get_track_segments_from_graph, plot_track, project_points_to_segment)
+from matplotlib.collections import LineCollection
+from matplotlib.colorbar import ColorbarBase, make_axes
+
 from src.analysis import maximum_a_posteriori_estimate
-from src.parameters import STATE_COLORS, STATE_ORDER
+from src.parameters import (FIGURE_DIR, SAMPLING_FREQUENCY, SHORT_STATE_ORDER,
+                            STATE_COLORS, STATE_ORDER)
 
 try:
     from upsetplot import UpSet
 except ImportError:
     class Upset:
         pass
+
+
+SHORT_STATE_NAMES = {
+    "Hover": "Hover",
+    "Hover-Continuous-Mix": "Hover-Cont.-Mix",
+    "Continuous": "Cont.",
+    "Fragmented-Continuous-Mix": "Frag.-Cont.-Mix",
+    "Fragmented": "Frag."
+}
 
 
 def plot_2D_position_with_color_time(time, position, ax=None, cmap='plasma',
@@ -287,11 +300,21 @@ def plot_neuron_place_field_2D_1D_position(
 
 
 def plot_category_counts(replay_info):
-    upset = UpSet(replay_info.set_index(STATE_ORDER[::-1]),
+    df = (replay_info
+          .rename(columns=SHORT_STATE_NAMES)
+          .set_index(SHORT_STATE_ORDER[::-1]))
+    upset = UpSet(df,
                   sum_over=False, sort_sets_by=None, show_counts=False,
                   sort_by='cardinality', intersection_plot_elements=6,
                   element_size=32)
-    return upset.plot()
+    axes = upset.plot()
+    axes["intersections"].set_ylabel(
+        "Number of\nRipples per\nCombination",
+        rotation="horizontal",
+        ha="right",
+        va="center",
+    )
+    return axes
 
 
 def _plot_category(replay_info, category, kind='strip', ax=None,
@@ -307,16 +330,16 @@ def _plot_category(replay_info, category, kind='strip', ax=None,
         norm = np.ones_like(
             replay_info.left_well_position.values[:, np.newaxis])
     data = (replay_info.loc[:, is_col].mask(zero_mask)
-            .rename(columns=lambda c: c.split('_')[0]))
+            .rename(columns=lambda c: SHORT_STATE_NAMES[c.split('_')[0]]))
     data /= norm
     if kind == 'strip':
-        sns.stripplot(data=data, order=STATE_ORDER, orient='horizontal',
+        sns.stripplot(data=data, order=SHORT_STATE_ORDER, orient='horizontal',
                       palette=STATE_COLORS, ax=ax, **kwargs)
     elif kind == 'violin':
-        sns.violinplot(data=data, order=STATE_ORDER, orient='horizontal',
+        sns.violinplot(data=data, order=SHORT_STATE_ORDER, orient='horizontal',
                        palette=STATE_COLORS, ax=ax, cut=0, **kwargs)
     elif kind == "box":
-        sns.boxplot(data=data, order=STATE_ORDER, orient='horizontal',
+        sns.boxplot(data=data, order=SHORT_STATE_ORDER, orient='horizontal',
                     palette=STATE_COLORS, ax=ax, **kwargs)
     sns.despine(left=True, ax=ax)
 
@@ -326,7 +349,7 @@ def plot_category_duration(replay_info, kind='strip', ax=None, **kwargs):
         ax = plt.gca()
     _plot_category(replay_info, 'duration', kind=kind, ax=ax,
                    is_zero_mask=True, **kwargs)
-    ax.set_xlabel('Duration [s]')
+    ax.set_xlabel('Duration within Ripple [s]')
 
 
 def plot_linear_position_of_animal(replay_info, ax=None):
@@ -836,3 +859,137 @@ def plot_1D_wtrack_landmarks(data, max_time, ax=None):
         va="center",
         weight="bold",
     )
+
+
+def make_classifier_movie(
+    classifier, results, ripple_number, data, epoch_key,
+    frame_rate=SAMPLING_FREQUENCY // 30,
+    movie_name=None,
+):
+
+    MILLISECONDS_TO_SECONDS = 1000
+    if movie_name is None:
+        movie_name = (f"{epoch_key[0]}_{epoch_key[1]:02d}_{epoch_key[2]:02d}"
+                      f"_{ripple_number:04d}.mp4")
+        movie_name = os.path.join(FIGURE_DIR, movie_name)
+    posterior = (results
+                 .sel(ripple_number=ripple_number)
+                 .acausal_posterior
+                 .dropna("time", how="all")
+                 )
+    probabilities = posterior.sum("position")
+    map_position = classifier.place_bin_center_2D_position_[
+        posterior.sum("state").argmax("position").values
+    ]
+    time_slice = slice(
+        *data["ripple_times"].loc[ripple_number, ["start_time", "end_time"]]
+    )
+    position = (
+        data["position_info"]
+        .loc[time_slice, ["projected_x_position", "projected_y_position"]]
+        .values
+    )
+    # Set up formatting for the movie files
+    Writer = animation.writers["ffmpeg"]
+    writer = Writer(fps=frame_rate, metadata=dict(artist="Me"), bitrate=1800)
+
+    fig, axes = plt.subplots(
+        1,
+        3,
+        figsize=(14, 7),
+        gridspec_kw={"width_ratios": [10, 10, 1]},
+        constrained_layout=False,
+    )
+
+    # Plot 1
+    axes[0].set_facecolor("black")
+    position_2d = data["position_info"].loc[:, ["x_position", "y_position"]]
+    axes[0].plot(
+        position_2d.values[:, 0],
+        position_2d.values[:, 1],
+        color="lightgrey",
+        alpha=0.4,
+        zorder=1,
+    )
+
+    axes[0].set_xlim(
+        data["position_info"].x_position.min() - 1,
+        data["position_info"].x_position.max() + 1,
+    )
+    axes[0].set_ylim(
+        data["position_info"].y_position.min() + 1,
+        data["position_info"].y_position.max() + 1,
+    )
+    axes[0].set_xlabel("x-position")
+    axes[0].set_ylabel("y-position")
+
+    position = np.asarray(position)
+    position_dot = axes[0].scatter(
+        [], [], s=80, zorder=102, color="b", label="Actual")
+    (position_line,) = axes[0].plot([], [], "b-", linewidth=3)
+
+    map_dot = axes[0].scatter([], [], s=80, zorder=102,
+                              color="r", label="Decoded")
+    (map_line,) = axes[0].plot([], [], "r-", linewidth=3)
+    axes[0].legend(fontsize=9, loc="upper right")
+
+    # Plot 2
+    time = (MILLISECONDS_TO_SECONDS *
+            probabilities.time.values / np.timedelta64(1, "s"))
+    (hover_line,) = axes[1].plot([], [], STATE_COLORS["Hover"], linewidth=3)
+    (cont_line,) = axes[1].plot(
+        [], [], STATE_COLORS["Continuous"], linewidth=3)
+    (frag_line,) = axes[1].plot(
+        [], [], STATE_COLORS["Fragmented"], linewidth=3)
+    axes[1].set_ylim((0, 1.01))
+    axes[1].set_xlim((time.min(), time.max()))
+    axes[1].set_xlabel("Time [ms]")
+    axes[1].set_ylabel("Probability")
+
+    axes[2].legend(
+        (hover_line, cont_line, frag_line),
+        ("Hover", "Cont.", "Frag."),
+        fontsize=12,
+        loc="upper right",
+        frameon=False,
+    )
+    axes[2].axis("off")
+
+    sns.despine()
+    n_frames = map_position.shape[0]
+
+    def _update_plot(time_ind):
+        start_ind = max(0, time_ind - 5)
+        time_slice = slice(start_ind, time_ind)
+
+        position_dot.set_offsets(position[time_ind])
+        position_line.set_data(
+            position[time_slice, 0], position[time_slice, 1])
+
+        map_dot.set_offsets(map_position[time_ind])
+        map_line.set_data(
+            map_position[time_slice, 0], map_position[time_slice, 1])
+
+        hover_line.set_data(
+            time[:time_ind], probabilities.sel(
+                state="Hover").values[:time_ind],
+        )
+        cont_line.set_data(
+            time[:time_ind], probabilities.sel(
+                state="Continuous").values[:time_ind],
+        )
+        frag_line.set_data(
+            time[:time_ind], probabilities.sel(
+                state="Fragmented").values[:time_ind],
+        )
+
+        return position_dot, map_dot
+
+    movie = animation.FuncAnimation(
+        fig, _update_plot, frames=n_frames, interval=1000 / frame_rate,
+        blit=True
+    )
+    if movie_name is not None:
+        movie.save(movie_name, writer=writer)
+
+    return fig, movie

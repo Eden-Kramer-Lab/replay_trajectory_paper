@@ -1,16 +1,12 @@
-import copy
-
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 
 from src.analysis import (get_is_classified, get_probability,
                           maximum_a_posteriori_estimate)
-from src.figure_utilities import (ONE_COLUMN, PAGE_HEIGHT, TWO_COLUMN,
-                                  save_figure)
+from src.figure_utilities import PAGE_HEIGHT, TWO_COLUMN, save_figure
 from src.parameters import PROBABILITY_THRESHOLD, STATE_COLORS
-from src.visualization import (plot_1D_wtrack_landmarks,
-                               plot_2D_position_with_color_time)
+from src.visualization import plot_2D_position_with_color_time
 
 MILLISECONDS_TO_SECONDS = 1000
 
@@ -70,7 +66,7 @@ def plot_2D_results(spike_times, data, results_2D, classifier_2D,
             MILLISECONDS_TO_SECONDS *
             probability.time / np.timedelta64(1, "s"),
             prob,
-            linewidth=3,
+            linewidth=2,
             color=STATE_COLORS[state],
         )
 
@@ -84,7 +80,7 @@ def plot_2D_results(spike_times, data, results_2D, classifier_2D,
     )
     axes[1].set_xlabel("Time [ms]")
 
-    axes[1].set_ylim((0, 1.01))
+    axes[1].set_ylim((0, 1.05))
     axes[1].set_yticks((0, 1))
     axes[1].set_ylabel("Probability")
 
@@ -190,5 +186,5 @@ def plot_2D_results(spike_times, data, results_2D, classifier_2D,
         f"{data_type}_2D_acasual_classification"
     )
     save_figure(fig_name)
-    
+
     return cbar

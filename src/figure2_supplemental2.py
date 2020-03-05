@@ -61,11 +61,11 @@ def plot_clusterless_1D_results(multiunit_times, data, results,
             MILLISECONDS_TO_SECONDS *
             probability.time / np.timedelta64(1, "s"),
             prob,
-            linewidth=3,
+            linewidth=2,
             color=STATE_COLORS[state],
         )
 
-    axes[1].set_ylim((0, 1.01))
+    axes[1].set_ylim((0, 1.05))
     axes[1].set_yticks((0, 1))
     axes[1].set_ylabel("Prob.")
     probability2 = get_probability(results)

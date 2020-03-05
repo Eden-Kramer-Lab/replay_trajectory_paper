@@ -58,12 +58,12 @@ def plot_1D_results(spike_times, data, results_1D,
          (ripple_end - ripple_start) / np.timedelta64(1, "s"))
     )
 
-    axes[0].set_yticks((1, n_tetrodes))
+    axes[0].set_yticks((0, n_tetrodes))
 
     if data_type == "sorted_spikes":
         axes[0].set_ylabel("Cells")
     else:
-        axes[0].set_ylabel("Tetrodes")
+        axes[0].set_ylabel("Tet.")
 
     # axis 1
     probability = results_1D.acausal_posterior.sum(["position"])
@@ -74,11 +74,11 @@ def plot_1D_results(spike_times, data, results_1D,
             MILLISECONDS_TO_SECONDS *
             probability.time / np.timedelta64(1, "s"),
             prob,
-            linewidth=3,
+            linewidth=2,
             color=STATE_COLORS[state],
         )
 
-    axes[1].set_ylim((0, 1.01))
+    axes[1].set_ylim((0, 1.05))
     axes[1].set_yticks((0, 1))
     axes[1].set_ylabel("Prob.")
 
@@ -103,7 +103,7 @@ def plot_1D_results(spike_times, data, results_1D,
     cmap = copy.copy(plt.cm.get_cmap(cmap))
     cmap.set_bad(color="lightgrey", alpha=1.0)
 
-    posterior_mesh = (
+    (
         results_1D.assign_coords(
             time=lambda ds: MILLISECONDS_TO_SECONDS *
             ds.time / np.timedelta64(1, "s")
@@ -145,8 +145,7 @@ def plot_1D_results(spike_times, data, results_1D,
 
     plot_1D_wtrack_landmarks(data, max_time, ax=axes[2])
     axes[2].set_ylabel("Position [cm]")
-    
-    plt.suptitle(data_type.replace("_", " ").title(), y=1.05)
+
     sns.despine()
 
     fig_name = (
@@ -155,8 +154,6 @@ def plot_1D_results(spike_times, data, results_1D,
         f"{data_type}_1D_acasual_classification"
     )
     save_figure(fig_name)
-    
-    return posterior_mesh
 
 
 def plot_1D_projected_to_2D(epoch_key, ripple_number, data,
