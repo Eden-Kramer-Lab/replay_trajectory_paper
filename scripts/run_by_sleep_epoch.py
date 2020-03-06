@@ -9,15 +9,15 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import xarray as xr
-from scipy.ndimage import label
-from tqdm.auto import tqdm
-
 from loren_frank_data_processing import save_xarray
 from replay_trajectory_classification import (ClusterlessClassifier,
                                               SortedSpikesClassifier)
+from scipy.ndimage import label
+from tqdm.auto import tqdm
+
 from src.analysis import (get_place_field_max, get_sleep_replay_info,
                           reshape_to_segments)
-from src.load_sleep_data import get_sleep_and_prev_run_epochs, load_sleep_data
+from src.load_data import get_sleep_and_prev_run_epochs, load_sleep_data
 from src.parameters import (FIGURE_DIR, PROBABILITY_THRESHOLD,
                             PROCESSED_DATA_DIR, SAMPLING_FREQUENCY,
                             TRANSITION_TO_CATEGORY)
