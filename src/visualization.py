@@ -221,7 +221,8 @@ def plot_ripple_decode_1D(posterior, ripple_position, ripple_spikes,
 
     fig, axes = plt.subplots(
         3, 1, figsize=figsize,
-        constrained_layout=True, sharex=True)
+        constrained_layout=True, sharex=True,
+        gridspec_kw={"height_ratios": [1, 1, 3]},)
 
     axes[0].scatter(ripple_time[spike_time_ind], neuron_ind, color='black',
                     zorder=1, marker='|', s=20, linewidth=1)
