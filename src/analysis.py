@@ -2,7 +2,6 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 import xarray as xr
-
 from loren_frank_data_processing.track_segment_classification import (
     get_track_segments_from_graph, project_points_to_segment)
 
@@ -93,7 +92,7 @@ def get_replay_info(results, ripple_spikes, ripple_times, position_info,
 
 def get_sleep_replay_info(results, ripple_spikes, ripple_times, position_info,
                           sampling_frequency, probability_threshold,
-                          epoch_key):
+                          epoch_key, classifier):
     '''
 
     Parameters
@@ -140,6 +139,24 @@ def get_sleep_replay_info(results, ripple_spikes, ripple_times, position_info,
     replay_info['animal'] = animal
     replay_info['day'] = int(day)
     replay_info['epoch'] = int(epoch)
+
+    min_max = (
+        classifier
+        ._nodes_df[classifier._nodes_df.is_bin_edge]
+        .groupby('edge_id')
+        .aggregate(['min', 'max']))
+
+    replay_info['center_well_position'] = min_max.loc[0].linear_position.min()
+    replay_info['choice_position'] = min_max.loc[0].linear_position.max()
+
+    replay_info['left_arm_start'] = min_max.loc[1].linear_position.min()
+    replay_info['left_well_position'] = min_max.loc[3].linear_position.max()
+
+    replay_info['right_arm_start'] = min_max.loc[2].linear_position.min()
+    replay_info['right_well_position'] = min_max.loc[4].linear_position.max()
+    center_well_id = 0
+    replay_info['max_linear_distance'] = list(
+        classifier.distance_between_nodes_[center_well_id].values())[-1]
 
     return replay_info
 
