@@ -2,6 +2,7 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 import xarray as xr
+
 from loren_frank_data_processing.track_segment_classification import (
     get_track_segments_from_graph, project_points_to_segment)
 
@@ -86,6 +87,59 @@ def get_replay_info(results, ripple_spikes, ripple_times, position_info,
     center_well_id = 0
     replay_info['max_linear_distance'] = list(
         classifier.distance_between_nodes_[center_well_id].values())[-1]
+
+    return replay_info
+
+
+def get_sleep_replay_info(results, ripple_spikes, ripple_times, position_info,
+                          sampling_frequency, probability_threshold,
+                          epoch_key):
+    '''
+
+    Parameters
+    ----------
+    results : xarray.Dataset, shape (n_ripples, n_position_bins, n_states,
+                                     n_ripple_time)
+    ripple_spikes : pandas.DataFrame (n_ripples * n_ripple_time, n_neurons)
+    ripple_times : pandas.DataFrame (n_ripples, 2)
+    position_info : pandas.DataFrame (n_time, n_covariates)
+    sampling_frequency : float
+    probability_threshold : float
+    epoch_key : tuple
+
+    Returns
+    -------
+    replay_info : pandas.DataFrame, shape (n_ripples, n_covariates)
+
+    '''
+    probability = get_probability(results)
+    is_classified = get_is_classified(probability, probability_threshold)
+
+    duration = (is_classified.sum('time') / sampling_frequency)
+    duration = duration.to_dataframe().unstack(level=1)
+    duration.columns = list(duration.columns.get_level_values('state'))
+    duration = duration.rename(
+        columns=lambda column_name: column_name + '_duration')
+    is_category = (duration > 0.0).rename(columns=lambda c: c.split('_')[0])
+    duration = pd.concat((duration, is_category), axis=1)
+    duration['is_classified'] = np.any(duration > 0.0, axis=1)
+    duration['n_unique_spiking'] = get_n_unique_spiking(ripple_spikes)
+    duration['n_total_spikes'] = get_n_total_spikes(ripple_spikes)
+
+    ripple_position_info = reshape_to_segments(position_info, ripple_times)
+    duration['actual_x_position'] = ripple_position_info.groupby(
+        'ripple_number').x_position.mean()
+    duration['actual_y_position'] = ripple_position_info.groupby(
+        'ripple_number').y_position.mean()
+    duration['actual_speed'] = ripple_position_info.groupby(
+        'ripple_number').speed.mean()
+
+    replay_info = pd.concat((ripple_times, duration), axis=1)
+    animal, day, epoch = epoch_key
+
+    replay_info['animal'] = animal
+    replay_info['day'] = int(day)
+    replay_info['epoch'] = int(epoch)
 
     return replay_info
 
