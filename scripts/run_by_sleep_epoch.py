@@ -134,7 +134,7 @@ def sorted_spikes_analysis_1D(sleep_epoch_key, prev_run_epoch_key,
                 plot_ripple_decode_1D(
                     posterior, ripple_position,
                     ripple_spikes.loc[ripple_number], linear_position_order,
-                    data['position_info'])
+                    data['position_info'], classifier)
                 plt.suptitle(
                     f'ripple number = {sleep_epoch_key[0]}_'
                     f'{sleep_epoch_key[1]:02d}_{sleep_epoch_key[2]:02d}'
@@ -265,7 +265,7 @@ def clusterless_analysis_1D(sleep_epoch_key, prev_run_epoch_key,
                 plot_ripple_decode_1D(
                     posterior, ripple_position,
                     ripple_spikes.loc[ripple_number], linear_position_order,
-                    data['position_info'], spike_label='Tetrodes')
+                    data['position_info'], classifier, spike_label='Tetrodes')
                 plt.suptitle(
                     f'ripple number = {sleep_epoch_key[0]}_'
                     f'{sleep_epoch_key[1]:02d}_{sleep_epoch_key[2]:02d}'

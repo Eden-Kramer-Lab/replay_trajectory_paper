@@ -9,14 +9,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import xarray as xr
-from scipy.ndimage import label
-from tqdm.auto import tqdm
-
 from loren_frank_data_processing import save_xarray
 from loren_frank_data_processing.position import (EDGE_ORDER, EDGE_SPACING,
                                                   make_track_graph)
 from replay_trajectory_classification import (ClusterlessClassifier,
                                               SortedSpikesClassifier)
+from scipy.ndimage import label
+from tqdm.auto import tqdm
+
 from src.analysis import (get_linear_position_order, get_place_field_max,
                           get_replay_info, reshape_to_segments)
 from src.load_data import load_data
@@ -176,7 +176,7 @@ def sorted_spikes_analysis_1D(epoch_key, plot_ripple_figures=False):
                 plot_ripple_decode_1D(
                     posterior, ripple_position.loc[ripple_number],
                     ripple_spikes.loc[ripple_number], linear_position_order,
-                    data['position_info'])
+                    data['position_info'], classifier)
                 plt.suptitle(
                     f'ripple number = {animal}_{day:02d}_{epoch:02d}_'
                     f'{ripple_number:04d}')
@@ -453,7 +453,7 @@ def clusterless_analysis_1D(epoch_key, plot_ripple_figures=False):
                 plot_ripple_decode_1D(
                     posterior, ripple_position.loc[ripple_number],
                     ripple_spikes.loc[ripple_number], linear_position_order,
-                    data['position_info'], spike_label='Tetrodes')
+                    data['position_info'], classifier, spike_label='Tetrodes')
                 plt.suptitle(
                     f'ripple number = {animal}_{day:02d}_{epoch:02d}_'
                     f'{ripple_number:04d}')

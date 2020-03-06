@@ -211,7 +211,7 @@ def plot_ripple_decode_2D(posterior, ripple_position,
 
 
 def plot_ripple_decode_1D(posterior, ripple_position, ripple_spikes,
-                          linear_position_order, position_info,
+                          linear_position_order, position_info, classifier,
                           spike_label='Cells', figsize=(10, 7)):
     ripple_spikes = np.asarray(ripple_spikes)
     spike_time_ind, neuron_ind = np.nonzero(
@@ -249,24 +249,28 @@ def plot_ripple_decode_1D(posterior, ripple_position, ripple_spikes,
     axes[2].set_xticks((min_time, max_time))
     axes[-1].set_xlabel('Time [ms]')
 
-    try:
-        max_df = position_info.groupby('arm_name').linear_position.max()
-        min_df = position_info.groupby('arm_name').linear_position.min()
-        axes[2].set_ylim((0, position_info.linear_position.max()))
-        axes[2].set_yticks((0, position_info.linear_position.max()))
+    min_max = (
+        classifier
+        ._nodes_df[classifier._nodes_df.is_bin_edge]
+        .groupby('edge_id')
+        .aggregate(['min', 'max']))
 
-        for arm_name, max_position in max_df.iteritems():
-            axes[2].axhline(max_position, color='lightgrey',
-                            linestyle='-', linewidth=1)
-            axes[2].text(min_time, max_position - 5, arm_name, color='white',
-                         fontsize=8, verticalalignment='top')
-        for arm_name, min_position in min_df.iteritems():
-            axes[2].axhline(min_position, color='lightgrey',
-                            linestyle='-', linewidth=1)
-    except KeyError:
-        pass
+    center_arm_position = min_max.loc[0].linear_position.max()
+    left_well_position = min_max.loc[3].linear_position.max()
+    right_well_position = min_max.loc[4].linear_position.max()
+
+    axes[2].set_ylim((0, np.floor(left_well_position)))
+    axes[2].set_yticks((0, np.floor(left_well_position)))
+
+    axes[2].text(min_time, left_well_position, "Left Arm", color='white',
+                 fontsize=8, verticalalignment='top')
+    axes[2].text(min_time, right_well_position, "Right Arm", color='white',
+                 fontsize=8, verticalalignment='top')
+    axes[2].text(min_time, center_arm_position, "Center Arm", color='white',
+                 fontsize=8, verticalalignment='top')
     axes[2].plot(ripple_time, ripple_position, color='white', linestyle='--',
                  linewidth=2, alpha=0.7)
+    axes[2].set_title("")
 
     sns.despine()
 
