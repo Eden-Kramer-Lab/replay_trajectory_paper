@@ -73,7 +73,7 @@
                 footskip=25pt]{geometry}
 \RequirePackage[labelfont={bf,sf},%
                 labelsep=period,%
-                figurename=Fig.]{caption}
+                figurename=Figure]{caption}
 
 \DeclareUnicodeCharacter{00B0}{\degree}
 
