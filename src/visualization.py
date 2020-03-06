@@ -242,7 +242,7 @@ def plot_ripple_decode_1D(posterior, ripple_position, ripple_spikes,
     axes[1].legend(loc='center left', bbox_to_anchor=(1, 0.5),
                    fancybox=False, shadow=False, ncol=1, frameon=False)
 
-    posterior.sum('state').plot(
+    posterior.sum('state', skipna=False).plot(
         x='time', y='position', robust=True, vmin=0.0, ax=axes[2])
     axes[2].set_ylabel('Position [cm]')
     axes[2].set_xlim((min_time, max_time))
