@@ -254,7 +254,13 @@
 \titlespacing*{\subsection}{0pc}{2.5ex \@plus3pt \@minus2pt}{2pt}
 \titlespacing*{\subsubsection}{0pc}{2ex \@plus2.5pt \@minus1.5pt}{2pt}
 \titlespacing*{\paragraph}{0pc}{1.5ex \@plus2pt \@minus1pt}{12pt}
-
+\newcommand{\beginsupplement}{%
+        \setcounter{table}{0}
+        \renewcommand{\thetable}{S\arabic{table}}%
+        \setcounter{figure}{0}
+        \renewcommand{\thefigure}{S\arabic{figure}}%
+     }
+     
 %% Figure caption style
 \DeclareCaptionFormat{smallformat}{\normalfont\sffamily\fontsize{7}{9}\selectfont#1#2#3}
 \DeclareCaptionFormat{largeformat}{\normalfont\sffamily\fontsize{9}{12}\selectfont#1#2#3}
@@ -374,7 +380,7 @@
 \Affilfont\bfseries COMPETING FINANCIAL INTERESTS\par\mdseries}
 \def\endinterests{\vspace{0.3em}\par\normalsize}
 
-%% environemts
+%% environments
 \newdimen\tmpitemindent
 \def\QED{\mbox{\rule[0pt]{1.5ex}{1.5ex}}}
 \def\proof{\noindent\hspace{2em}{\it Proof: }}
