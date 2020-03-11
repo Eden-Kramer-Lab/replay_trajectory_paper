@@ -59,7 +59,7 @@ However, there is a growing evidence that trajectories that have more complex dy
 Our mathematical model precisely specifies the dyna
 
 \section*{Results}
-\subsection*{Test}
+\subsection*{The model can successfully detect short-time scale changes in dynamics}
 
 \begin{figure*}%[tbhp]
 \centering
@@ -69,6 +69,8 @@ Our mathematical model precisely specifies the dyna
 \label{Figure1}
 \end{figure*}
 
+\subsection*{The model can find canonical continuous replays}
+
 \begin{figure*}%[tbhp]
 \centering
 \includegraphics[width=0.80\linewidth]{figures/Figure2/Figure2_v3}
@@ -77,22 +79,32 @@ Our mathematical model precisely specifies the dyna
 \label{Figure2}
 \end{figure*}
 
+\subsection*{The model also finds replays that would not normally be classified by the Bayesian Decoder}
+\subsection*{Most replays are spatially coherent, but often not at the the speed posited by canonical replay}
+
 \begin{figure*}%[tbhp]
 \centering
 \includegraphics[width=0.80\linewidth]{figures/Figure3/Figure3_v3}
-\caption{A-D. Four examples of replays that would not be well-described using the Bayesian decoder. Figure conventions are the same as in Figure 2. \textbf{(A)} A replay that starts down the center arm away from the animal's position at the center well, slows down, and returns back. \textbf{(B)} A replay that stays at the left well for the entirety of the SWR while the animal is in the center arm. \textbf{(C)} A replay that begins stationary at the left well and then jumps to the middle of the right arm and proceeds up the right arm to the right well. \textbf{(D)} A replay that begins stationary at the left well, jumps to the center arm, proceeds away from the center well, jumps to the right arm, proceeds back toward the center well, and then becomes fragmented. \textbf{(E)} Percentage of SWRs in each epoch that has some content that falls into one of the categories (Hover, Hover-Continuous-Mix, Continuous, Fragmented-Continuous-Mix, or Fragmented). \textbf{(F)} Of the classified content, the percentage of SWRs in each epoch that have some Hover, Hover-Continuous-Mix, or Continuous content. \textbf{(G)} Of the classified content, the percentage of SWR in each epoch that has some Continuous content.
+\caption{A-D. Four examples of replays that would not be well-characterized by using the Bayesian decoder. Figure conventions are the same as in Figure 2. \textbf{(A)} A replay that starts down the center arm away from the animal's position at the center well, slows down, and returns back. \textbf{(B)} A replay that stays at the left well for the entirety of the SWR while the animal is in the center arm. \textbf{(C)} A replay that begins stationary at the left well and then jumps to the middle of the right arm and proceeds up the right arm to the right well. \textbf{(D)} A replay that begins stationary at the left well, jumps to the center arm, proceeds away from the center well, jumps to the right arm, proceeds back toward the center well, and then becomes fragmented. \textbf{(E)} Percentage of SWRs in each epoch that has some content that falls into one of the categories (Hover, Hover-Continuous-Mix, Continuous, Fragmented-Continuous-Mix, or Fragmented). \textbf{(F)} Of the classified content, the percentage of SWRs in each epoch that have some Hover, Hover-Continuous-Mix, or Continuous content. \textbf{(G)} Of the classified content, the percentage of SWR in each epoch that has some Continuous content.
 }
 \label{Figure3}
 \end{figure*}
 
+\subsection*{Most replays only have one dynamic but some do not}
+
 \begin{figure*}%[tbhp]
 \centering
-\includegraphics[width=0.80\linewidth]{figures/Figure4/Figure4_v2}
-\caption{\textbf{(A)} UpSet plot of the most common combinations of dynamics within each ripple. Each row represents a possible category present in the SWR. Each column represents a set of dynamics categories, where filled-in black dots with an edge between the dots indicates that multiple categories are present in the SWR (at temporally distinct times). The sets are ordered by how often they occurred as indicated by the bar plot above each category. The total number of each category is indicated by the rotated bar plot on the left. \textbf{(B)} Box plot of the duration of each dynamic category within a ripple. \textbf{(C)} The distance of the latent position from the animal's position for each dynamic category within each ripple. \textbf{(D)} Probability density estimate 
+\includegraphics[width=0.80\linewidth]{figures/Figure4/Figure4_v3}
+\caption{
+Analysis of SWRs from all animals. \textbf{(A)} UpSet plot of the most common combinations of dynamics within each ripple. Each row represents a possible category present in the SWR. Each column represents a set of dynamics categories, where filled-in black dots with an edge between the dots indicates that multiple categories are present in the SWR (at temporally distinct times). The sets are ordered by how often they occurred as indicated by the bar plot above each category. The total number of each category is indicated by the rotated bar plot on the left. \textbf{(B)} Distribution of the duration of each dynamic category within a SWR. \textbf{(C)} The distance of the average latent position from the animal's position for each dynamic category within each SWR. \textbf{(D)} Position of hovers on the W-track at least 30 cm away from the animal's position. \textbf{(E)} Distribution of multiunit spike rates for each dynamic category within each SWR.
 }
 \label{Figure4}
 \end{figure*}
 
+\subsection*{Many replays have time periods where the latent position remains at just one position and that position can be both local and non-local to the animal's position}
+\subsection*{Non-local hovers, though rare, occur all over the track, but mostly at reward wells and choice points.}
+
+\subsection*{Removing spatial information from the model leads to fewer classified ripples and shorter duration dynamic categories}
 
 \section*{Discussion}
 
@@ -107,8 +119,14 @@ Our mathematical model precisely specifies the dyna
 \newpage
 
 \section*{Methods}
+\subsection*{Experiment and Electrophysiology}
+\subsection*{Linearization}
+\subsection*{Ripple Detection}
+\subsection*{Spike Sorting}
+\subsection*{Clusterless Data}
+\subsection*{Simulated Data}
+
 \subsection*{The Model}
-The 
 
 \subsection*{Encoding - Clusterless}
 In order to encode how each tetrode's unsorted spiking activity relates to position, we use a marked point process framework. For each multiunit spike during movement (defined as time periods when the running speed is greater than 4 cm/s), the associated waveform features (the marks) and position are recorded in a (n-spikes, n-features + n-position-dimensions) array. In our case, the waveform features correspond to the max amplitude observed on each tetrode wire at the time of the multiunit spike. This array is used as the training samples in a kernel density estimator during the decoding step.
@@ -120,12 +138,11 @@ $$log(\lambda(t)) = \beta_{0} + \sum_{i} f_{i}(position)\beta_{i}$$
 
 A small L2 penalization term $-\lambda\norm{\beta_{i}}_{2}^{2}$ used to prevent model fitting instability when spiking activity is very low. We set this to 0.5 for all cells. Fitting is done by maximizing the penalized likelihood using a Newton-Raphson algorithm.
 
-\subsection*{Decoding - Clusterless}
+\subsection*{Decoding}
 
+\subsection*{Classification of Dynamic States}
+\subsection*{Replay distance from animal}
 
-\subsection*{Simulated Data}
-
-\subsection*{Data}
 
 \subsection*{Software and Code availability}
 Python code used for analysis and generating figures in the paper is available at: \url{https://github.com/Eden-Kramer-Lab/replay_trajectory_paper}. Code for the classifier is available in a separate software repository to facilitate code reuse at: \url{https://github.com/Eden-Kramer-Lab/replay_trajectory_classification}. All code is open-source and licensed under the MIT Software License. Classifier code can be easily installed as a python package with all requisite dependencies using pip or conda. See software repositories for specific details.
@@ -141,28 +158,29 @@ Python code used for analysis and generating figures in the paper is available a
 \begin{figure*}%[tbhp]
 \centering
 \includegraphics[width=0.80\linewidth]{figures/Figure1-supplemental1/Figure1_v1_supplemental1}
-\caption{Placeholder image of Iris with a long example caption to show justification setting.}
+\caption{The model is robust to changes in the discrete transition matrix. Each plot shows the probability of each dynamic on simulated data example from Figure 1 with a different diagonal value--which governs the probability of remaining in that state. The off-diagonal values--the probability of switching to one of the other states--are set to be equally likely with the remainder of the probability, as in Figure 1D. The first plot (upper left) shows the case when all states are equally likely. The diagonal increases from left to right, top to bottom, until the case where the diagonal is one and the off-diagonal is zero--i.e. the case where there is no probability of switching to another state.}
 \label{fig:Figure1-Figure supplement 1}
 \end{figure*}
 
 \begin{figure*}%[tbhp]
 \centering
 \includegraphics[width=0.80\linewidth]{figures/Figure2-supplemental1/Figure2_v2-supplemental1}
-\caption{Placeholder image of Iris with a long example caption to show justification setting.}
+\caption{Decoding the same SWR in Figure 2 using 2D clusterless and sorted spikes. \textbf{(A)} The left plot shows the spikes from cells arranged by the linear position of the peak of place field as in Figure 2. The middle plot shows the probability of each dynamic over time from the 2D decode. Shaded regions indicate classification category as in Figure 1G and 2. The rightmost plot shows the MAP estimate of the latent position with color indicating time. The latent position posterior summed over time is shown in purple underneath. The light grey lines represent the position of the animal over the entire epoch and the red dot represents the animal's position. \textbf{(B)} Same as in A, but with clusterless decoding.}
 \label{fig:Figure2-Figure supplement 1}
 \end{figure*}
 
 \begin{figure*}%[tbhp]
 \centering
 \includegraphics[width=0.80\linewidth]{figures/Figure2-supplemental2/Figure2_v2-supplemental2}
-\caption{Placeholder image of Iris with a long example caption to show justification setting.}
+\caption{A-C. Examples of continuous replays. Left panel uses the same conventions as Figure 2A and 2B. Right panel shows the 1D MAP estimate projected back to 2D as in Figure 2C. Color indicates time. Light grey lines indicate the animal's position over the entire epoch.}
 \label{fig:Figure2-Figure supplement 2}
 \end{figure*}
 
 \begin{figure*}%[tbhp]
 \centering
 \includegraphics[width=0.80\linewidth]{figures/Figure3-supplemental1/Figure3_v2_supplemental1}
-\caption{Placeholder image of Iris with a long example caption to show justification setting.}
+\caption{More examples of replays that would not be well-characterized by using the Bayesian decoder. Conventions are the same as in Figure 3. \textbf{(A)} A continuous replay that starts in the left arm back toward the center well, jumps to the right arm and continuous back toward the center well. \textbf{(B)} A continuous replay that travels down the right arm toward the center well, proceeds past the choice point toward the left well and then returns back to the choice point. \textbf{(C)} A replay that starts down the left arm toward the center arm and turns into a hover near the choice point. \textbf{(D)} The first half is a fragmented replay and the second half is unclassified. \textbf{(E)} A hover in the first half of the SWR on the right arm and then a hover in the SWR at the left well. \textbf{(F)} A hover that starts at the animal's position at the center well, then jumps to the left well and comes back toward the center well.
+}
 \label{fig:Figure3-Figure supplement 1}
 \end{figure*}
 
