@@ -313,7 +313,7 @@ def plot_category_counts(replay_info):
           .set_index(SHORT_STATE_ORDER[::-1]))
     upset = UpSet(df,
                   sum_over=False, sort_sets_by=None, show_counts=False,
-                  sort_by='cardinality', intersection_plot_elements=6,
+                  sort_by='cardinality', intersection_plot_elements=100,
                   element_size=32)
     axes = upset.plot()
     axes["intersections"].set_ylabel(
@@ -357,7 +357,7 @@ def plot_category_duration(replay_info, kind='strip', ax=None, **kwargs):
         ax = plt.gca()
     _plot_category(replay_info, 'duration', kind=kind, ax=ax,
                    is_zero_mask=True, **kwargs)
-    ax.set_xlabel('Duration within Ripple [s]')
+    ax.set_xlabel('Duration within ripple [s]')
 
 
 def plot_linear_position_of_animal(replay_info, ax=None):
@@ -677,11 +677,8 @@ def plot_linear_position_markers(replay_info, ax=None, is_vertical=True,
         ax = plt.gca()
     if is_vertical:
         _, y_max = ax.get_ylim()
-        ax.axvline(replay_info.center_well_position.mean(),
-                   color=color, zorder=zorder, linestyle=linestyle,
-                   alpha=alpha)
         ax.text(replay_info.center_well_position.mean() + jitter, y_max,
-                'Center', horizontalalignment=horizontalalignment,
+                'C', horizontalalignment=horizontalalignment,
                 verticalalignment=verticalalignment, fontsize=fontsize,
                 color=color)
 
@@ -698,7 +695,7 @@ def plot_linear_position_markers(replay_info, ax=None, is_vertical=True,
         ax.axvline(replay_info.right_well_position.mean(),
                    color=color, zorder=zorder, linestyle=linestyle,
                    alpha=alpha)
-        ax.text(replay_info.left_arm_start.mean() + jitter, y_max, 'Left',
+        ax.text(replay_info.left_well_position.mean() + jitter, y_max, 'L',
                 horizontalalignment=horizontalalignment,
                 verticalalignment=verticalalignment,
                 fontsize=fontsize, color=color, zorder=zorder)
@@ -709,13 +706,10 @@ def plot_linear_position_markers(replay_info, ax=None, is_vertical=True,
         ax.axvline(replay_info.left_arm_start.mean(),
                    color=color, zorder=zorder, linestyle=linestyle,
                    alpha=alpha)
-        ax.axvline(replay_info.left_well_position.mean(),
-                   color=color, zorder=zorder, linestyle=linestyle,
-                   alpha=alpha)
-        ax.text(replay_info.right_arm_start.mean() + jitter, y_max, 'Right',
+        ax.text(replay_info.right_well_position.mean() + jitter, y_max, 'R',
                 horizontalalignment=horizontalalignment,
                 verticalalignment=verticalalignment,
-                fontsize=fontsize, color=color)
+                fontsize=fontsize, color=color, zorder=zorder)
 
     else:
         _, x_max = ax.get_xlim()
