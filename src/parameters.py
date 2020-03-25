@@ -1,6 +1,7 @@
 from os.path import abspath, dirname, join, pardir
 
 import numpy as np
+
 from loren_frank_data_processing import Animal
 from replay_trajectory_classification.misc import NumbaKDE
 
@@ -42,7 +43,16 @@ model_kwargs = {
 }
 knot_spacing = 5
 spike_model_penalty = 0.5
+
+'''
+1. Geometric mean of duration is 1 / (1 - p)
+2. So p = 1 - (1 / n_time_steps).
+3. Want `n_time_steps` to equal 100 ms.
+4. If our timestep is 2 ms, then n_time_steps = 50
+5. So p = 0.98
+'''
 discrete_diag = 0.98
+
 continuous_transition_types = (
     [['random_walk', 'uniform', 'identity'],  # noqa
      ['uniform',     'uniform', 'uniform'],   # noqa
