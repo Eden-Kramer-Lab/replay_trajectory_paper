@@ -1,13 +1,12 @@
 import copy
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 
-from src.analysis import (get_is_classified, get_probability,
-                          maximum_a_posteriori_estimate)
-from src.figure_utilities import (ONE_COLUMN, PAGE_HEIGHT, TWO_COLUMN,
-                                  save_figure)
+from src.analysis import get_is_classified, get_probability
+from src.figure_utilities import ONE_COLUMN, PAGE_HEIGHT, save_figure
 from src.parameters import PROBABILITY_THRESHOLD, STATE_COLORS
 from src.visualization import (plot_1D_wtrack_landmarks,
                                plot_2D_position_with_color_time)
@@ -153,7 +152,7 @@ def plot_1D_results(spike_times, data, results_1D,
         f"{animal}_{day:02d}_{epoch:02d}_{ripple_number:04d}_"
         f"{data_type}_1D_acasual_classification"
     )
-    save_figure(fig_name)
+    save_figure(os.path.join("Figure2", fig_name))
 
 
 def plot_1D_projected_to_2D(epoch_key, ripple_number, data,
@@ -233,4 +232,4 @@ def plot_1D_projected_to_2D(epoch_key, ripple_number, data,
         f"{animal}_{day:02d}_{epoch:02d}_{ripple_number:04d}_"
         f"{data_type}_1D_acasual_classification"
     )
-    save_figure(fig_name)
+    save_figure(os.path.join("Figure2", fig_name))

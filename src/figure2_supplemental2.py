@@ -1,4 +1,5 @@
 import copy
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -140,7 +141,7 @@ def plot_clusterless_1D_results(multiunit_times, data, results,
             f"{animal}_{day:02d}_{epoch:02d}_{ripple_number:04d}_"
             f"clusterless_1D_acasual_classification"
         )
-        save_figure(fig_name)
+        save_figure(os.path.join("Figure2-supplemental2", fig_name))
 
 
 def plot_1D_projected_to_2D(epoch_key, ripple_number, data, results,
@@ -221,4 +222,4 @@ def plot_1D_projected_to_2D(epoch_key, ripple_number, data, results,
             f"{animal}_{day:02d}_{epoch:02d}_{ripple_number:04d}_"
             f"{data_type}_1D_acasual_classification"
         )
-        save_figure(fig_name)
+        save_figure(os.path.join("Figure2-supplemental2", fig_name))

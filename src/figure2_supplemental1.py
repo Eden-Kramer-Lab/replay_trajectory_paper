@@ -1,3 +1,5 @@
+import os
+
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
@@ -185,6 +187,6 @@ def plot_2D_results(spike_times, data, results_2D, classifier_2D,
         f"{animal}_{day:02d}_{epoch:02d}_{ripple_number:04d}_"
         f"{data_type}_2D_acasual_classification"
     )
-    save_figure(fig_name)
+    save_figure(os.path.join("Figure2-supplemental1", fig_name))
 
     return cbar
