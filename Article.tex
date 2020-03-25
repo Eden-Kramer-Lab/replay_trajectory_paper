@@ -59,14 +59,22 @@ However, there is a growing evidence that trajectories that have more complex dy
 Our mathematical model precisely specifies the dyna
 
 \section*{Results}
-\subsection*{The model can successfully detect short-time scale changes in dynamics}
+\subsection*{Overview of the model}
+
+
+
+In order to validate the model's effectiveness in detecting short time scale changes in spiking dynamics, we first simulated 19 Poisson spiking cells with Gaussian place fields on a 180 cm virtual linear track. Each place field has a 36 cm variance and a 15 Hz peak firing rate, which is spaced every 10 cm along the virtual track. We then applied our decoding algorithm to the spiking sequence in Figure \ref{1}A. For the first third of this sequence, a single place cell fires repeatedly. For the middle third of the sequence, the cells fire in sequential spatial order. For the last third, the cells fire in a incoherent spatial pattern.
+
+Decoding the spiking sequence requires specifying two elements: the data model and the dynamics model. For the data model, our decoder is the same as the Bayesian decoder. We compute an estimate of how each cell's firing rate varies over position (the place field, Figure \ref{1}B). This is used during decoding to compute the Poisson likelihood of position over time given the spiking sequence of interest. In contrast to the typical Bayesian decoder, we use small time bins (2 ms) because we are able to take advantage of the prior placed on the dynamics by the state space model. This allows us to detect changes on smaller time scales than would be possible with the 20 ms bin size used with the Bayesian decoder.
+
+Next, we specify a dynamics model for how latent position can evolve at a given time (Figure \ref{1}C). We are interested in identifying three types of different dynamics---hover, continuous, and fragmented---which are modeled with 
 
 \begin{figure*}%[tbhp]
 \centering
 \includegraphics[width=0.80\linewidth]{figures/Figure1/Figure1_v3}
 \caption{Components of the state space model and demonstration on simulated data. \textbf{(A)} 19 simulated place cells that exhibit three different sequence patterns. For the first third of time, one cell fires repeatedly, representing one stationary location. For the second third of time, the cells fire in sequence, representing a smooth continuous trajectory through space. For the last third cells fire in an incoherent pattern, representing a non-smooth fragmented trajectory through space. \textbf{(B)} Like the Bayesian Decoder, the state space model uses estimates of cells' place fields from when the animal is moving and combines them with the observed spikes in (A) to compute the likelihood of position for each time step. \textbf{(C)} This is combined with an explicit model of each dynamic state--which determines how latent position can change based on the posterior from the previous time step. In the hover state, this is modeled as the identity matrix because the position remains the same. In the continuous state, the dynamics are modeled as a Gaussian random walk, meaning the next possible position is likely to be spatially close. In the fragmented state, the dynamics are modeled as uniform, meaning the next position is equally likely to be anywhere. Note that the states displayed only reflect the within-state dynamics. \textbf{(D)} The probability of remaining in a particular state versus switching to another state. This is modeled as having a high probability of remaining in a particular state with a small probability of switching to one of the other states at each time step. \textbf{(F)} The state space model uses the components in A-D over all time to decode the joint probability of latent position and dynamic state. The joint probability can be summarized by marginalizing over latent position (left panel) to get the probability of each dynamic state over time (lines). This can also be used to get an estimate of latent position over time (right panel). \textbf{(G)} The probability of each state given a particular constant speed trajectory. Each speed corresponds to a simulated spiking sequence at that speed. The lines correspond to the average probability of that state over the sequence. Dotted line represents the 0.8 classification threshold we use to classify each range of speeds and shaded regions correspond to the classification we have given the range of speeds.
 }
-\label{Figure1}
+\label{1}
 \end{figure*}
 
 \subsection*{The model can find canonical continuous replays}
@@ -80,7 +88,8 @@ Our mathematical model precisely specifies the dyna
 \end{figure*}
 
 \subsection*{The model also finds replays that would not normally be classified by the Bayesian Decoder}
-\subsection*{Most replays are spatially coherent, but often not at the the speed posited by canonical replay}
+
+\subsection*{Most replays are spatially coherent, but often not at the speed posited by canonical replay}
 
 \begin{figure*}%[tbhp]
 \centering
@@ -102,9 +111,9 @@ Analysis of SWRs from all animals. \textbf{(A)} UpSet plot of the most common co
 \end{figure*}
 
 \subsection*{Many replays have time periods where the latent position remains at just one position and that position can be both local and non-local to the animal's position}
-\subsection*{Non-local hovers, though rare, occur all over the track, but mostly at reward wells and choice points.}
+\subsection*{Non-local hovers occur all over the track, but mostly at reward wells and choice points.}
 
-\subsection*{Removing spatial information from the model leads to fewer classified ripples and shorter duration dynamic categories}
+\subsection*{Removing spatial information from the model leads to fewer classified ripples}
 
 \section*{Discussion}
 
@@ -119,12 +128,22 @@ Analysis of SWRs from all animals. \textbf{(A)} UpSet plot of the most common co
 \newpage
 
 \section*{Methods}
-\subsection*{Experiment and Electrophysiology}
+\subsection*{Recording Locations and Techniques}
+Ten male Long Evans rats (500-700 g, 4-9 months old) were trained on a W-track spatial alternation task. XX rats contributed to a previous study \cite{KarlssonAwakereplayremote2009}. Neural activity was recorded in CA1, CA2, CA3, MEC, Subiculum, and DG depending on the rat. We only used hippocampal tetrodes (CA1, CA2, CA3) in this study.
+
+\subsection*{Behavioral Task}
+The behavioral task is a W-track spatial alternation task as presented in \cite{KarlssonAwakereplayremote2009}. For each day, animals alternated between 15 minute sessions in a rest box and 15 minutes in the W-track. The behavioral task is a W-track spatial alternation task as presented in \cite{KarlssonAwakereplayremote2009}. For each day, animals alternated between 15 minute sessions in a rest box and 15 minutes in the W-track. Only run epochs with at least 9 hippocampal principal cells that fired at least 100 spikes were included in the analysis.
+
+Only run epochs with at least 9 hippocampal principal cells that fired at least 100 spikes were included in the analysis.
+
 \subsection*{Linearization}
-\subsection*{Ripple Detection}
-Ripple detection performed as in \cite{Kayhippocampalnetworkspatial2016}. Briefly
+To decrease the time it takes to run the model, the 2D position of the animal is converted into a 1D position. This is done by first defining a graph representation of the track, where edges correspond to segments of the W-track and nodes represent intersection points between those segments. Then, based on the algorithm in \cite{NewsonHiddenMarkovmap2009}, we use a Hidden Markov Model (HMM) to classify which track segment the animal is on. This algorithm was developed to track cars on roads with GPS signals. Using the HMM prevents sudden jumps from one track segment to another, which is particularly important near intersections when we are tracking the head position. Briefly, the observation model of the HMM is Gaussian and it models the likelihood of being on a track segment as the Gaussian distance to that segment with a 5 cm standard deviation. The state transition model is an empirically estimated state transition that changes with each time point that tries to ensure that the euclidean distance between successive position estimates is similar to the shortest path distance along the graph between successive position estimates. A slight bias of 0.1 is given to the diagonal to encourage staying on the same track segment. The most likely track segment the animal is on is computed using the Viterbi algorithm. After finding the track segment that corresponds to each 2D position, the 2D position is projected onto the track segment. This allows us to define a distance from the center well in terms of shortest path length on the track, where 0 cm represents the center well position. The linear distance can then be converted into a linear position by assigning each track segment a position in 1D space. The code used for linearization can be found at \url{https://github.com/Eden-Kramer-Lab/loren_frank_data_processing}.
+
+\subsection*{SWR Detection}
+Sharp wave ripples were detected using the same method as in \cite{Kayhippocampalnetworkspatial2016}. Briefly, each LFP was filtered between 150-250 Hz, squared and then summed across tetrodes--forming a single population trace over time. This trace was smoothed with a Gaussian with a 4 ms standard deviation and the square root of this trace was taken to get an estimate of the population ripple band power. Candidate SWR times were found by z-scoring the population power trace and finding times when the z-score exceeded 2 standard deviations for a minimum of 15 ms and the speed of the animal was less than 4 cm/s. The SWR times were then defined as times when the z-score was greater than the mean and contained the candidate SWR times. The code used for ripple detection can be found at \url{https://github.com/Eden-Kramer-Lab/ripple_detection}.
+
 \subsection*{Spike Sorting}
-\subsection*{Clusterless Data}
+
 \subsection*{Simulated Data}
 
 \subsection*{The Model}
@@ -139,11 +158,13 @@ $$log(\lambda(t)) = \beta_{0} + \sum_{i} f_{i}(position)\beta_{i}$$
 
 A small L2 penalization term $-\lambda\norm{\beta_{i}}_{2}^{2}$ used to prevent model fitting instability when spiking activity is very low. We set this to 0.5 for all cells. Fitting is done by maximizing the penalized likelihood using a Newton-Raphson algorithm.
 
-\subsection*{Decoding}
+\subsection*{Decoding - Clusterless}
 
 \subsection*{Classification of Dynamic States}
-\subsection*{Replay distance from animal}
+We used a threshold of 0.8 to classify the probability of each state into 5 categories. Time periods during sharp wave ripples are labeled as Hover, Continuous, or Fragmented when the probability of each state is above 0.8. Time periods are labeled as Hover-Continuous-Mix or Fragmented-Continuous-Mix when the sum of Hover and Continuous or Fragmented and Continuous are above 0.8, respectively. Time periods where none of these criterion are met are considered unclassified because there is not strong enough evidence for one or more of the states.
 
+\subsection*{Replay distance from animal}
+Replay distance from the animal is defined as the shortest path distance along the track graph between the animal's projected position on the track graph (see Linearization) and the MAP estimate of the joint posterior marginalized over state, which is defined as the center of the position bin with the greatest posterior value.
 
 \subsection*{Software and Code availability}
 Python code used for analysis and generating figures in the paper is available at: \url{https://github.com/Eden-Kramer-Lab/replay_trajectory_paper}. Code for the classifier is available in a separate software repository to facilitate code reuse at: \url{https://github.com/Eden-Kramer-Lab/replay_trajectory_classification}. All code is open-source and licensed under the MIT Software License. Classifier code can be easily installed as a python package with all requisite dependencies using pip or conda. See software repositories for specific details.
