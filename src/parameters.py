@@ -45,7 +45,7 @@ knot_spacing = 5
 spike_model_penalty = 0.5
 
 '''
-1. Geometric mean of duration is 1 / (1 - p)
+1. Geometric mean of duration is: n_time_steps = 1 / (1 - p)
 2. So p = 1 - (1 / n_time_steps).
 3. Want `n_time_steps` to equal 100 ms.
 4. If our timestep is 2 ms, then n_time_steps = 50
