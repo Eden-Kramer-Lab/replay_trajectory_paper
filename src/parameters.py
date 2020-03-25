@@ -35,6 +35,12 @@ _BRAIN_AREAS = ['CA1', 'CA2', 'CA3']
 
 # Classifier Parameters
 place_bin_size = 3.0
+'''
+In one time step (2 ms),
+68% likely to be within 2.45 cm (12.25 m / s)
+95% likely to be within 4.90 cm (24.5 m / s)
+99.7% likely to be within 7.35 cm (36.75 m / s)
+'''
 movement_var = 6.0
 replay_speed = 1
 model = NumbaKDE
