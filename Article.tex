@@ -11,21 +11,21 @@
 
 \begin{document}
 
-\title{A state space model for discovering the trajectory dynamics of replay}
+\title{A state space model for characterizing the trajectory dynamics of replay}
 \shorttitle{Replay Dynamics}
 
 % Use letters for affiliations, numbers to show equal authorship (if applicable) and to indicate the corresponding author
-\author[4]{Eric L. Denovellis}
+\author[1]{Eric L. Denovellis}
 \author[2, 3]{Anna K. Gillespie}
 \author[2, 3]{Michael E. Coulter}
-\author[1]{Uri T. Eden}
-\author[2, 3, 4, \Letter]{Loren M. Frank}
+\author[4]{Uri T. Eden}
+\author[1, 2, 3, \Letter]{Loren M. Frank}
 
 
-\affil[1]{Department of Mathematics and Statistics, Boston University, Boston, Massachusetts}
+\affil[1]{Howard Hughes Medical Institute, University of California, San Francisco, San Francisco, California}
 \affil[2]{Department of Physiology, University of California, San Francisco, San Francisco, California}
 \affil[3]{Kavli Institute for Fundamental Neuroscience, University of California, San Francisco, San Francisco, California}
-\affil[4]{Howard Hughes Medical Institute, University of California, San Francisco, San Francisco, California}
+\affil[4]{Department of Mathematics and Statistics, Boston University, Boston, Massachusetts}
 
 \maketitle
 
@@ -34,7 +34,7 @@
 \begin{abstract}
 During sleep and immobility, hippocampal place cells fire in sequences consistent with temporally compressed versions of trajectories previously run by the animal. These replayed sequences are hypothesized to be an important mechanism for the retrieval of spatial memory in service of consolidation and decision-making. Replay events are typically evaluated based on whether they activate sequences of place cells that represent spatially continuous trajectories through the environment, but recent work has shown that these events can have more complex dynamics. For example, sequences can alternate between hovering on a particular spatial location and continuous movement or can represent continuous trajectories in other spatial environments, which may appear spatially incoherent in the context of the current environment.
 
-To quantify the structure of replay events, we develop a state space model that uses a combination of discrete and continuous latent state to decompose place cell sequences into categories based on their latent dynamics. Each discrete latent “category” is associated with a type of continuous latent dynamic—hovering in place, spatially fragmented or spatially continuous. This allows for (1) direct comparison between different categories of sequence dynamics, (2) expression of our confidence in one or more categories explaining the data, and (3) characterization of the transitions between categories. In addition, the model can function in 2D, avoiding linearization errors on more complicated environments. We demonstrate the utility of this model on simulated and real data of an animal performing a spatial memory task.
+To quantify the structure of replay events, we develop a state space model that uses a combination of discrete and continuous latent state to decompose place cell sequences into categories based on their latent dynamics. Each discrete latent “category” is associated with a type of continuous latent dynamic—spatially stationary, spatially fragmented or spatially continuous. This allows for (1) direct comparison between different categories of sequence dynamics, (2) expression of our confidence in one or more categories explaining the data, and (3) characterization of the transitions between categories. In addition, the model can function in 2D, avoiding linearization errors on more complicated environments. We demonstrate the utility of this model on simulated and real data of an animal performing a spatial memory task.
 
 \end {abstract}
 %TC:break main
@@ -50,25 +50,20 @@ loren\at phy.ucsf.edu
 \end{corrauthor}
 
 \section*{Introduction}
-The hippocampus is a brain area that is important for short term learning and memory. Neurons in the hippocampus preferentially fire in response to specific locations in an environment, which results in sequences of cells firing as an animal moves through an environment that reflect the trajectory of the animal. When the animal is asleep or immobile, cells also fire in sequence, forming trajectory-like representations that can recapitulate sequences previously observed when the animal was running. These sequences are thought to be important for memory consolidation or prospective decision making. (cite some examples). Therefore, characterizing the dynamics of hippocampal sequences is important for understanding memory consolidation and prospective decision making.
+Neurons in the hippocampus preferentially fire in response to specific locations in an environment, firing in sequence as the animal moves through space. When the animal is asleep or immobile, cells also fire in sequence, forming trajectory-like representations that can recapitulate sequences previously observed when the animal was running (cite). These sequences are thought to be important for memory consolidation or prospective decision making. Therefore, characterizing the trajectory of hippocampal sequences is important for understanding memory consolidation and prospective decision making.
 
-Current methods analyze hippocampal sequences by assuming a constant velocity trajectory \cite{DavidsonHippocampalReplayExtended2009}, corresponding to a single dynamic. This is done by computing the probability of position at each time using the place field information from the population of neurons and then fitting a line to maximize the probability of position over time. If the probabilities near the best fit line are high relative to shuffled distribution, the replay is analyzed. Often, trajectories that travel less than a certain distance \cite{PfeifferAutoassociativedynamicsgeneration2015} are excluded.
+An often used method for characterizing the trajectories of hippocampal sequences is the Bayesian decoder (cite). The Bayesian decoder consists of two steps: first, the probability of position is computed at each time bin using the previously estimated place fields from the population of neurons. Second---assuming the trajectory of the replay is of constant velocity---a line is fit that maximizes the probability of position over time. If the probabilities near the best fit line are high relative to shuffled distribution, the replay is analyzed. Trajectories that travel less than a certain distance are often excluded (cite).
 
-However, there is a growing evidence that trajectories that have more complex dynamics. Farooq and Dragoi \cite{FarooqEmergencepreconfiguredplastic2019} found that juvenile rats . For example, Pfeiffer and Foster \cite{PfeifferAutoassociativedynamicsgeneration2015} found that trajectories alternated between stationary hovering trajectories and continuous movement trajectories on a gamma timescale. 
+Although the Bayesian decoder has been useful in characterizing replay---particularly in the case of linear tracks---the assumption of constant velocity is a strong assumption about the dynamics of replay. Because replays are typically judged based on how well their trajectories conform to the constant velocity assumption, only a subset of sharp wave ripples or multiunit high synchrony events are typically analyzed (37\% of events\cite{KarlssonAwakereplayremote2009}, 16\%  of events\cite{DavidsonHippocampalReplayExtended2009} 5-20\% Tingley and Peyrache 2020). This potentially excludes replays with more complicated, non-constant velocity dynamics.
 
-Our mathematical model precisely specifies the dyna
+Recognizing this, several studies have moved away from the constant velocity assumption, using the weighted mean or maximum of each posterior time bin and connecting each time bin with a line (cite). For example, using this approach, Pfeiffer and Foster \cite{PfeifferAutoassociativedynamicsgeneration2015} found that replays can alternate between representing a single location and sequential spatial trajectories. On the other hand, Stella et al. found that replays are more spatially continuous, following Brownian diffusion dynamics. One possibility for the difference between the studies is that this method is dependent on the size of the time bin, does not take into account the uncertainty of the posterior, and can lead to highly variable trajectories.
+
+State space models are a well-understood, well-known statistical solution to these problems. By mathematically modeling the relationship between the data and latent dynamics, state space models make the assumptions of the model explicit and interpretable. State space models have successfully been applied to decoding movement from the spiking of cells in the hippocampus (Brown et al 1998) and in classifying replay trajectories in real-time settings (Deng et al. 2016). However, these state space models have generally assumed one dynamic persists through the replay, which would not capture more complicated, non-constant velocity trajectories.
+
+Here, we define a state space model of replay that characterizes trajectories as a mixture of three speed dynamics: stationary trajectories, continuous trajectories many times the typical speed of the animal, and fragmented trajectories. These dynamics represent the categories neuroscientists studying replay typically focus on when investigating replay. We show how this model can take advantage of clusterless decoding---which relates multiunit spike wave form features to position without spike sorting--giving us more information about the population spiking activity.  Using this, we find that this model can identify replays with spatially coherent trajectories as well as replays with more complicated representations that can have a mixture of stationary, continuous, and fragmented dynamics. We also show that, by using this model, we are able to interpret a larger fraction of the replays than previous studies. Surprisingly, we find that many replay trajectories, although spatially coherent, are slower in speed than reported in previous studies including stationary events, which represent a single location, and slowly moving trajectories that are more consistent with the animal's movement speed. This challenges the notion that replay trajectories only consist of trajectories that are many times faster than the animal's behavior.
+
 
 \section*{Results}
-\subsection*{Overview of the model}
-
-
-
-In order to validate the model's effectiveness in detecting short time scale changes in spiking dynamics, we first simulated 19 Poisson spiking cells with Gaussian place fields on a 180 cm virtual linear track. Each place field has a 36 cm variance and a 15 Hz peak firing rate, which is spaced every 10 cm along the virtual track. We then applied our decoding algorithm to the spiking sequence in Figure \ref{1}A. For the first third of this sequence, a single place cell fires repeatedly. For the middle third of the sequence, the cells fire in sequential spatial order. For the last third, the cells fire in a incoherent spatial pattern.
-
-Decoding the spiking sequence requires specifying two elements: the data model and the dynamics model. For the data model, our decoder is the same as the Bayesian decoder. We compute an estimate of how each cell's firing rate varies over position (the place field, Figure \ref{1}B). This is used during decoding to compute the Poisson likelihood of position over time given the spiking sequence of interest. In contrast to the typical Bayesian decoder, we use small time bins (2 ms) because we are able to take advantage of the prior placed on the dynamics by the state space model. This allows us to detect changes on smaller time scales than would be possible with the 20 ms bin size used with the Bayesian decoder.
-
-Next, we specify a dynamics model for how latent position can evolve at a given time (Figure \ref{1}C). We are interested in identifying three types of different dynamics---hover, continuous, and fragmented---which are modeled with 
-
 \begin{figure*}%[tbhp]
 \centering
 \includegraphics[width=0.80\linewidth]{figures/Figure1/Figure1_v3}
@@ -76,20 +71,38 @@ Next, we specify a dynamics model for how latent position can evolve at a given 
 }
 \label{1}
 \end{figure*}
+\subsection*{Overview of the model}
+In order to introduce and validate the model, we demonstrate how the model works on a simulated dataset (Figure \ref{1}). We simulated 19 Poisson spiking cells with Gaussian place fields on a 180 cm virtual linear track. Each place field has a 36 cm variance and a 15 Hz peak firing rate, which is spaced every 10 cm along the virtual track. We then apply our decoding algorithm to the spiking sequence in Figure \ref{1}A. For the first third of this sequence, a single place cell fires repeatedly. For the middle third of the sequence, the cells fire in sequential spatial order. For the last third, the cells fire in a incoherent spatial order. These firing patterns represent three different types of sequence dynamics, which we call stationary, continuous, and fragmented, respectively. The goal of our model is to characterize replay events in terms of these three dynamical states at every time point.
 
-\subsection*{The model can find canonical continuous replays}
+Decoding the spiking sequence dynamics requires specifying two elements: the data model and the dynamics model. For the data model, our decoder is the same as the Bayesian decoder. We compute an estimate of how each cell's firing rate varies over position (the place field, Figure \ref{1}B). This is used during decoding to compute the Poisson likelihood of position over time given the spiking sequence of interest. In contrast to the Bayesian decoder, we use small time bins (2 ms vs. 20 ms) because we are able to take advantage of the prior placed on the dynamics by the state space model. This allows us to detect changes on smaller time scales than would be possible with the Bayesian decoder.
+
+Next, we specify a dynamics model for how latent position--the "mental" position of the animal represented by the cells--can evolve in each of these sequences (Figure \ref{1}C). We do this by defining a state transition matrix, which defines how the latent position can change from the previous time step.. In the stationary state, we expect latent position to not change between time steps, so we use an identity state transition matrix. In the continuous state, we expect the latent position to be "spatially close" to the position in the previous time step, so we use a Gaussian random walk state transition matrix. This means that, for a given latent position, the probability of moving to another position is modeled by a Gaussian centered at that position and "spatially close" is defined by the variance of the Gaussian. In our case, since we are interested in identifying replays that move at speeds much faster than the animal's speed, we set this to 6.0 cm. This means that with a 2 ms time step, the latent position is 95\% likely to be within 4.90 cm of the previous latent position (or 24.5 m/s) which is consistent with replay speeds observed in previous studies \cite{DavidsonHippocampalReplayExtended2009, PfeifferAutoassociativedynamicsgeneration2015}. In the fragmented state, we expect that the latent position can move to any available position. We model this using a uniform state transition matrix, which makes all positions equally likely.
+
+Finally, we specify how likely we are to stay in a dynamic state versus changing to another state (Figure \ref{1}D). In order to be conservative, we assume that each dynamic is likely to dominate for the entirety of the replay, with a small probability of switching to one of the other states. Therefore, we set the probability of staying in a state to 0.98 for each 2 ms time step. Because the probability of changing dynamics follows a geometric distribution, this corresponds to an expected duration of 100 ms for staying in a particular state.
+
+Once we have specified the data and dynamics model, we have fully specified the state space model. We use acausal decoding, meaning that we use all information from the past and future spikes, to estimate the joint posterior probability of position and dynamic state. We summarize the resulting posterior with two quantities: the probability of each state over time and the probability of position over time (Figure \ref{1}F, left and right plot respectively). From these two summaries, we can see that the model successfully captures the dynamics of the population spiking activity in Figure \ref{1}A. The probability of the stationary state has high probability at the beginning of the simulated replay, reflecting the consistent spiking from one cell. This gives way to the continuous state, reflecting the trajectory-like spiking from the population of cells. Then the fragmented state dominates for the last third when the population spiking is not spatially coherent. We can also see that these three states are reflected in the estimate of latent position of the animal.  Importantly, we get a much less variable estimate due to the correct specification of the dynamics.
+
+One way to interpret the probabilities in our model is as a classifier of speeds of replay. To demonstrate this, we applied the model to simulated replays of increasing speed(Figure \ref{1}G), from 1 cm/s to 10,000 m/s. From this, we can see that not only are there regions of speed that correspond to our three states being high probable (where highly probable means over 0.8), there are in-between speeds where two of the states dominate with high probability; that is, the sum of two of the states' probabilities is over 0.8. In this manuscript, we will refer to these as mixture states. For example, when the stationary state has a probability of 0.5 and the continuous has a probability of 0.5, we call this a stationary-continuous mixture (light blue, Figure \ref{1}G). By using this classification scheme, we can characterize the speed or set of speeds in a replay.
+
+In order to verify that the model was robust to the choice of probability of staying in a state, we decoded the spiking sequence in Figure \ref{1}A with different probabilities of staying in the same state versus switching to another state (Figure 1-Supplemental Figure 1). We found that for a large range of plausible probabilities of staying in one of the states (0.9 - 0.9999), the model still correctly identified the dynamic states with high probability.
 
 \begin{figure*}%[tbhp]
 \centering
 \includegraphics[width=0.80\linewidth]{figures/Figure2/Figure2_v3}
 \caption{Demonstration of the state space model on real data using both sorted and clusterless spikes on the same SWR. \textbf{(A)} Decoding using sorted spikes (arranged top to bottom). In the top panel, 31 cells on a W-track ordered according to linearized position by their place field peaks. The second panel shows the probability of each dynamic over time as in Figure 1F. Shaded regions correspond to the speed classifications as in Figure 1G. The third panel shows the estimated probability of latent position over the course of the SWR as it travels down the center arm toward the right arm. L, R, C correspond to the position of the left, right and center wells respectively. The animal's position is indicated by the red triangle. \textbf{(B)} Decoding using clusterless spikes. The top panel shows multiunit spiking activity from each tetrode. Other panels have the same convention as(A).  \textbf{(C)} 1D MAP estimate of the latent position in (A) projected back into 2D. Color indicates time. The animal's position is denoted by the red circle. Light grey lines show the animal's 2D position over the entire epoch. L, R, and C correspond to the left, right and center well as in (A). \textbf{(D)} 1D MAP estimate of the latent position in (B) projected back into 2D. Figure conventions are the same as in (C).
 }
-\label{Figure2}
+\label{2}
 \end{figure*}
+\subsection*{The model finds known continuous replays with sorted and clusterless spikes}
+Next, we wanted to validate our model on real hippocampal data. We first applied the decoding algorithm to a sharp wave ripple (SWR) with clear sequential population activity (Figure \ref{2}A, top panel) from 31 cells recorded in hippocampus while the rat was performing a spatial alternation task on the W-track. We see that the probability of being in the continuous state is high throughout the SWR, with the probability of being in a stationary state being slightly higher at the beginning and end of the SWR (Figure \ref{2}A, middle panel). Using our speed classification, this means that the speed of the replay starts slower---as a mixture of continuous and stationary states---and then speeds up and slows down again. We can see this in the posterior probability of linear position over time as the replay travels down the center arm and up the right arm (Figure \ref{2}A, bottom panel) as well as the projection of the maximum of this trajectory to 2D (Figure \ref{2}C). Moreover, when we apply the same model using 2D position, we get a similar result (Figure 2-Supplemental 1A).
 
-\subsection*{The model also finds replays that would not normally be classified by the Bayesian Decoder}
+One problem with using spikes from cells identified using spike sorting is that there is potentially a lot of information lost by determining the identity of each cell---many spikes are discarded with information about position because it could not be assigned to one cell. Therefore, we wanted to use a method which directly relates multiunit spike waveform features to position without spike sorting, which we call clusterless decoding. Clusterless decoding has been successfully used to identify theta sequences and replay sequences in the hippocampus (\cite{KloostermanBayesiandecodingusing2014, ChenTransductiveneuraldecoding2012,DengRapidclassificationhippocampal2016}, Kay et al. 2020). Here, if we apply it to the same SWR as the sorted spikes, we get similar decoding and classification of the sequence (Figure \ref{2}B, D), both in using 1D linearized and 2D position (Figure 2-Supplemental 1B). Note that, using clusterless decoding, the estimate of the posterior probability of position is much more certain than the corresponding posterior probability of position using sorted spikes (Figure \ref{2}D vs C).
 
-\subsection*{Most replays are spatially coherent, but often not at the speed posited by canonical replay}
+\subsection*{The model finds replays that would not normally be identified by the Bayesian Decoder}
+After validating our model on a single SWR, we then applied our decoding algorithm to hippocampal recordings from 10 animals performing the W-track spatial alternation task (tetrodes = [10, 24], brain areas = [CA1, CA2, CA3]; some data previously used in \cite{KarlssonAwakereplayremote2009}). We observed many replays that were classified as continuous throughout the entirety of SWR and would have been identified by the Bayesian Decoder (Figure 2-Supplemental 2A-C) . However, we also observed replays that did not have this structure, but could be interpreted in terms of our model. For example, we observed trajectories that started in one direction and reversed back to the original position (Figure \ref{3}A), trajectories that stayed in one position (Figure \ref{3}A), trajectories that started in a single location trajectories, jumped to a
+
+
+\subsection*{Most replays are spatially coherent, but slower than reported}
 
 \begin{figure*}%[tbhp]
 \centering
@@ -114,7 +127,12 @@ Analysis of SWRs from all animals. \textbf{(A)} UpSet plot of the most common co
 \subsection*{Non-local hovers occur all over the track, but mostly at reward wells and choice points.}
 
 \subsection*{Removing spatial information from the model leads to fewer classified ripples}
-
+\begin{figure}%[tbhp]
+\centering
+\includegraphics[width=0.80\linewidth]{figures/Figure5/Figure5_v1}
+\caption{Comparison of real vs. position shuffled data for two epochs from different animals. Line represents the percent of SWR classified in that epoch for real data. The histogram represents the distribution after 50 shuffles of the position data. Position data was shuffled by resampling with replacement from the set of all observed positions in that epoch, destroying position information but preserving spiking timing.}
+\label{Figure5}
+\end{figure}
 \section*{Discussion}
 
 
