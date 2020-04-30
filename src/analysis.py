@@ -286,7 +286,7 @@ def get_replay_distance_metrics(results, ripple_position_info, ripple_spikes,
     metrics = {
         'replay_distance_from_actual_position': np.mean(
             replay_distance_from_actual_position),
-        'replay_speed': replay_speed,
+        'replay_speed': np.mean(replay_speed),
         'replay_velocity_actual_position': np.mean(
             replay_velocity_actual_position),
         'replay_velocity_center_well': np.mean(replay_velocity_center_well),
