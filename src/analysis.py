@@ -296,6 +296,7 @@ def get_replay_distance_metrics(results, ripple_position_info, ripple_spikes,
         'replay_total_distance': np.sum(
             np.abs(np.diff(replay_distance_from_actual_position))),
         'replay_total_displacement': replay_total_displacement,
+        'state_order': get_state_order(is_classified),
     }
 
     for state, above_threshold in is_classified.groupby('state'):
@@ -417,6 +418,19 @@ def _get_projected_track_positions(position, track_segments, track_segment_id):
     projected_track_positions = projected_track_positions[(
         np.arange(n_time), track_segment_id)]
     return projected_track_positions
+
+
+def get_state_order(is_classified):
+    order = is_classified.state[
+        is_classified[is_classified.sum("state").astype(bool)].argmax("state")
+    ]
+
+    return [
+        current_state
+        for ind, (previous_state, current_state)
+        in enumerate(zip(order.values[:-1], order.values[1:]))
+        if current_state != previous_state or ind == 0
+    ]
 
 
 def calculate_replay_distance(track_graph, map_estimate, actual_positions,
