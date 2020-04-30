@@ -2,6 +2,7 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 import xarray as xr
+
 from loren_frank_data_processing.track_segment_classification import (
     get_track_segments_from_graph, project_points_to_segment)
 
@@ -238,19 +239,19 @@ def get_replay_distance_metrics(results, ripple_position_info, ripple_spikes,
                  .acausal_posterior
                  .dropna('time', how='all')
                  .assign_coords(
-                     time=lambda ds: 1000 * ds.time / np.timedelta64(1, 's')))
+                     time=lambda ds: ds.time / np.timedelta64(1, 's')))
     is_classified = (
         is_classified
         .sel(ripple_number=ripple_number)
         .dropna('time', how='all')
         .assign_coords(
-            time=lambda ds: 1000 * ds.time / np.timedelta64(1, 's')))
+            time=lambda ds: ds.time / np.timedelta64(1, 's')))
     probability = (
         probability
         .sel(ripple_number=ripple_number)
         .dropna('time', how='all')
         .assign_coords(
-            time=lambda ds: 1000 * ds.time / np.timedelta64(1, 's'))
+            time=lambda ds: ds.time / np.timedelta64(1, 's'))
     )
     ripple_spikes = ripple_spikes.loc[ripple_number]
     map_estimate = maximum_a_posteriori_estimate(posterior.sum('state'))
@@ -273,20 +274,22 @@ def get_replay_distance_metrics(results, ripple_position_info, ripple_spikes,
     except IndexError:
         replay_total_displacement = np.nan
 
+    time = np.asarray(posterior.time)
     map_estimate = map_estimate.squeeze()
+    replay_speed = np.abs(np.gradient(
+        replay_distance_from_actual_position, time))
+    replay_velocity_actual_position = np.gradient(
+        replay_distance_from_actual_position, time)
+    replay_velocity_center_well = np.gradient(
+        replay_distance_from_center_well, time)
 
     metrics = {
         'replay_distance_from_actual_position': np.mean(
             replay_distance_from_actual_position),
-        'replay_speed': np.mean(
-            np.abs(np.diff(replay_distance_from_actual_position)) /
-            sampling_frequency),
+        'replay_speed': replay_speed,
         'replay_velocity_actual_position': np.mean(
-            np.diff(replay_distance_from_actual_position) /
-            sampling_frequency),
-        'replay_velocity_center_well': np.mean(
-            np.diff(replay_distance_from_center_well)
-            / sampling_frequency),
+            replay_velocity_actual_position),
+        'replay_velocity_center_well': np.mean(replay_velocity_center_well),
         'replay_distance_from_center_well': np.mean(
             replay_distance_from_center_well),
         'replay_linear_position': np.mean(map_estimate),
@@ -303,27 +306,22 @@ def get_replay_distance_metrics(results, ripple_position_info, ripple_spikes,
         except ValueError:
             metrics[f'{state}_max_probability'] = np.nan
         if np.any(above_threshold):
-            time = np.asarray(posterior.time)
-            state_distance = replay_distance_from_actual_position[
-                above_threshold]
-
             metrics[f'{state}_replay_distance_from_actual_position'] = np.mean(
-                state_distance)
-            metrics[f'{state}_replay_speed'] = np.mean(
-                np.abs(np.diff(state_distance)) / sampling_frequency)
+                replay_distance_from_actual_position[
+                    above_threshold])
+            metrics[f'{state}_replay_speed'] = np.mean(replay_speed[
+                above_threshold])
             metrics[f'{state}_replay_velocity_actual_position'] = np.mean(
-                np.diff(state_distance) / sampling_frequency)
+                replay_velocity_actual_position[above_threshold])
             metrics[f'{state}_replay_velocity_center_well'] = np.mean(
-                np.diff(replay_distance_from_center_well[above_threshold])
-                / sampling_frequency)
+                replay_velocity_center_well[above_threshold])
             metrics[f'{state}_replay_distance_from_center_well'] = np.mean(
                 replay_distance_from_center_well[above_threshold])
             metrics[f'{state}_replay_linear_position'] = np.mean(
                 map_estimate[above_threshold])
             metrics[f'{state}_replay_total_distance'] = np.sum(
-                np.abs(np.diff(state_distance)))
-            metrics[f'{state}_replay_total_displacement'] = np.abs(
-                state_distance[-1] - state_distance[0])
+                np.abs(np.diff(replay_distance_from_actual_position[
+                    above_threshold])))
             metrics[f'{state}_min_time'] = np.min(time[above_threshold])
             metrics[f'{state}_max_time'] = np.max(time[above_threshold])
             metrics[f'{state}_n_unique_spiking'] = (
