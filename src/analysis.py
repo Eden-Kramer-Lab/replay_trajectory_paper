@@ -296,10 +296,10 @@ def get_replay_distance_metrics(results, ripple_position_info, ripple_spikes,
     metrics = {
         'replay_distance_from_actual_position': np.mean(
             replay_distance_from_actual_position),
-        'replay_speed': np.mean(replay_speed),
-        'replay_velocity_actual_position': np.mean(
+        'replay_speed': np.median(replay_speed),
+        'replay_velocity_actual_position': np.median(
             replay_velocity_actual_position),
-        'replay_velocity_center_well': np.mean(replay_velocity_center_well),
+        'replay_velocity_center_well': np.median(replay_velocity_center_well),
         'replay_distance_from_center_well': np.mean(
             replay_distance_from_center_well),
         'replay_linear_position': np.mean(map_estimate),
@@ -320,13 +320,12 @@ def get_replay_distance_metrics(results, ripple_position_info, ripple_spikes,
             metrics[f'{state}_max_probability'] = np.nan
         if np.any(above_threshold):
             metrics[f'{state}_replay_distance_from_actual_position'] = np.mean(
-                replay_distance_from_actual_position[
-                    above_threshold])
-            metrics[f'{state}_replay_speed'] = np.mean(replay_speed[
-                above_threshold])
-            metrics[f'{state}_replay_velocity_actual_position'] = np.mean(
+                replay_distance_from_actual_position[above_threshold])
+            metrics[f'{state}_replay_speed'] = np.median(
+                replay_speed[above_threshold])
+            metrics[f'{state}_replay_velocity_actual_position'] = np.median(
                 replay_velocity_actual_position[above_threshold])
-            metrics[f'{state}_replay_velocity_center_well'] = np.mean(
+            metrics[f'{state}_replay_velocity_center_well'] = np.median(
                 replay_velocity_center_well[above_threshold])
             metrics[f'{state}_replay_distance_from_center_well'] = np.mean(
                 replay_distance_from_center_well[above_threshold])
