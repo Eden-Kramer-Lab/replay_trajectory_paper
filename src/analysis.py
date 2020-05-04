@@ -320,22 +320,22 @@ def get_replay_distance_metrics(results, ripple_position_info, ripple_spikes,
             metrics[f'{state}_max_probability'] = np.nan
         if np.any(above_threshold):
             metrics[f'{state}_replay_distance_from_actual_position'] = np.mean(
-                replay_distance_from_actual_position[above_threshold])
+                replay_distance_from_actual_position[above_threshold])  # cm
             metrics[f'{state}_replay_speed'] = np.median(
-                replay_speed[above_threshold])
+                replay_speed[above_threshold])  # cm / s
             metrics[f'{state}_replay_velocity_actual_position'] = np.median(
-                replay_velocity_actual_position[above_threshold])
+                replay_velocity_actual_position[above_threshold])  # cm / s
             metrics[f'{state}_replay_velocity_center_well'] = np.median(
-                replay_velocity_center_well[above_threshold])
+                replay_velocity_center_well[above_threshold])  # cm / s
             metrics[f'{state}_replay_distance_from_center_well'] = np.mean(
-                replay_distance_from_center_well[above_threshold])
+                replay_distance_from_center_well[above_threshold])  # cm
             metrics[f'{state}_replay_linear_position'] = np.mean(
-                map_estimate[above_threshold])
+                map_estimate[above_threshold])  # cm
             metrics[f'{state}_replay_total_distance'] = np.sum(
                 np.abs(np.diff(replay_distance_from_actual_position[
-                    above_threshold])))
-            metrics[f'{state}_min_time'] = np.min(time[above_threshold])
-            metrics[f'{state}_max_time'] = np.max(time[above_threshold])
+                    above_threshold])))  # cm
+            metrics[f'{state}_min_time'] = np.min(time[above_threshold])  # s
+            metrics[f'{state}_max_time'] = np.max(time[above_threshold])  # s
             metrics[f'{state}_n_unique_spiking'] = (
                 ripple_spikes.sum(axis=0) > 0).sum()
             metrics[f'{state}_n_total_spikes'] = (
@@ -344,7 +344,7 @@ def get_replay_distance_metrics(results, ripple_position_info, ripple_spikes,
                 sampling_frequency * metrics[f'{state}_n_total_spikes'] /
                 above_threshold.sum())
             metrics[f'{state}_spatial_coverage'] = np.mean(
-                spatial_coverage[above_threshold])
+                spatial_coverage[above_threshold])  # cm
             metrics[f'{state}_spatial_coverage_percentage'] = np.mean(
                 spatial_coverage_percentage[above_threshold])
 
