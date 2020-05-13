@@ -9,14 +9,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import xarray as xr
+from scipy.ndimage import label
+from tqdm.auto import tqdm
+
 from loren_frank_data_processing import save_xarray
 from loren_frank_data_processing.position import (EDGE_ORDER, EDGE_SPACING,
                                                   make_track_graph)
 from replay_trajectory_classification import (ClusterlessClassifier,
                                               SortedSpikesClassifier)
-from scipy.ndimage import label
-from tqdm.auto import tqdm
-
 from src.analysis import (get_linear_position_order, get_place_field_max,
                           get_replay_info, reshape_to_segments)
 from src.load_data import load_data
