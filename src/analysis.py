@@ -2,6 +2,7 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 import xarray as xr
+from scipy.ndimage.filters import gaussian_filter1d
 
 from loren_frank_data_processing.track_segment_classification import (
     get_track_segments_from_graph, project_points_to_segment)
@@ -267,6 +268,13 @@ def get_replay_distance_metrics(results, ripple_position_info, ripple_spikes,
      replay_distance_from_center_well) = calculate_replay_distance(
         track_graph, map_estimate, actual_positions,
         actual_track_segment_ids, position_info)
+
+    SMOOTH_SIGMA = 0.005
+    replay_distance_from_actual_position = gaussian_smooth(
+        replay_distance_from_actual_position, SMOOTH_SIGMA, sampling_frequency)
+    replay_distance_from_center_well = gaussian_smooth(
+        replay_distance_from_center_well, SMOOTH_SIGMA, sampling_frequency)
+
     try:
         replay_total_displacement = np.abs(
             replay_distance_from_actual_position[-1] -
@@ -597,3 +605,29 @@ def highest_posterior_density(posterior_density, coverage=0.95):
     threshold = sorted_norm_posterior[(
         np.arange(n_time), crit_ind)] * const.squeeze()
     return threshold
+
+
+def gaussian_smooth(data, sigma, sampling_frequency, axis=0, truncate=8):
+    '''1D convolution of the data with a Gaussian.
+
+    The standard deviation of the gaussian is in the units of the sampling
+    frequency. The function is just a wrapper around scipy's
+    `gaussian_filter1d`, The support is truncated at 8 by default, instead
+    of 4 in `gaussian_filter1d`
+
+    Parameters
+    ----------
+    data : array_like
+    sigma : float
+    sampling_frequency : int
+    axis : int, optional
+    truncate : int, optional
+
+    Returns
+    -------
+    smoothed_data : array_like
+
+    '''
+    return gaussian_filter1d(
+        data, sigma * sampling_frequency, truncate=truncate, axis=axis,
+        mode='constant')
