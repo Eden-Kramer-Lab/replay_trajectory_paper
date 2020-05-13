@@ -343,9 +343,9 @@ def get_replay_distance_metrics(results, ripple_position_info, ripple_spikes,
             metrics[f'{state}_population_rate'] = (
                 sampling_frequency * metrics[f'{state}_n_total_spikes'] /
                 above_threshold.sum())
-            metrics[f'{state}_spatial_coverage'] = np.mean(
+            metrics[f'{state}_spatial_coverage'] = np.median(
                 spatial_coverage[above_threshold])  # cm
-            metrics[f'{state}_spatial_coverage_percentage'] = np.mean(
+            metrics[f'{state}_spatial_coverage_percentage'] = np.median(
                 spatial_coverage_percentage[above_threshold])
 
     return metrics
