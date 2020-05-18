@@ -1,18 +1,18 @@
 
 import os
 
-import matplotlib.animation as animation
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+
+import matplotlib.animation as animation
+import matplotlib.pyplot as plt
 from loren_frank_data_processing.position import (get_position_dataframe,
                                                   make_track_graph)
 from loren_frank_data_processing.track_segment_classification import (
     get_track_segments_from_graph, plot_track, project_points_to_segment)
 from matplotlib.collections import LineCollection
 from matplotlib.colorbar import ColorbarBase, make_axes
-
 from src.analysis import maximum_a_posteriori_estimate
 from src.parameters import (FIGURE_DIR, SAMPLING_FREQUENCY, SHORT_STATE_ORDER,
                             STATE_COLORS, STATE_ORDER)
@@ -326,7 +326,8 @@ def plot_category_counts(replay_info):
 
 
 def _plot_category(replay_info, category, kind='strip', ax=None,
-                   is_zero_mask=False, is_normalized=False, **kwargs):
+                   is_zero_mask=False, is_normalized=False,
+                   include_unclassified=False, **kwargs):
     is_col = replay_info.columns.str.endswith(f'_{category}')
     if is_zero_mask:
         zero_mask = np.isclose(replay_info.loc[:, is_col], 0.0)
@@ -339,7 +340,13 @@ def _plot_category(replay_info, category, kind='strip', ax=None,
             replay_info.left_well_position.values[:, np.newaxis])
     data = (replay_info.loc[:, is_col].mask(zero_mask)
             .rename(columns=lambda c: SHORT_STATE_NAMES[c.split('_')[0]]))
+    if include_unclassified:
+        unclassified = replay_info.loc[
+            ~replay_info.is_classified, f"{category}"]
+        data = pd.concat((unclassified, data)).rename(
+            columns={0: "Unclassified"})
     data /= norm
+
     if kind == 'strip':
         sns.stripplot(data=data, order=SHORT_STATE_ORDER, orient='horizontal',
                       palette=STATE_COLORS, ax=ax, **kwargs)
