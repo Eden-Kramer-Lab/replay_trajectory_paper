@@ -92,4 +92,5 @@ STATE_COLORS = {
     'Fragmented-Continuous-Mix': '#2a586a',
     'Frag.-Cont.-Mix': '#2a586a',
     '': '#c7c7c7',
+    'Unclassified': '#c7c7c7',
 }
