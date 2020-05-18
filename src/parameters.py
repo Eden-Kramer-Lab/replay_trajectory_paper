@@ -75,10 +75,10 @@ TRANSITION_TO_CATEGORY = {
 PROBABILITY_THRESHOLD = 0.8
 
 STATE_ORDER = ['Hover', 'Hover-Continuous-Mix', 'Continuous',
-               'Fragmented-Continuous-Mix', 'Fragmented', 'Unclassified']
+               'Fragmented-Continuous-Mix', 'Fragmented']
 
 SHORT_STATE_ORDER = ['Hover', 'Hover-Cont.-Mix', 'Cont.',
-                     'Frag.-Cont.-Mix', 'Frag.', 'Unclass.']
+                     'Frag.-Cont.-Mix', 'Frag.']
 
 # Plotting Colors
 STATE_COLORS = {
@@ -92,6 +92,4 @@ STATE_COLORS = {
     'Fragmented-Continuous-Mix': '#2a586a',
     'Frag.-Cont.-Mix': '#2a586a',
     '': '#c7c7c7',
-    'Unclassified': '#c7c7c7',
-    'Unclass.': '#c7c7c7',
 }
