@@ -345,16 +345,19 @@ def _plot_category(replay_info, category, kind='strip', ax=None,
                         .loc[~replay_info.is_classified, f"{category}"]
                         .rename("Unclassified"))
         data = pd.concat((unclassified, data), axis=1)
+        order = SHORT_STATE_ORDER.copy().append("Unclassified")
+    else:
+        order = SHORT_STATE_ORDER
     data /= norm
 
     if kind == 'strip':
-        sns.stripplot(data=data, order=SHORT_STATE_ORDER, orient='horizontal',
+        sns.stripplot(data=data, order=order, orient='horizontal',
                       palette=STATE_COLORS, ax=ax, **kwargs)
     elif kind == 'violin':
-        sns.violinplot(data=data, order=SHORT_STATE_ORDER, orient='horizontal',
+        sns.violinplot(data=data, order=order, orient='horizontal',
                        palette=STATE_COLORS, ax=ax, cut=0, **kwargs)
     elif kind == "box":
-        sns.boxplot(data=data, order=SHORT_STATE_ORDER, orient='horizontal',
+        sns.boxplot(data=data, order=order, orient='horizontal',
                     palette=STATE_COLORS, ax=ax, **kwargs)
     sns.despine(left=True, ax=ax)
 
