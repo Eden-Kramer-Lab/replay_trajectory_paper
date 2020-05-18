@@ -345,7 +345,8 @@ def _plot_category(replay_info, category, kind='strip', ax=None,
                         .loc[~replay_info.is_classified, f"{category}"]
                         .rename("Unclassified"))
         data = pd.concat((unclassified, data), axis=1)
-        order = SHORT_STATE_ORDER.copy().append("Unclassified")
+        order = SHORT_STATE_ORDER.copy()
+        order.append("Unclassified")
     else:
         order = SHORT_STATE_ORDER
     data /= norm
