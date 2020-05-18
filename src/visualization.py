@@ -341,10 +341,10 @@ def _plot_category(replay_info, category, kind='strip', ax=None,
     data = (replay_info.loc[:, is_col].mask(zero_mask)
             .rename(columns=lambda c: SHORT_STATE_NAMES[c.split('_')[0]]))
     if include_unclassified:
-        unclassified = replay_info.loc[
-            ~replay_info.is_classified, f"{category}"]
-        data = pd.concat((unclassified, data)).rename(
-            columns={0: "Unclassified"})
+        unclassified = (replay_info
+                        .loc[~replay_info.is_classified, f"{category}"]
+                        .rename("Unclassified"))
+        data = pd.concat((unclassified, data), axis=1)
     data /= norm
 
     if kind == 'strip':
