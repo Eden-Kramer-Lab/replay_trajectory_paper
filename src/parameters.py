@@ -78,7 +78,7 @@ STATE_ORDER = ['Hover', 'Hover-Continuous-Mix', 'Continuous',
                'Fragmented-Continuous-Mix', 'Fragmented', 'Unclassified']
 
 SHORT_STATE_ORDER = ['Hover', 'Hover-Cont.-Mix', 'Cont.',
-                     'Frag.-Cont.-Mix', 'Frag.', 'Unclass.']
+                     'Frag.-Cont.-Mix', 'Frag.', 'Unclassified']
 
 # Plotting Colors
 STATE_COLORS = {
