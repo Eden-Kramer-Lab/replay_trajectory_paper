@@ -1,9 +1,9 @@
 import networkx as nx
 import numpy as np
 import pandas as pd
-import xarray as xr
 from scipy.ndimage.filters import gaussian_filter1d
 
+import xarray as xr
 from loren_frank_data_processing.track_segment_classification import (
     get_track_segments_from_graph, project_points_to_segment)
 
@@ -43,6 +43,8 @@ def get_replay_info(results, ripple_spikes, ripple_times, position_info,
     duration['is_classified'] = np.any(duration > 0.0, axis=1)
     duration['n_unique_spiking'] = get_n_unique_spiking(ripple_spikes)
     duration['n_total_spikes'] = get_n_total_spikes(ripple_spikes)
+    duration['population_rate'] = (ripple_spikes.groupby(
+        "ripple_number").mean().mean(axis=1) * sampling_frequency)
 
     ripple_position_info = reshape_to_segments(position_info, ripple_times)
     duration['actual_x_position'] = ripple_position_info.groupby(
@@ -345,12 +347,12 @@ def get_replay_distance_metrics(results, ripple_position_info, ripple_spikes,
             metrics[f'{state}_min_time'] = np.min(time[above_threshold])  # s
             metrics[f'{state}_max_time'] = np.max(time[above_threshold])  # s
             metrics[f'{state}_n_unique_spiking'] = (
-                ripple_spikes.sum(axis=0) > 0).sum()
+                ripple_spikes.iloc[above_threshold].sum(axis=0) > 0).sum()
             metrics[f'{state}_n_total_spikes'] = (
-                ripple_spikes.sum(axis=0)).sum()
+                ripple_spikes.iloc[above_threshold].sum(axis=0)).sum()
             metrics[f'{state}_population_rate'] = (
-                sampling_frequency * metrics[f'{state}_n_total_spikes'] /
-                above_threshold.sum())
+                sampling_frequency *
+                ripple_spikes.iloc[above_threshold].to_numpy().mean())
             metrics[f'{state}_spatial_coverage'] = np.median(
                 spatial_coverage[above_threshold])  # cm
             metrics[f'{state}_spatial_coverage_percentage'] = np.median(
