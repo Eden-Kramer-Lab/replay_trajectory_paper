@@ -67,7 +67,7 @@ We therefore developed a state space model (cite Brown, Deng) of generative acti
 \section*{Results}
 \begin{figure*}%[tbhp]
 \centering
-\includegraphics[width=0.80\linewidth]{figures/Figure1/Figure1_v3}
+\includegraphics[width=0.80\linewidth]{figures/Figure1/Figure1_v4}
 \caption{Components of the state space model and demonstration on simulated data. \textbf{(A)} 19 simulated place cells that exhibit three different sequence patterns. For the first third of time, one cell fires repeatedly, representing one stationary location. For the second third of time, the cells fire in sequence, representing a smooth continuous trajectory through space. For the last third cells fire in an incoherent pattern, representing a non-smooth fragmented trajectory through space. \textbf{(B)} Like the Bayesian Decoder, the state space model uses estimates of cells' place fields from when the animal is moving and combines them with the observed spikes in (A) to compute the likelihood of position for each time step. \textbf{(C)} This is combined with an explicit model of each dynamic state--which determines how latent position can change based on the posterior from the previous time step. In the hover state, this is modeled as the identity matrix because the position remains the same. In the continuous state, the dynamics are modeled as a Gaussian random walk, meaning the next possible position is likely to be spatially close. In the fragmented state, the dynamics are modeled as uniform, meaning the next position is equally likely to be anywhere. Note that the dynamics displayed only reflect the within-state dynamics. \textbf{(D)} The probability of remaining in a particular state versus switching to another state. This is modeled as having a high probability of remaining in a particular state with a small probability of switching to one of the other dynamics at each time step. \textbf{(F)} The state space model uses the components in A-D over all time to decode the joint probability of latent position and dynamic state. The joint probability can be summarized by marginalizing over latent position (left panel) to get the probability of each dynamic state over time (lines). This can also be used to get an estimate of latent position over time (right panel). \textbf{(G)} The probability of each state given a particular constant speed trajectory. Each speed corresponds to a simulated spiking sequence at that speed. The lines correspond to the average probability of that state over the sequence. Dotted line represents the 0.8 classification threshold we use to classify each range of speeds and shaded regions correspond to the classification we have given the range of speeds.
 }
 \label{1}
@@ -89,7 +89,7 @@ In order to verify that the model was robust to the choice of probability of sta
 
 \begin{figure*}%[tbhp]
 \centering
-\includegraphics[width=0.80\linewidth]{figures/Figure2/Figure2_v3}
+\includegraphics[width=0.80\linewidth]{figures/Figure2/Figure2_v4}
 \caption{Demonstration of the state space model on real data using both sorted and clusterless spikes on the same SWR. \textbf{(A)} Decoding using sorted spikes (arranged top to bottom). In the top panel, 31 cells on a W-track ordered according to linearized position by their place field peaks. The second panel shows the probability of each dynamic over time as in Figure 1F. Shaded regions correspond to the speed classifications as in Figure 1G. The third panel shows the estimated probability of latent position over the course of the SWR as it travels down the center arm toward the right arm. L, R, C correspond to the position of the left, right and center wells respectively. The animal's position is indicated by the red triangle. \textbf{(B)} Decoding using clusterless spikes. The top panel shows multiunit spiking activity from each tetrode. Other panels have the same convention as(A).  \textbf{(C)} 1D MAP estimate of the latent position in (A) projected back into 2D. Color indicates time. The animal's position is denoted by the red circle. Light grey lines show the animal's 2D position over the entire epoch. L, R, and C correspond to the left, right and center well as in (A). \textbf{(D)} 1D MAP estimate of the latent position in (B) projected back into 2D. Figure conventions are the same as in (C).
 }
 \label{2}
@@ -98,7 +98,7 @@ In order to verify that the model was robust to the choice of probability of sta
 
 \begin{figure*}%[tbhp]
 \centering
-\includegraphics[width=0.80\linewidth]{figures/Figure3/Figure3_v3}
+\includegraphics[width=0.80\linewidth]{figures/Figure3/Figure3_v4}
 \caption{A-D. Four examples of replays that would not be well-characterized by using the Bayesian decoder. Figure conventions are the same as in Figure 2. \textbf{(A)} A replay that starts down the center arm away from the animal's position at the center well, slows down, and returns back. \textbf{(B)} A replay that stays at the left well for the entirety of the SWR while the animal is in the center arm. \textbf{(C)} A replay that begins stationary at the left well and then jumps to the middle of the right arm and proceeds up the right arm to the right well. \textbf{(D)} A replay that begins stationary at the left well, jumps to the center arm, proceeds away from the center well, jumps to the right arm, proceeds back toward the center well, and then becomes fragmented. \textbf{(E)} Percentage of SWRs in each epoch that has some content that falls into one of the categories (Hover, Hover-Continuous-Mix, Continuous, Fragmented-Continuous-Mix, or Fragmented). \textbf{(F)} Of the classified content, the percentage of SWRs in each epoch that have some Hover, Hover-Continuous-Mix, or Continuous content. \textbf{(G)} Of the classified content, the percentage of SWR in each epoch that has some Continuous content.
 }
 \label{3}
@@ -116,7 +116,7 @@ To better understand the distribution of dynamics during SWRs, we then asked wha
 \subsection*{Many replay trajectories are closer to the animal's movement speed}
 \begin{figure*}%[tbhp]
 \centering
-\includegraphics[width=0.80\linewidth]{figures/Figure4/Figure4_v3}
+\includegraphics[width=0.80\linewidth]{figures/Figure4/Figure4_v4}
 \caption{
 Analysis of SWRs from all animals. \textbf{(A)} UpSet plot---which is similar to a Venn diagram with more than 3 sets---of the most common sets of dynamics within each ripple. Each row represents a possible category present in the SWR. Each column represents a set of dynamics categories, where filled-in black dots with an edge between the dots indicates that multiple categories are present in the SWR (at temporally distinct times). The sets are ordered by how often they occurred as indicated by the bar plot above each category. The total number of each category is indicated by the rotated bar plot on the left. \textbf{(B)} Distribution of the duration of each dynamic category within a SWR. \textbf{(C)} The distance of the average latent position from the animal's position for each dynamic category within each SWR. \textbf{(D)} Position of hovers on the W-track at least 30 cm away from the animal's position. \textbf{(E)} Distribution of multiunit spike rates for each dynamic category within each SWR.
 }
@@ -129,7 +129,7 @@ The next most common category is those SWRs that were exclusively stationary (XX
 
 \begin{figure}%[tbhp]
 \centering
-\includegraphics[width=0.80\linewidth]{figures/Figure5/Figure5_v1}
+\includegraphics[width=0.80\linewidth]{figures/Figure5/Figure5_v2}
 \caption{Comparison of real vs. position shuffled data for two epochs from different animals. Line represents the percent of SWR classified in that epoch for real data. The histogram represents the distribution after 50 shuffles of the position data. Position data was shuffled by resampling with replacement from the set of all observed positions in that epoch, destroying position information but preserving spiking timing.}
 \label{Figure5}
 \end{figure}
@@ -197,7 +197,7 @@ Python code used for analysis and generating figures in the paper is available a
 
 \begin{figure*}%[tbhp]
 \centering
-\includegraphics[width=0.80\linewidth]{figures/Figure1-supplemental1/Figure1_v1_supplemental1}
+\includegraphics[width=0.80\linewidth]{figures/Figure1-supplemental1/Figure1-supplemental1_v2}
 \caption{The model is robust to changes in the discrete transition matrix. Each plot shows the probability of each dynamic on simulated data example from Figure 1 with a different diagonal value--which governs the probability of remaining in that state. The off-diagonal values--the probability of switching to one of the other dynamics--are set to be equally likely with the remainder of the probability, as in Figure 1D. The first plot (upper left) shows the case when all dynamics are equally likely. The diagonal increases from left to right, top to bottom, until the case where the diagonal is one and the off-diagonal is zero--i.e. the case where there is no probability of switching to another state.}
 \label{fig:Figure1-Figure supplement 1}
 \end{figure*}
@@ -224,6 +224,12 @@ Python code used for analysis and generating figures in the paper is available a
 \label{fig:Figure3-Figure supplement 1}
 \end{figure*}
 
+\begin{figure}%[tbhp]
+\centering
+\includegraphics[width=0.80\linewidth]{figures/Figure5/Figure5_v1}
+\caption{Comparison of real vs. position shuffled data for two epochs from different animals. Line represents the percent of SWR classified in that epoch for real data. The histogram represents the distribution after 50 shuffles of the position data. Position data was shuffled by resampling with replacement from the set of all observed positions in that epoch, destroying position information but preserving spiking timing.}
+\label{Figure3-Figure supplement 2}
+\end{figure}
 
 %TC:endignore
 %the command above ignores this section for word count
