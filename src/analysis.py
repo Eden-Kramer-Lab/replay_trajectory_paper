@@ -271,7 +271,7 @@ def get_replay_distance_metrics(results, ripple_position_info, ripple_spikes,
         track_graph, map_estimate, actual_positions,
         actual_track_segment_ids, position_info)
 
-    SMOOTH_SIGMA = 0.005
+    SMOOTH_SIGMA = 0.010
     replay_distance_from_actual_position = gaussian_smooth(
         replay_distance_from_actual_position, SMOOTH_SIGMA, sampling_frequency)
     replay_distance_from_center_well = gaussian_smooth(
