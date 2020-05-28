@@ -271,7 +271,7 @@ def get_replay_distance_metrics(results, ripple_position_info, ripple_spikes,
         track_graph, map_estimate, actual_positions,
         actual_track_segment_ids, position_info)
 
-    SMOOTH_SIGMA = 0.010
+    SMOOTH_SIGMA = 0.001
     replay_distance_from_actual_position = gaussian_smooth(
         replay_distance_from_actual_position, SMOOTH_SIGMA, sampling_frequency)
     replay_distance_from_center_well = gaussian_smooth(
@@ -609,7 +609,7 @@ def highest_posterior_density(posterior_density, coverage=0.95):
     return threshold
 
 
-def gaussian_smooth(data, sigma, sampling_frequency, axis=0, truncate=8):
+def gaussian_smooth(data, sigma, sampling_frequency, axis=0):
     '''1D convolution of the data with a Gaussian.
 
     The standard deviation of the gaussian is in the units of the sampling
@@ -623,7 +623,6 @@ def gaussian_smooth(data, sigma, sampling_frequency, axis=0, truncate=8):
     sigma : float
     sampling_frequency : int
     axis : int, optional
-    truncate : int, optional
 
     Returns
     -------
@@ -631,5 +630,4 @@ def gaussian_smooth(data, sigma, sampling_frequency, axis=0, truncate=8):
 
     '''
     return gaussian_filter1d(
-        data, sigma * sampling_frequency, truncate=truncate, axis=axis,
-        mode='constant')
+        data, sigma * sampling_frequency, axis=axis)
