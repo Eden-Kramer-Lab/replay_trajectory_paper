@@ -268,8 +268,9 @@ def sorted_spikes_analysis_2D(epoch_key, plot_ripple_figures=False):
         track_graph, SAMPLING_FREQUENCY, PROBABILITY_THRESHOLD, epoch_key,
         classifier)
     epoch_identifier = f'{animal}_{day:02d}_{epoch:02d}_{data_type}_{dim}'
+    prob = int(PROBABILITY_THRESHOLD * 100)
     replay_info_filename = os.path.join(
-        PROCESSED_DATA_DIR, f'{epoch_identifier}_replay_info.csv')
+        PROCESSED_DATA_DIR, f'{epoch_identifier}_replay_info_{prob:02d}.csv')
     replay_info.to_csv(replay_info_filename)
 
     logging.info('Plotting ripple figures...')
@@ -416,8 +417,9 @@ def clusterless_analysis_1D(epoch_key, plot_ripple_figures=False):
         track_graph, SAMPLING_FREQUENCY, PROBABILITY_THRESHOLD, epoch_key,
         classifier)
     epoch_identifier = f'{animal}_{day:02d}_{epoch:02d}_{data_type}_{dim}'
+    prob = int(PROBABILITY_THRESHOLD * 100)
     replay_info_filename = os.path.join(
-        PROCESSED_DATA_DIR, f'{epoch_identifier}_replay_info.csv')
+        PROCESSED_DATA_DIR, f'{epoch_identifier}_replay_info_{prob:02d}.csv')
     replay_info.to_csv(replay_info_filename)
 
     logging.info('Plotting ripple figures...')
@@ -538,8 +540,9 @@ def clusterless_analysis_2D(epoch_key, plot_ripple_figures=False):
         track_graph, SAMPLING_FREQUENCY, PROBABILITY_THRESHOLD, epoch_key,
         classifier)
     epoch_identifier = f'{animal}_{day:02d}_{epoch:02d}_{data_type}_{dim}'
+    prob = int(PROBABILITY_THRESHOLD * 100)
     replay_info_filename = os.path.join(
-        PROCESSED_DATA_DIR, f'{epoch_identifier}_replay_info.csv')
+        PROCESSED_DATA_DIR, f'{epoch_identifier}_replay_info_{prob:02d}.csv')
     replay_info.to_csv(replay_info_filename)
 
     logging.info('Plotting ripple figures...')
