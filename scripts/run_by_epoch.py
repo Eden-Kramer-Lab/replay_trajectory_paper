@@ -5,13 +5,13 @@ from argparse import ArgumentParser
 from signal import SIGUSR1, SIGUSR2, signal
 from subprocess import PIPE, run
 
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import xarray as xr
 from scipy.ndimage import label
 from tqdm.auto import tqdm
 
+import matplotlib.pyplot as plt
+import xarray as xr
 from loren_frank_data_processing import save_xarray
 from loren_frank_data_processing.position import (EDGE_ORDER, EDGE_SPACING,
                                                   make_track_graph)
@@ -138,8 +138,9 @@ def sorted_spikes_analysis_1D(epoch_key, plot_ripple_figures=False):
         track_graph, SAMPLING_FREQUENCY, PROBABILITY_THRESHOLD, epoch_key,
         classifier)
     epoch_identifier = f'{animal}_{day:02d}_{epoch:02d}_{data_type}_{dim}'
+    prob = int(PROBABILITY_THRESHOLD * 100)
     replay_info_filename = os.path.join(
-        PROCESSED_DATA_DIR, f'{epoch_identifier}_replay_info.csv')
+        PROCESSED_DATA_DIR, f'{epoch_identifier}_replay_info_{prob:02d}.csv')
     replay_info.to_csv(replay_info_filename)
 
     logging.info('Plotting ripple figures...')
