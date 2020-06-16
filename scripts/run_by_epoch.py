@@ -401,7 +401,7 @@ def clusterless_analysis_1D(epoch_key, plot_ripple_figures=False):
                                   .map(TRANSITION_TO_CATEGORY)))
 
         ripple_times = data['ripple_times'].loc[:, ['start_time', 'end_time']]
-        spikes = (((data['multiunit'].sum('features') > 0) * 1.0)
+        spikes = ((((~np.isnan(data['multiunit'])).sum('features') > 0) * 1.0)
                   .to_dataframe(name='spikes').unstack())
         spikes.columns = data['tetrode_info'].tetrode_id
         ripple_spikes = reshape_to_segments(spikes, ripple_times)
@@ -493,7 +493,7 @@ def clusterless_analysis_2D(epoch_key, plot_ripple_figures=False):
             group=f'/{data_type}/{dim}/classifier/ripples/')
         logging.info('Found existing results. Loading...')
         ripple_times = data['ripple_times'].loc[:, ['start_time', 'end_time']]
-        spikes = (((data['multiunit'].sum('features') > 0) * 1.0)
+        spikes = ((((~np.isnan(data['multiunit'])).sum('features') > 0) * 1.0)
                   .to_dataframe(name='spikes').unstack())
         spikes.columns = data['tetrode_info'].tetrode_id
         ripple_spikes = reshape_to_segments(spikes, ripple_times)
