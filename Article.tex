@@ -201,7 +201,7 @@ Sharp wave ripples were detected using the same method as in \cite{Kayhippocampa
 \subsection*{The Model}
 Let $x_{k}$ be a continuous latent variable that corresponds to the position represented by the population of cells at time $t_k$ and $I_{k}$ be a discrete latent variable that is an indicator for the dynamics we wish to characterize: stationary, continuous, and fragmented. The goal of the model is to simultaneously estimate the posterior probability of both variables $p(x_k, I_k \mid O_{1:T})$, where $O_{1:T}$ corresponds to the observed data for for all times from 1 to $T$, the final time. The observed data can be either spike trains $\Delta N_{1:T}^{(1:C)}$ from $C$ putative cells when decoding with sorted spikes or multiunit spikes $\Delta N_{1:T}^{(1:E)}$ and their associated wave form features $\Vec{m}$ from each tetrode $E$ when decoding with clusterless spikes.
 
-We have previously shown [Asilomar REF] that the posterior $p(x_k, I_k \mid O_{1:T})$ can be directly estimated by applying the following recursive causal filter equation, starting with initial conditions $p(x_{0}, I_{0} \mid O_{0})$:
+We have previously shown \cite{DenovellisCharacterizinghippocampalreplay2019} that the posterior $p(x_k, I_k \mid O_{1:T})$ can be directly estimated by applying the following recursive causal filter equation, starting with initial conditions $p(x_{0}, I_{0} \mid O_{0})$:
 
 $$
 p(x_{k}, I_{k} \mid O_{1:k}) \propto
@@ -281,7 +281,7 @@ where $\delta(x_{k-1})$ is an identity transition matrix where position cannot c
 
 As discussed in the Results, this says that when persisting in the same dynamic, the stationary, continuous, and fragmented dynamics are defined by the identity transition, the random walk, and the uniform transition, respectively. When transitioning to or from the fragmented dynamic, we assume we do not have any information about the position, so the transition is uniform. Finally, when the transition is from the stationary to continuous, we assume the position is spatially close where it was previously, so we use a random walk. When the transition is from continuous to stationary, we assume that the position is no longer changing, so we use the identity transition.
 
-Lastly, we estimate the likelihood of the observations $p(O_{k} \mid x_{k}, I_{k})$. It has been shown [REFS, Zhang, Brown] that the likelihood with sorted spikes can be computed as:
+Lastly, we estimate the likelihood of the observations $p(O_{k} \mid x_{k}, I_{k})$. It has been shown \cite{ZhangInterpretingNeuronalPopulation1998, BrownStatisticalParadigmNeural1998} that the likelihood with sorted spikes can be computed as:
 $$
 p(O_{k} \mid x_{k}, I_{k}) = p(\Delta N_{k}^{(1:C)} \mid x_{k}, I_{k}) \propto
 \prod^{C}_{i=1} [\lambda_{i}(t_{k} \mid x_{k}, I_{k})\Delta_{k}]^{N_{t_{k}}^{i}} \\
