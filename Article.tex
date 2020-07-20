@@ -22,7 +22,7 @@
 \author[2, 3]{Michael E. Coulter}
 \author[5]{Marielena Sosa}
 \author[6]{Kenneth Kay}
-\author[2, 3]{Jason E. Chung}
+\author[7]{Jason E. Chung}
 \author[4]{Uri T. Eden}
 \author[1, 2, 3, \Letter]{Loren M. Frank}
 
@@ -33,6 +33,7 @@
 \affil[4]{Department of Mathematics and Statistics, Boston University, Boston, Massachusetts}
 \affil[5]{Department of Neurobiology, Stanford University, Palo Alto, California}
 \affil[6]{Mortimer B. Zuckerman Mind Brain Behavior Institute, Columbia University, New York, New York}
+\affil[7]{Department of Neurological Surgery, University of California, San Francisco, California}
 
 \maketitle
 
@@ -55,7 +56,7 @@ loren\at phy.ucsf.edu
 \end{corrauthor}
 
 \section*{Introduction}
-The brain has the remarkable ability to retrieve representations of past events and generate representations of possible future events. These internal "generative" representations \cite{KayConstantSubsecondCycling2020} can be identified because the underlying neural activity patterns resemble those seen during actual events. In particular, an encoding model that relates neural firing to external covariates can be constructed during an experience, and this model can inverted to decode an internal representation of the covariates from the neural activity at a different time.
+The brain has the remarkable ability to retrieve representations of past events and generate representations of possible future events. These internal "generative" representations \cite{KayConstantSubsecondCycling2020} can be identified because the underlying neural activity patterns resemble those seen during actual events. In particular, an encoding model that relates neural firing to external covariates can be constructed during an experience, and this model can be inverted to decode an internal representation of the covariates from the neural activity at a different time.
 
 Mental events may not occur in the same time span as actual events: memories can be retrieved and used in less time than was required for the original experience, and mental simulations can span a series of actions more quickly than would be required to perform those actions. Consistent with this, generative representations can unfold rapidly \cite{NadasdyReplayTimeCompression1999, LeeMemorySequentialExperience2002, DavidsonHippocampalReplayExtended2009, KarlssonAwakereplayremote2009}. As a result, decoding generative representations often involves making assumptions about their timescale and temporal structure, and these assumptions can limit the interpretation of the data. 
 
@@ -105,7 +106,7 @@ As mentioned above, the model is robust to the choice of probability of staying 
 \begin{figure*}%[tbhp]
 \centering
 \includegraphics[width=0.80\linewidth]{figures/Figure2/Figure2_v4}
-\caption{Demonstration of the state space model on real data using both sorted and clusterless spikes on the same SWR. \textbf{(A)} Decoding using sorted spikes. The top panel shows 31 cells on a W-track ordered according to linearized position by their place field peaks. The second panel shows the probability of each dynamic over time as in Figure 1F. Shaded regions correspond to the speed classifications as in Figure 1G. The third panel shows the estimated probability of latent position over the course of the SWR as it travels down the center arm toward the right arm. L, R, C correspond to the position of the left, right and center reward wells respectively. The animal's actual position is indicated by the red triangle. \textbf{(B)} Decoding using clusterless spikes. The top panel shows multiunit spiking activity from each tetrode. Other panels have the same convention as(A).  \textbf{(C)} 1D MAP estimate of the latent position in (A) projected back into 2D. Color indicates time. The animal's actual position is denoted by the red circle. Light grey lines show the animal's 2D position over the entire epoch. L, R, and C correspond to the left, right and center reward well as in (A). \textbf{(D)} 1D MAP estimate of the latent position in (B) projected back into 2D. Figure conventions are the same as in (C).
+\caption{Demonstration of the state space model on real data using both sorted and clusterless spikes on the same SWR. \textbf{(A)} Decoding using sorted spikes. The top panel shows 31 cells on a W-track ordered according to linearized position by their place field peaks. The second panel shows the probability of each dynamic over time as in Figure 1F. Shaded regions correspond to the speed classifications as in Figure 1G. The third panel shows the estimated probability of latent position over the course of the SWR as it travels down the center arm toward the right arm. L, R, C correspond to the position of the left, right and center reward wells respectively. The animal's actual position is indicated by the red triangle. \textbf{(B)} Decoding using clusterless spikes. The top panel shows multiunit spiking activity from each tetrode. Other panels have the same convention as(A).  \textbf{(C)} Maximum of the 1D decoded position (the most probable position) in (A) projected back into 2D. Color indicates time. The animal's actual position is denoted by the red circle. Light grey lines show the animal's 2D position over the entire epoch. L, R, and C correspond to the left, right and center reward well as in (A). \textbf{(D)} Maximum of the 1D decoded position (the most probable position) in (B) projected back into 2D. Figure conventions are the same as in (C).
 }
 \label{2}
 \end{figure*}
@@ -374,7 +375,8 @@ Replay distance from the animal is defined as the shortest path distance along t
 The non-local stationary position is defined as replay distances at least 30 cm from the animal's position during a time period classified as stationary.
 
 \subsection*{Software and Code Availability}
-Python code used for analysis and generating figures in the paper is available at: \url{https://github.com/Eden-Kramer-Lab/replay_trajectory_paper}. Code for the classifier is available in a separate software repository to facilitate code reuse at: \url{https://github.com/Eden-Kramer-Lab/replay_trajectory_classification}. All code is open-source and licensed under the MIT Software License. Classifier code can be easily installed as a python package with all requisite dependencies using pip or conda. See software repositories for specific details.
+Python code used for analysis and generating figures in the paper is available at: \url{https://github.com/Eden-Kramer-Lab/replay_trajectory_paper}. Code for the classifier is available in a separate software repository to facilitate code reuse at: \url{https://github.com/Eden-Kramer-Lab/replay_trajectory_classification}.
+Both code bases rely on the python packages: Numpy \cite{vanderWaltNumPyArrayStructure2011}, Numba \cite{LamNumbaLLVMbasedPython2015}, Matplotlib \cite{HunterMatplotlib2DGraphics2007}, xarray \cite{HoyerxarrayNDlabeled2017}, NetworkX \cite{HagbergExploringNetworkStructure2008}, Pandas \cite{McKinneyDataStructuresStatistical2010} and Seaborn (doi: 10.5281/zenodo.883859). All code is open-source and licensed under the MIT Software License. Classifier code can be easily installed as a python package with all requisite dependencies using pip or conda. See software repositories for specific details.
 
 \newpage
 
