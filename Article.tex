@@ -369,14 +369,14 @@ $$
 which we approximate with a Reimann sum.
 
 \subsection*{Replay distance from animal}
-Replay distance from the animal is defined as the shortest path distance along the track graph between the animal's 2D position projected on to the track graph (see Linearization) and the MAP estimate of the posterior probability of position $\argmax_{x_k} p(x_{k} \mid O_{1:T})$, which is defined as the center of the position bin with the greatest posterior value. The shortest path is found using Dijkstra's algorithm.
+Replay distance from the animal is defined as the shortest path distance along the track graph between the animal's 2D position projected on to the track graph (see Linearization) and the MAP estimate of the posterior probability of position $\argmax_{x_k} p(x_{k} \mid O_{1:T})$, which is defined as the center of the position bin with the greatest posterior value. The shortest path is found using Dijkstra's algorithm \cite{Dijkstranotetwoproblems1959}.
 
 \subsection*{Non-Local Stationary Position}
 The non-local stationary position is defined as replay distances at least 30 cm from the animal's position during a time period classified as stationary.
 
 \subsection*{Software and Code Availability}
 Python code used for analysis and generating figures in the paper is available at: \url{https://github.com/Eden-Kramer-Lab/replay_trajectory_paper}. Code for the classifier is available in a separate software repository to facilitate code reuse at: \url{https://github.com/Eden-Kramer-Lab/replay_trajectory_classification}.
-Both code bases rely on the python packages: Numpy \cite{vanderWaltNumPyArrayStructure2011}, Numba \cite{LamNumbaLLVMbasedPython2015}, Matplotlib \cite{HunterMatplotlib2DGraphics2007}, xarray \cite{HoyerxarrayNDlabeled2017}, NetworkX \cite{HagbergExploringNetworkStructure2008}, Pandas \cite{McKinneyDataStructuresStatistical2010} and Seaborn (doi: 10.5281/zenodo.883859). All code is open-source and licensed under the MIT Software License. Classifier code can be easily installed as a python package with all requisite dependencies using pip or conda. See software repositories for specific details.
+Both code bases rely on the following python packages: Numpy \cite{vanderWaltNumPyArrayStructure2011}, Numba \cite{LamNumbaLLVMbasedPython2015}, Matplotlib \cite{HunterMatplotlib2DGraphics2007}, xarray \cite{HoyerxarrayNDlabeled2017}, NetworkX \cite{HagbergExploringNetworkStructure2008}, Pandas \cite{McKinneyDataStructuresStatistical2010} and Seaborn (doi: 10.5281/zenodo.883859). All code is open-source and licensed under the MIT Software License. Classifier code can be easily installed as a python package with all requisite dependencies using pip or conda. See software repositories for specific details.
 
 \newpage
 
