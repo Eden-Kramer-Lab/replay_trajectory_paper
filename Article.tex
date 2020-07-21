@@ -369,7 +369,7 @@ $$
 which we approximate with a Reimann sum.
 
 \subsection*{Replay distance from animal}
-Replay distance from the animal is defined as the shortest path distance along the track graph between the animal's 2D position projected on to the track graph (see Linearization) and the MAP estimate of the posterior probability of position $\argmax_{x_k} p(x_{k} \mid O_{1:T})$, which is defined as the center of the position bin with the greatest posterior value. The shortest path is found using Dijkstra's algorithm.
+Replay distance from the animal is defined as the shortest path distance along the track graph between the animal's 2D position projected on to the track graph (see Linearization) and the MAP estimate of the posterior probability of position $\argmax_{x_k} p(x_{k} \mid O_{1:T})$, which is defined as the center of the position bin with the greatest posterior value. The shortest path is found using Dijkstra's algorithm \cite{Dijkstranotetwoproblems1959}.
 
 \subsection*{Non-Local Stationary Position}
 The non-local stationary position is defined as replay distances at least 30 cm from the animal's position during a time period classified as stationary.
