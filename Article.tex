@@ -154,7 +154,7 @@ We found that spatially coherent events did indeed have lower cumulative HPDs th
 \centering
 \includegraphics[width=0.80\linewidth]{figures/Figure5/Figure5_v3}
 \caption{
-Analysis of SWRs from all animals. \textbf{(A)} UpSet plot---which is similar to a Venn diagram with more than 3 sets---of the most common sets of dynamics within each ripple. Each row represents a possible category present in the SWR. Each column represents a set of dynamics categories, where filled-in black dots with an edge between the dots indicates that multiple categories are present in the SWR (at temporally distinct times). The sets are ordered by how often they occurred as indicated by the bar plot above each category. The total number of each category is indicated by the rotated bar plot on the left. \textbf{(B)} Distribution of the duration of each dynamic category within a SWR. \textbf{(C)} The distance of the average latent position from the animal's position for each dynamic category within each SWR. \textbf{(D)} Position of stationary trajectories on the W-track at least 30 cm away from the animal's position. \textbf{(E)} Distribution of multiunit spike rates for each dynamic category within each SWR.
+Analysis of SWRs from all animals. \textbf{(A)} UpSet plot \cite{LexUpSetVisualizationIntersecting2014}---which is similar to a Venn diagram with more than 3 sets---of the most common sets of dynamics within each ripple. Each row represents a possible category present in the SWR. Each column represents a set of dynamics categories, where filled-in black dots with an edge between the dots indicates that multiple categories are present in the SWR (at temporally distinct times). The sets are ordered by how often they occurred as indicated by the bar plot above each category. The total number of each category is indicated by the rotated bar plot on the left. \textbf{(B)} Distribution of the duration of each dynamic category within a SWR. \textbf{(C)} The distance of the average latent position from the animal's position for each dynamic category within each SWR. \textbf{(D)} Position of stationary trajectories on the W-track at least 30 cm away from the animal's position. \textbf{(E)} Distribution of multiunit spike rates for each dynamic category within each SWR.
 }
 \label{5}
 \end{figure*}
@@ -369,13 +369,13 @@ $$
 which we approximate with a Reimann sum.
 
 \subsection*{Replay distance from animal}
-Replay distance from the animal is defined as the shortest path distance along the track graph between the animal's 2D position projected on to the track graph (see Linearization) and the MAP estimate of the posterior probability of position $\argmax_{x_k} p(x_{k} \mid O_{1:T})$, which is defined as the center of the position bin with the greatest posterior value. The shortest path is found using Dijkstra's algorithm \cite{Dijkstranotetwoproblems1959}.
+Replay distance from the animal is defined as the shortest path distance along the track graph between the animal's 2D position projected on to the track graph (see Linearization) and the MAP estimate of the posterior probability of position $\argmax_{x_k} p(x_{k} \mid O_{1:T})$, which is defined as the center of the position bin with the greatest posterior value. The shortest path is found using Dijkstra's algorithm \cite{Dijkstranotetwoproblems1959} as implemented in NetworkX \cite{HagbergExploringNetworkStructure2008}.
 
 \subsection*{Non-Local Stationary Position}
 The non-local stationary position is defined as replay distances at least 30 cm from the animal's position during a time period classified as stationary.
 
 \subsection*{Software and Code Availability}
-Python code used for analysis and generating figures in the paper is available at: \url{https://github.com/Eden-Kramer-Lab/replay_trajectory_paper}. Code for the classifier is available in a separate software repository to facilitate code reuse at: \url{https://github.com/Eden-Kramer-Lab/replay_trajectory_classification}.
+Python code used for analysis and generating figures in the paper is available at: \url{https://github.com/Eden-Kramer-Lab/replay_trajectory_paper}. Code for the classifier is available in a separate software repository to facilitate code reuse at: \url{https://github.com/Eden-Kramer-Lab/replay_trajectory_classification} (doi: 10.5281/zenodo.3713412).
 Both code bases rely on the following python packages: Numpy \cite{vanderWaltNumPyArrayStructure2011}, Numba \cite{LamNumbaLLVMbasedPython2015}, Matplotlib \cite{HunterMatplotlib2DGraphics2007}, xarray \cite{HoyerxarrayNDlabeled2017}, NetworkX \cite{HagbergExploringNetworkStructure2008}, Pandas \cite{McKinneyDataStructuresStatistical2010} and Seaborn (doi: 10.5281/zenodo.883859). All code is open-source and licensed under the MIT Software License. Classifier code can be easily installed as a python package with all requisite dependencies using pip or conda. See software repositories for specific details.
 
 \newpage
@@ -389,14 +389,14 @@ Both code bases rely on the following python packages: Numpy \cite{vanderWaltNum
 \begin{figure*}%[tbhp]
 \centering
 \includegraphics[width=0.80\linewidth]{figures/Figure1-supplemental1/Figure1_v2_supplemental1}
-\caption{The model is robust to changes in the discrete transition matrix. Each plot shows the probability of each dynamic on simulated data example from Figure 1 with a different diagonal value--which governs the probability of remaining in that state. The off-diagonal values--the probability of switching to one of the other dynamics--are set to be equally likely with the remainder of the probability, as in Figure 1D. The first plot (upper left) shows the case when all dynamics are equally likely. The diagonal increases from left to right, top to bottom, until the case where the diagonal is one and the off-diagonal is zero--i.e. the case where there is no probability of switching to another state.}
+\caption{The model is robust to changes in the discrete transition matrix. Each plot shows the probability of each dynamic on simulated data example from Figure 1 with a different diagonal value---which governs the probability of remaining in that state. The off-diagonal values---the probability of switching to one of the other dynamics---are set to be equally likely with the remainder of the probability, as in Figure 1D. The first plot (upper left) shows the case when all dynamics are equally likely. The diagonal increases from left to right, top to bottom, until the case where the diagonal is one and the off-diagonal is zero---i.e. the case where there is no probability of switching to another state.}
 \label{fig:Figure1-Figure supplement 1}
 \end{figure*}
 
 \begin{figure*}%[tbhp]
 \centering
 \includegraphics[width=0.80\linewidth]{figures/Figure2-supplemental1/Figure2_v3-supplemental1}
-\caption{Decoding the same SWR in Figure 2 using 2D clusterless and sorted spikes. \textbf{(A)} The left plot shows the spikes from cells arranged by the linear position of the peak of place field as in Figure 2. The middle plot shows the probability of each dynamic over time from the 2D decode. Shaded regions indicate classification category as in Figure 1G and 2. The rightmost plot shows the MAP estimate of the latent position with color indicating time. The latent position posterior summed over time is shown in purple underneath. The light grey lines represent the position of the animal over the entire epoch and the red dot represents the animal's position. \textbf{(B)} Same as in A, but with clusterless decoding.}
+\caption{Decoding the same SWR in Figure \ref{2} with 2D position using sorted spikes decoding and clusterless decoding, respectively. \textbf{(A)} The left plot shows the spikes from cells arranged by the linear position of the peak of place field as in Figure 2. The middle plot shows the probability of each dynamic over time from the 2D decode. Shaded regions indicate classification category as in Figure 1G and 2. The rightmost plot shows the most probable estimate of the latent position (MAP estimate) with color indicating time. The latent position posterior summed over time is shown in purple underneath. The light grey lines represent the position of the animal over the entire epoch and the red dot represents the animal's position. \textbf{(B)} Same as in A, but with clusterless decoding.}
 \label{fig:Figure2-Figure supplement 1}
 \end{figure*}
 
@@ -418,7 +418,7 @@ Both code bases rely on the following python packages: Numpy \cite{vanderWaltNum
 \begin{figure}%[tbhp]
 \centering
 \includegraphics[width=0.80\linewidth]{figures/Figure3-supplemental2/Figure3_v1-supplemental2}
-\caption{Comparison of real vs. position shuffled data for two epochs from different animals. Line represents the percent of SWR classified in that epoch for real data. The histogram represents the distribution after 50 shuffles of the position data. Position data was shuffled by resampling with replacement from the set of all observed positions in that epoch, destroying position information but preserving spiking timing.}
+\caption{Comparison of real vs. position shuffled data for two epochs from different animals. Line represents the percent of SWR classified in that epoch for real data. The histogram represents the distribution after 50 shuffles of the position data. Position data was shuffled by resampling with replacement from the set of all observed positions in that epoch, destroying position information but preserving spiking timing and position occupancy.}
 \label{fig:Figure3-Figure supplement 2}
 \end{figure}
 
