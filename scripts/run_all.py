@@ -2,12 +2,11 @@ import os
 import subprocess
 import sys
 
-from tqdm.auto import tqdm
-
 from loren_frank_data_processing import (make_epochs_dataframe,
                                          make_neuron_dataframe)
 from src.parameters import (ANIMALS, MAX_N_EXPOSURES, MIN_N_NEURONS,
                             PROCESSED_DATA_DIR)
+from tqdm.auto import tqdm
 
 
 def run_bash(epoch_key, log_directory):

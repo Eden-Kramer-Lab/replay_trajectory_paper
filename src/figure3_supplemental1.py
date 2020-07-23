@@ -4,7 +4,6 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
-
 from src.analysis import get_is_classified, get_probability
 from src.figure_utilities import ONE_COLUMN, PAGE_HEIGHT, save_figure
 from src.parameters import PROBABILITY_THRESHOLD, STATE_COLORS

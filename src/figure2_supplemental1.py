@@ -3,7 +3,6 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
-
 from src.analysis import (get_is_classified, get_probability,
                           maximum_a_posteriori_estimate)
 from src.figure_utilities import PAGE_HEIGHT, TWO_COLUMN, save_figure

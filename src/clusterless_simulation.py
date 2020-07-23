@@ -1,5 +1,4 @@
 import numpy as np
-
 from replay_trajectory_classification.simulate import (
     simulate_linear_distance, simulate_multiunit_with_place_fields,
     simulate_time)

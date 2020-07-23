@@ -1,11 +1,10 @@
 import os
 from glob import glob
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-
-import matplotlib.pyplot as plt
 from loren_frank_data_processing import make_tetrode_dataframe
 from src.figure_utilities import PAGE_HEIGHT, TWO_COLUMN, save_figure
 from src.parameters import (_BRAIN_AREAS, ANIMALS, PROCESSED_DATA_DIR,
