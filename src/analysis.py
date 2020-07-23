@@ -1,11 +1,10 @@
 import networkx as nx
 import numpy as np
 import pandas as pd
-from scipy.ndimage.filters import gaussian_filter1d
-
 import xarray as xr
 from loren_frank_data_processing.track_segment_classification import (
     get_track_segments_from_graph, project_points_to_segment)
+from scipy.ndimage.filters import gaussian_filter1d
 
 
 def get_replay_info(results, ripple_spikes, ripple_times, position_info,

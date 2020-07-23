@@ -2,7 +2,6 @@ import os
 from glob import glob
 
 import pandas as pd
-
 from src.parameters import PROCESSED_DATA_DIR, STATE_ORDER
 
 

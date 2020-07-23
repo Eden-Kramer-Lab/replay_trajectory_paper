@@ -13,8 +13,6 @@ from loren_frank_data_processing import save_xarray
 from replay_trajectory_classification import (ClusterlessClassifier,
                                               SortedSpikesClassifier)
 from scipy.ndimage import label
-from tqdm.auto import tqdm
-
 from src.analysis import (get_place_field_max, get_sleep_replay_info,
                           reshape_to_segments)
 from src.load_data import get_sleep_and_prev_run_epochs, load_sleep_data
@@ -23,6 +21,7 @@ from src.parameters import (FIGURE_DIR, PROBABILITY_THRESHOLD,
                             TRANSITION_TO_CATEGORY)
 from src.visualization import (plot_category_counts, plot_category_duration,
                                plot_ripple_decode_1D)
+from tqdm.auto import tqdm
 
 FORMAT = '%(asctime)s %(message)s'
 

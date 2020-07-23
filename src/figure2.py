@@ -4,7 +4,6 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
-
 from src.analysis import get_is_classified, get_probability
 from src.figure_utilities import ONE_COLUMN, PAGE_HEIGHT, save_figure
 from src.parameters import PROBABILITY_THRESHOLD, STATE_COLORS
@@ -120,21 +119,11 @@ def plot_1D_results(spike_times, data, results_1D,
         )
     )
 
-    ripple_position = ripple_position_info.loc[:, "linear_position"].mean()
+    ripple_position = ripple_position_info.loc[:, "linear_position"]
     max_time = (MILLISECONDS_TO_SECONDS * probability.time /
                 np.timedelta64(1, "s")).max()
-    axes[2].annotate(
-        "",
-        xy=(max_time + 2, ripple_position),
-        xycoords="data",
-        xytext=(max_time + 12, ripple_position),
-        textcoords="data",
-        arrowprops=dict(shrink=0.00, color="red"),
-        horizontalalignment="left",
-        verticalalignment="center",
-        color="red",
-        zorder=200,
-    )
+    axes[2].plot(time, ripple_position, linestyle="--", linewidth=2,
+                 color="magenta", clip_on=False)
     axes[2].set_xlim((0, max_time))
     axes[2].set_xticks(
         (0, MILLISECONDS_TO_SECONDS *
@@ -145,7 +134,7 @@ def plot_1D_results(spike_times, data, results_1D,
     plot_1D_wtrack_landmarks(data, max_time, ax=axes[2])
     axes[2].set_ylabel("Position [cm]")
 
-    sns.despine()
+    sns.despine(offset=5)
 
     fig_name = (
         "figure2_"

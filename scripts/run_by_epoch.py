@@ -5,18 +5,16 @@ from argparse import ArgumentParser
 from signal import SIGUSR1, SIGUSR2, signal
 from subprocess import PIPE, run
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from scipy.ndimage import label
-from tqdm.auto import tqdm
-
-import matplotlib.pyplot as plt
 import xarray as xr
 from loren_frank_data_processing import save_xarray
 from loren_frank_data_processing.position import (EDGE_ORDER, EDGE_SPACING,
                                                   make_track_graph)
 from replay_trajectory_classification import (ClusterlessClassifier,
                                               SortedSpikesClassifier)
+from scipy.ndimage import label
 from src.analysis import (get_linear_position_order, get_place_field_max,
                           get_replay_info, reshape_to_segments)
 from src.load_data import load_data
@@ -29,6 +27,7 @@ from src.parameters import (ANIMALS, FIGURE_DIR, PROBABILITY_THRESHOLD,
 from src.visualization import (plot_category_counts, plot_category_duration,
                                plot_neuron_place_field_2D_1D_position,
                                plot_ripple_decode_1D, plot_ripple_decode_2D)
+from tqdm.auto import tqdm
 
 FORMAT = '%(asctime)s %(message)s'
 

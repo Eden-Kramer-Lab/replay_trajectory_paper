@@ -1,7 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
-
 from src.parameters import (PAGE_HEIGHT, STATE_COLORS, TRANSITION_TO_CATEGORY,
                             TWO_COLUMN)
 

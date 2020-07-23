@@ -1,12 +1,11 @@
 
 import os
 
+import matplotlib.animation as animation
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-
-import matplotlib.animation as animation
-import matplotlib.pyplot as plt
 from loren_frank_data_processing.position import (get_position_dataframe,
                                                   make_track_graph)
 from loren_frank_data_processing.track_segment_classification import (
