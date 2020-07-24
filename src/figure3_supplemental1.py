@@ -111,18 +111,8 @@ def plot_clusterless_1D_results(multiunit_times, data, results,
     max_time = (
         MILLISECONDS_TO_SECONDS * probability.time / np.timedelta64(1, "s")
     ).max()
-    axes[2].annotate(
-        "",
-        xy=(max_time, ripple_position.mean()),
-        xycoords="data",
-        xytext=(max_time + ripple_duration * 0.04, ripple_position.mean()),
-        textcoords="data",
-        arrowprops=dict(shrink=0.00, color="red"),
-        horizontalalignment="left",
-        verticalalignment="center",
-        color="red",
-        zorder=200,
-    )
+    axes[2].plot(time, ripple_position, linestyle="--", linewidth=2,
+                 color="magenta", clip_on=False)
     axes[2].set_xlim((0, max_time))
     axes[2].set_xticks((0, np.round(ripple_duration).astype(int)))
     axes[2].set_xlabel("Time [ms]")
@@ -130,7 +120,7 @@ def plot_clusterless_1D_results(multiunit_times, data, results,
     plot_1D_wtrack_landmarks(data, max_time, ax=axes[2])
     axes[2].set_ylabel("Position [cm]")
 
-    sns.despine()
+    sns.despine(offset=5)
 
     # Save Plot
     if is_save_figure:
