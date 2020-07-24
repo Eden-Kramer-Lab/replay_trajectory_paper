@@ -37,7 +37,7 @@ def plot_clusterless_1D_results_hpd(
         1,
         sharex=True,
         constrained_layout=True,
-        figsize=(ONE_COLUMN, PAGE_HEIGHT / 3),
+        figsize=(0.9 * ONE_COLUMN, 0.9 * PAGE_HEIGHT / 3),
         gridspec_kw={"height_ratios": [1, 3, 3, 3]},
     )
 
