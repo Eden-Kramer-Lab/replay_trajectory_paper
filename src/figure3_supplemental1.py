@@ -67,7 +67,7 @@ def plot_clusterless_1D_results(multiunit_times, data, results,
 
     axes[1].set_ylim((0, 1.05))
     axes[1].set_yticks((0, 1))
-    axes[1].set_ylabel("Probability")
+    axes[1].set_ylabel("Prob.")
     probability2 = get_probability(results)
     is_classified = get_is_classified(probability2, PROBABILITY_THRESHOLD)
 
