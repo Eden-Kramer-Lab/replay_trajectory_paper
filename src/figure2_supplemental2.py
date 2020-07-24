@@ -120,7 +120,7 @@ def plot_clusterless_1D_results(multiunit_times, data, results,
     plot_1D_wtrack_landmarks(data, max_time, ax=axes[2])
     axes[2].set_ylabel("Position [cm]")
 
-    sns.despine()
+    sns.despine(offset=5)
 
     # Save Plot
     if is_save_figure:
@@ -181,7 +181,7 @@ def plot_1D_projected_to_2D(epoch_key, ripple_number, data, results,
         ripple_position_info["projected_x_position"],
         ripple_position_info["projected_y_position"],
         zorder=100,
-        color="red",
+        color="magenta",
         s=100,
     )
 
