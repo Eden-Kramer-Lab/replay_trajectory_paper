@@ -120,7 +120,7 @@ def plot_clusterless_1D_results(multiunit_times, data, results,
     plot_1D_wtrack_landmarks(data, max_time, ax=axes[2])
     axes[2].set_ylabel("Position [cm]")
 
-    sns.despine()
+    sns.despine(offset=5)
 
     # Save Plot
     if is_save_figure:
