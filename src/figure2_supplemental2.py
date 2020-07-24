@@ -51,7 +51,7 @@ def plot_clusterless_1D_results(multiunit_times, data, results,
     axes[0].set_xticks((0, ripple_duration))
 
     axes[0].set_yticks((1, n_tetrodes))
-    axes[0].set_ylabel("Tetrodes")
+    axes[0].set_ylabel("Tet.")
 
     # axis 1
     probability = results.acausal_posterior.sum(["position"])
