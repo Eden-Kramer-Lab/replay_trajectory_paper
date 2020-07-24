@@ -113,7 +113,7 @@ def plot_2D_results(spike_times, data, results_2D, classifier_2D,
         ripple_position_info["x_position"],
         ripple_position_info["y_position"],
         zorder=100,
-        color="red",
+        color="magenta",
         s=100,
     )
 
@@ -174,7 +174,7 @@ def plot_2D_results(spike_times, data, results_2D, classifier_2D,
         textcoords="axes fraction",
         horizontalalignment="left",
         verticalalignment="center",
-        color="red",
+        color="magenta",
         zorder=200,
     )
     plt.suptitle(data_type.replace("_", " ").title(), y=1.05)

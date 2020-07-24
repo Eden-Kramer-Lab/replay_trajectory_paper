@@ -190,7 +190,7 @@ def plot_1D_projected_to_2D(epoch_key, ripple_number, data,
         ripple_position_info["projected_x_position"],
         ripple_position_info["projected_y_position"],
         zorder=100,
-        color="red",
+        color="magenta",
         s=100,
     )
     ax.text(183, 158, "L", ha="center", va="center", weight="bold", zorder=100)
