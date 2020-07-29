@@ -23,7 +23,7 @@ def plot_spikes(test_spikes, replay_time, ax=None, cmap=plt.get_cmap("tab20")):
     ax.set_xlabel("Time [ms]")
     ax.set_xlim((replay_time.min(), replay_time.max() + 1))
     ax.set_xticks((replay_time.min(), replay_time.max() + 1))
-    ax.set_title("Spike Trains", fontsize=16)
+    ax.set_title("Synthetic Replay Spike Train", fontsize=16)
     sns.despine()
 
 
@@ -95,7 +95,7 @@ def plot_state_transition(classifier):
     axes[-1].set_yticks(dist_lim)
     axes[1].set_xlabel("Current Position [cm]")
     axes[0].set_ylabel("Previous\nPosition [cm]")
-    plt.suptitle("Dynamics Model", y=1.1, fontsize=16)
+    plt.suptitle("Movement Dynamics Model", y=1.1, fontsize=16)
 
     sns.despine()
 
@@ -181,7 +181,7 @@ def plot_probabilities(results, ax=None):
     ax.set_ylabel("Probability")
     ax.set_yticks([0, 1])
     ax.set_ylim([0, 1.05])
-    ax.set_title("Probability of\nDynamic Mode", fontsize=16)
+    ax.set_title("Probability of\nMovement Dynamic", fontsize=16)
     sns.despine()
 
 
@@ -217,7 +217,7 @@ def plot_posterior(
     cbar.ax.set_yticklabels(["0", "Max"])  # vertically oriented colorbar
     cbar.outline.set_visible(False)
 
-    ax.set_title("Estimate of\nMental Position", fontsize=16)
+    ax.set_title("Estimate of\nLatent Position", fontsize=16)
 
     xlim = results.time.min(), results.time.max() + 1
     ax.set_xticks(xlim)
@@ -270,7 +270,8 @@ def plot_classification_of_speeds(probabilities, is_classified, ax=None):
     ax.set_xscale("log")
     ax.set_xticks((1e0, 1e1, 1e2, 1e3, 1e4))
     ax.set_xlim((1e0, 1e4))
-    ax.set_title("Classification of Speeds", fontsize=16, pad=10)
+    ax.set_title("Classification of Speeds by Movement Dynamic Probability",
+                 fontsize=16, pad=10)
 
     ax.set_xlim((probabilities.Speed.min(), probabilities.Speed.max()))
     sns.despine()
