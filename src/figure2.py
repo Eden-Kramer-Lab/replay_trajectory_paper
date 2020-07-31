@@ -3,6 +3,7 @@ import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import seaborn as sns
 from src.analysis import get_is_classified, get_probability
 from src.figure_utilities import ONE_COLUMN, PAGE_HEIGHT, save_figure
@@ -17,12 +18,12 @@ def plot_1D_results(spike_times, data, results_1D,
                     classifier_1D, epoch_key,
                     ripple_number, data_type="sorted_spikes", cmap="viridis"):
     fig, axes = plt.subplots(
-        3,
+        4,
         1,
-        sharex=True,
+        sharex=False,
         constrained_layout=True,
-        figsize=(0.9 * ONE_COLUMN, 0.9 * PAGE_HEIGHT / 3),
-        gridspec_kw={"height_ratios": [1, 1, 3]},
+        figsize=(0.6 * ONE_COLUMN, 0.9 * PAGE_HEIGHT / 3),
+        gridspec_kw={"height_ratios": [0.5, 1, 1, 3]},
     )
 
     n_tetrodes = len(spike_times)
@@ -35,9 +36,32 @@ def plot_1D_results(spike_times, data, results_1D,
     )
 
     ripple_position_info = data["position_info"].loc[ripple_start:ripple_end]
-
+    max_time = (MILLISECONDS_TO_SECONDS * results_1D.time /
+            np.timedelta64(1, "s")).max()
+    
     # axis 0
-    axes[0].eventplot(
+    lfp_start = ripple_start - pd.Timedelta(100, unit="ms")
+    lfp_end = ripple_end + pd.Timedelta(100, unit="ms")
+    ripple_filtered_lfps = data["ripple_filtered_lfps"].loc[lfp_start:lfp_end]
+    max_ripple_ind = np.unravel_index(
+        np.argmax(np.abs(ripple_filtered_lfps.values)), ripple_filtered_lfps.shape
+    )[-1]
+    axes[0].plot(
+        MILLISECONDS_TO_SECONDS * (ripple_filtered_lfps.index - ripple_start) / np.timedelta64(1, "s"),
+        ripple_filtered_lfps.values[:, max_ripple_ind],
+        color="black",
+    )
+    axes[0].axvline(0, color="lightgrey")
+    axes[0].axvline(max_time, color="lightgrey")
+    axes[0].set_xlim((0, max_time))
+    axes[0].set_xticks(
+        (0, MILLISECONDS_TO_SECONDS *
+         (ripple_end - ripple_start) / np.timedelta64(1, "s"))
+    )
+    axes[0].axis("off")
+    
+    # axis 1
+    axes[1].eventplot(
         [
             MILLISECONDS_TO_SECONDS
             * (multiunit.loc[ripple_start:ripple_end].index - ripple_start)
@@ -47,28 +71,27 @@ def plot_1D_results(spike_times, data, results_1D,
         color="black",
     )
 
-    axes[0].set_xlim(
+    axes[1].set_xlim(
         (0, MILLISECONDS_TO_SECONDS *
          (ripple_end - ripple_start) / np.timedelta64(1, "s"))
     )
-    axes[0].set_xticks(
-        (0, MILLISECONDS_TO_SECONDS *
-         (ripple_end - ripple_start) / np.timedelta64(1, "s"))
-    )
+    axes[1].set_xticks([])
 
-    axes[0].set_yticks((0, n_tetrodes))
+    axes[1].set_yticks((0, n_tetrodes))
 
     if data_type == "sorted_spikes":
-        axes[0].set_ylabel("Cells")
+        axes[1].set_ylabel("Cells")
     else:
-        axes[0].set_ylabel("Tet.")
+        axes[1].set_ylabel("Tet.")
+    sns.despine(ax=axes[1], offset=5)
+    axes[1].spines["left"].set_visible(False)
 
-    # axis 1
+    # axis 2
     probability = results_1D.acausal_posterior.sum(["position"])
 
     for state, prob in zip(results_1D.state.values,
                            probability.values.T):
-        axes[1].plot(
+        axes[2].plot(
             MILLISECONDS_TO_SECONDS *
             probability.time / np.timedelta64(1, "s"),
             prob,
@@ -76,9 +99,13 @@ def plot_1D_results(spike_times, data, results_1D,
             color=STATE_COLORS[state],
         )
 
-    axes[1].set_ylim((0, 1.05))
-    axes[1].set_yticks((0, 1))
-    axes[1].set_ylabel("Prob.")
+    axes[2].set_ylim((0, 1.05))
+    axes[2].set_yticks((0, 1))
+    axes[2].set_xlim((0, max_time))
+    axes[2].set_xticks([])
+    axes[2].set_ylabel("Prob.")
+    sns.despine(ax=axes[2], offset=5)
+    axes[2].spines["left"].set_visible(False)
 
     probability2 = get_probability(results_1D)
     is_classified = get_is_classified(probability2, PROBABILITY_THRESHOLD)
@@ -88,7 +115,7 @@ def plot_1D_results(spike_times, data, results_1D,
     for state, is_class in zip(is_classified.state.values,
                                is_classified.values.T):
         if is_class.sum() > 0:
-            axes[1].fill_between(
+            axes[2].fill_between(
                 time,
                 is_class,
                 where=is_class.astype(bool),
@@ -96,7 +123,7 @@ def plot_1D_results(spike_times, data, results_1D,
                 color=STATE_COLORS[state],
             )
 
-    # axis 2
+    # axis 3
 
     cmap = copy.copy(plt.cm.get_cmap(cmap))
     cmap.set_bad(color="lightgrey", alpha=1.0)
@@ -120,21 +147,19 @@ def plot_1D_results(spike_times, data, results_1D,
     )
 
     ripple_position = ripple_position_info.loc[:, "linear_position"]
-    max_time = (MILLISECONDS_TO_SECONDS * probability.time /
-                np.timedelta64(1, "s")).max()
-    axes[2].plot(time, ripple_position, linestyle="--", linewidth=2,
+    axes[3].plot(time, ripple_position, linestyle="--", linewidth=2,
                  color="magenta", clip_on=False)
-    axes[2].set_xlim((0, max_time))
-    axes[2].set_xticks(
+    axes[3].set_xlim((0, max_time))
+    axes[3].set_xticks(
         (0, MILLISECONDS_TO_SECONDS *
          (ripple_end - ripple_start) / np.timedelta64(1, "s"))
     )
-    axes[2].set_xlabel("Time [ms]")
+    axes[3].set_xlabel("Time [ms]")
 
-    plot_1D_wtrack_landmarks(data, max_time, ax=axes[2])
-    axes[2].set_ylabel("Position [cm]")
+    plot_1D_wtrack_landmarks(data, max_time, ax=axes[3])
+    axes[3].set_ylabel("Position [cm]")
 
-    sns.despine(offset=5)
+    sns.despine(ax=axes[3], offset=5)
 
     fig_name = (
         "figure2_"

@@ -3,6 +3,7 @@ import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import seaborn as sns
 from src.analysis import get_is_classified, get_probability
 from src.figure_utilities import ONE_COLUMN, PAGE_HEIGHT, save_figure
@@ -17,27 +18,49 @@ def plot_clusterless_1D_results(multiunit_times, data, results,
                                 classifier, epoch_key,
                                 ripple_number, cmap="viridis",
                                 is_save_figure=True):
-    time_slice = slice(
-        *data["ripple_times"].loc[ripple_number, ["start_time", "end_time"]]
+    ripple_start, ripple_end = (
+        data["ripple_times"].loc[ripple_number].start_time,
+        data["ripple_times"].loc[ripple_number].end_time,
     )
+    time_slice = slice(ripple_start, ripple_end)
+    
     fig, axes = plt.subplots(
-        3,
+        4,
         1,
-        sharex=True,
+        sharex=False,
         constrained_layout=True,
-        figsize=(0.9 * ONE_COLUMN, 0.9 * PAGE_HEIGHT / 3),
-        gridspec_kw={"height_ratios": [1, 1, 3]},
+        figsize=(0.6 * ONE_COLUMN, 0.9 * PAGE_HEIGHT / 3),
+        gridspec_kw={"height_ratios": [0.5, 1, 1, 3]},
     )
-
-    # axis 0
+    
     n_tetrodes = len(multiunit_times)
     ripple_duration = (
         MILLISECONDS_TO_SECONDS
         * (time_slice.stop - time_slice.start)
         / np.timedelta64(1, "s")
     )
+    max_time = (
+        MILLISECONDS_TO_SECONDS * results.time / np.timedelta64(1, "s")
+    ).max()
 
-    axes[0].eventplot(
+    # axis 0
+    lfp_start = ripple_start - pd.Timedelta(100, unit="ms")
+    lfp_end = ripple_end + pd.Timedelta(100, unit="ms")
+    ripple_filtered_lfps = data["ripple_filtered_lfps"].loc[lfp_start:lfp_end]
+    max_ripple_ind = np.unravel_index(
+        np.argmax(np.abs(ripple_filtered_lfps.values)), ripple_filtered_lfps.shape
+    )[-1]
+    axes[0].plot(
+        MILLISECONDS_TO_SECONDS * (ripple_filtered_lfps.index - ripple_start) / np.timedelta64(1, "s"),
+        ripple_filtered_lfps.values[:, max_ripple_ind],
+        color="black",
+    )
+    axes[0].set_xlim((0, max_time))
+    axes[0].set_xticks((0, np.round(ripple_duration).astype(int)))
+    axes[0].axis("off")
+
+    # axis 1
+    axes[1].eventplot(
         [
             MILLISECONDS_TO_SECONDS
             * (multiunit.loc[time_slice].index - time_slice.start)
@@ -47,27 +70,31 @@ def plot_clusterless_1D_results(multiunit_times, data, results,
         color="black",
     )
 
-    axes[0].set_xlim((0, ripple_duration))
-    axes[0].set_xticks((0, ripple_duration))
+    axes[1].set_xlim((0, ripple_duration))
+    axes[1].set_xticks((0, ripple_duration))
+    axes[1].set_yticks((0, n_tetrodes))
+    axes[1].set_ylabel("Tet.")
+    axes[1].set_xlim((0, max_time))
+    axes[1].set_xticks([])
 
-    axes[0].set_yticks((0, n_tetrodes))
-    axes[0].set_ylabel("Tet.")
-
-    # axis 1
+    # axis 2
     probability = results.acausal_posterior.sum(["position"])
 
     for state, prob in zip(results.state.values, probability.values.T):
-        axes[1].plot(
+        axes[2].plot(
             MILLISECONDS_TO_SECONDS *
             probability.time / np.timedelta64(1, "s"),
             prob,
-            linewidth=2,
+            linewidth=1,
             color=STATE_COLORS[state],
+            clip_on=False,
         )
 
-    axes[1].set_ylim((0, 1.05))
-    axes[1].set_yticks((0, 1))
-    axes[1].set_ylabel("Prob.")
+    axes[2].set_ylim((0, 1.05))
+    axes[2].set_yticks((0, 1))
+    axes[2].set_ylabel("Prob.")
+    axes[2].set_xlim((0, max_time))
+    axes[2].set_xticks([])
     probability2 = get_probability(results)
     is_classified = get_is_classified(probability2, PROBABILITY_THRESHOLD)
 
@@ -76,7 +103,7 @@ def plot_clusterless_1D_results(multiunit_times, data, results,
     for state, is_class in zip(is_classified.state.values,
                                is_classified.values.T):
         if is_class.sum() > 0:
-            axes[1].fill_between(
+            axes[2].fill_between(
                 time,
                 is_class,
                 where=is_class.astype(bool),
@@ -84,7 +111,7 @@ def plot_clusterless_1D_results(multiunit_times, data, results,
                 color=STATE_COLORS[state],
             )
 
-    # axis 2
+    # axis 3
     cmap = copy.copy(plt.cm.get_cmap(cmap))
     cmap.set_bad(color="lightgrey", alpha=1.0)
     (
@@ -102,25 +129,21 @@ def plot_clusterless_1D_results(multiunit_times, data, results,
             zorder=0,
             rasterized=True,
             cmap=cmap,
-            ax=axes[2],
+            ax=axes[3],
         )
     )
-    axes[2].set_title("")
+    axes[3].set_title("")
 
     ripple_position = data["position_info"].loc[time_slice, "linear_position"]
-    max_time = (
-        MILLISECONDS_TO_SECONDS * probability.time / np.timedelta64(1, "s")
-    ).max()
-    axes[2].plot(time, ripple_position, linestyle="--", linewidth=2,
+    axes[3].plot(time, ripple_position, linestyle="--", linewidth=2,
                  color="magenta", clip_on=False)
-    axes[2].set_xlim((0, max_time))
-    axes[2].set_xticks((0, np.round(ripple_duration).astype(int)))
-    axes[2].set_xlabel("Time [ms]")
-
-    plot_1D_wtrack_landmarks(data, max_time, ax=axes[2])
-    axes[2].set_ylabel("Position [cm]")
+    axes[3].set_xlim((0, max_time))
+    axes[3].set_xticks((0, np.round(ripple_duration).astype(int)))
+    axes[3].set_xlabel("Time [ms]")
+    axes[3].set_ylabel("Position [cm]")
 
     sns.despine(offset=5)
+
 
     # Save Plot
     if is_save_figure:

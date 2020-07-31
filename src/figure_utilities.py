@@ -26,8 +26,10 @@ def set_figure_defaults():
         'text.color': '#222222',
         'text.usetex': False,
         'figure.figsize': (7.2, 4.45),
-        'xtick.major.size': 0.05,
-        'ytick.major.size': 0.05,
+        'xtick.major.size': 2,
+        'xtick.bottom': True,
+        'ytick.left': True,
+        'ytick.major.size': 2,
         'axes.labelpad': 0.1,
     }
     sns.set(style='white', context='paper', rc=rc_params,
