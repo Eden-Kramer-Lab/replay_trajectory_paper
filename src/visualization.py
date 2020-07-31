@@ -175,7 +175,7 @@ def plot_1D_results(multiunit_times, data, results, classifier, ripple_number,
 
 
 def plot_1D_projected_to_2D(data, results, classifier, ripple_number,
-                            data_type="clusterless", cmap="viridis_r"):
+                            cmap="viridis_r"):
     position_2D = data["position_info"].loc[:, ["x_position", "y_position"]]
 
     ripple_start, ripple_end = (
