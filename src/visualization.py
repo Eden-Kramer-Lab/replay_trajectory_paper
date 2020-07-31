@@ -174,6 +174,73 @@ def plot_1D_results(multiunit_times, data, results, classifier, ripple_number,
     sns.despine(ax=axes[3], offset=5)
 
 
+def plot_1D_projected_to_2D(data, results, classifier, ripple_number,
+                            data_type="clusterless", cmap="viridis_r"):
+    position_2D = data["position_info"].loc[:, ["x_position", "y_position"]]
+
+    ripple_start, ripple_end = (
+        data["ripple_times"].loc[ripple_number].start_time,
+        data["ripple_times"].loc[ripple_number].end_time,
+    )
+
+    ripple_position_info = data["position_info"].loc[ripple_start:ripple_end]
+
+    map_position_ind = (
+        results.sum(
+            "state").acausal_posterior.argmax("position").values
+    )
+    map_position_2d = classifier.place_bin_center_2D_position_[
+        map_position_ind
+    ]
+
+    fig, ax = plt.subplots(1, 1, figsize=(
+        ONE_COLUMN, ONE_COLUMN), constrained_layout=True)
+    ax.plot(
+        position_2D.values[:, 0],
+        position_2D.values[:, 1],
+        color="lightgrey",
+        alpha=0.8,
+        zorder=1,
+    )
+
+    _, _, cbar = plot_2D_position_with_color_time(
+        MILLISECONDS_TO_SECONDS *
+        results.time / np.timedelta64(1, "s"),
+        map_position_2d,
+        ax=ax,
+        cmap=cmap,
+    )
+    cbar.set_label("Time [ms]")
+    cbar.outline.set_visible(False)
+
+    ax.scatter(
+        ripple_position_info["projected_x_position"],
+        ripple_position_info["projected_y_position"],
+        zorder=100,
+        color="magenta",
+        s=100,
+    )
+
+    ax.set_xlim((position_2D.values[:, 0].min(),
+                 position_2D.values[:, 0].max()))
+    ax.set_xticks(
+        (np.ceil(position_2D.values[:, 0].min()),
+         np.ceil(position_2D.values[:, 0].max()))
+    )
+    ax.set_xlabel("X-Position [cm]")
+
+    ax.set_ylim((position_2D.values[:, 1].min(),
+                 position_2D.values[:, 1].max()))
+    ax.set_yticks(
+        (np.ceil(position_2D.values[:, 1].min()),
+         np.ceil(position_2D.values[:, 1].max()))
+    )
+    ax.set_ylabel("Y-Position [cm]")
+
+    ax.axis("square")
+    sns.despine()
+
+
 def plot_2D_position_with_color_time(time, position, ax=None, cmap='plasma',
                                      alpha=None):
     '''
