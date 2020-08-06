@@ -194,7 +194,7 @@ def plot_1D_projected_to_2D(data, results, classifier, ripple_number,
     ]
 
     fig, ax = plt.subplots(1, 1, figsize=(
-        ONE_COLUMN, ONE_COLUMN), constrained_layout=True)
+        ONE_COLUMN * 0.6, ONE_COLUMN * 0.6), constrained_layout=True)
     ax.plot(
         position_2D.values[:, 0],
         position_2D.values[:, 1],
@@ -218,7 +218,7 @@ def plot_1D_projected_to_2D(data, results, classifier, ripple_number,
         ripple_position_info["projected_y_position"],
         zorder=100,
         color="magenta",
-        s=100,
+        s=50,
     )
 
     ax.set_xlim((position_2D.values[:, 0].min(),
@@ -238,6 +238,7 @@ def plot_1D_projected_to_2D(data, results, classifier, ripple_number,
     ax.set_ylabel("Y-Position [cm]")
 
     ax.axis("square")
+    ax.axis("off")
     sns.despine()
 
 
