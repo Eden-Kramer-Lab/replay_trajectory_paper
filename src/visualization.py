@@ -575,9 +575,9 @@ def _plot_category(replay_info, category, kind='strip', ax=None,
 def plot_category_duration(replay_info, kind='strip', ax=None, **kwargs):
     if ax is None:
         ax = plt.gca()
-    _plot_category(replay_info, 'duration', kind=kind, ax=ax,
+    _plot_category(replay_info * 1000, 'duration', kind=kind, ax=ax,
                    is_zero_mask=True, **kwargs)
-    ax.set_xlabel('Duration within ripple [s]')
+    ax.set_xlabel('Duration within ripple [ms]')
 
 
 def plot_linear_position_of_animal(replay_info, ax=None):
