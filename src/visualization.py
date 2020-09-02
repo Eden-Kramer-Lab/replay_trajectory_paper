@@ -316,13 +316,13 @@ def make_movie(position, posterior_density, position_info, map_position,
     ax.set_ylim(position_info.y_position.min() + 1,
                 position_info.y_position.max() + 1)
 
-    position_dot = plt.scatter([], [], s=200, zorder=102, color='black',
+    position_dot = plt.scatter([], [], s=200, zorder=102, color='magenta',
                                label='Actual position')
-    position_line, = plt.plot([], [], '-', linewidth=3, color='black')
+    position_line, = plt.plot([], [], '-', linewidth=3, color='magenta')
 
-    map_dot = plt.scatter([], [], s=200, zorder=102, color='r',
+    map_dot = plt.scatter([], [], s=200, zorder=102, color='green',
                           label='Decoded position')
-    map_line, = plt.plot([], [], 'r-', linewidth=3)
+    map_line, = plt.plot([], [], 'green-', linewidth=3)
     # spikes_dot = plt.scatter([], [], s=40, zorder=104, color='k',
     #                          label='spikes')
     vmax = np.percentile(posterior_density.values, 99)
