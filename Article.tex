@@ -107,7 +107,7 @@ As mentioned above, the model is robust to the choice of probability of staying 
 
 \begin{figure*}%[tbhp]
 \centering
-\includegraphics[width=0.80\linewidth]{figures/Figure2/Figure2_v4}
+\includegraphics[width=0.80\linewidth]{figures/Figure2/Figure2_v5}
 \caption{Demonstration of the state space model on hippocampal data using both sorted and clusterless spikes on the same SWR event. \textbf{(A)} Decoding using sorted spikes. The top panel shows 31 cells on a W-track ordered according to linearized position by their place field peaks. The second panel shows the probability of each dynamic over time as in Figure \ref{1}F. Shaded regions correspond to the speed classifications as in Figure \ref{1}G. The third panel shows the estimated probability of latent position over the course of the SWR as it travels down the center arm toward the right arm. L, R, C correspond to the position of the left, right and center reward wells respectively. The animal's actual position is indicated by the red triangle. \textbf{(B)} Decoding using clusterless spikes. The top panel shows multiunit spiking activity from each tetrode. Other panels have the same convention as (A).  \textbf{(C)} Maximum of the 1D decoded position (the most probable position) in (A) projected back onto the 2D maze for the sorted decoding. Color indicates time. The animal's actual position is denoted by the red circle. Light grey lines show the animal's 2D position over the entire recording session. L, R, and C correspond to the left, right and center reward well as in (A). \textbf{(D)} Maximum of the 1D decoded position (the most probable position) in (B) projected back into 2D using the clusterless decoding. Figure conventions are the same as in (C).
 }
 \label{2}
@@ -116,7 +116,7 @@ As mentioned above, the model is robust to the choice of probability of staying 
 
 \begin{figure*}%[tbhp]
 \centering
-\includegraphics[width=0.80\linewidth]{figures/Figure3/Figure3_v4}
+\includegraphics[width=0.80\linewidth]{figures/Figure3/Figure3_v5}
 \caption{A-D. Four examples of replays that would not be well-characterized by using the standard decoder. Figure conventions are the same as in Figure \ref{2}. \textbf{(A)} A replay that starts moving down the center arm away from the animal's position at the center well, slows down, and returns back. \textbf{(B)} A replay that persistently represents the left well for the entirety of the SWR while the animal remains in the center arm. \textbf{(C)} A replay that begins with stationary representation of the left well, then jumps to the middle of the right arm and proceeds up the right arm to the right well. \textbf{(D)} A replay that begins with stationary representation of the left well, jumps to the center arm, proceeds away from the center well, jumps to the right arm, proceeds back toward the center well, and then becomes fragmented. \textbf{(E)} Percentage of SWRs in each day that has some content that falls into one of the categories of dynamics (Stationary, Stationary-Continuous-Mix, Continuous, Fragmented-Continuous-Mix, or Fragmented). \textbf{(F)} Of the classified content, the percentage of SWRs in each day that have some Stationary, Stationary-Continuous-Mix, or Continuous content. \textbf{(G)} Of the classified content, the percentage of SWR in each day that has some Continuous content.
 }
 \label{3}
@@ -146,7 +146,7 @@ We found that spatially coherent events did indeed have lower cumulative HPD siz
 
 \begin{figure*}%[tb2]
 \centering
-\includegraphics[width=0.80\linewidth]{figures/Figure4/Figure4_v5}
+\includegraphics[width=0.80\linewidth]{figures/Figure4/Figure4_v6}
 \caption{95 \% Highest Posterior Density of the Dynamics. \textbf{(A-D)}  Examples of the 95 \% Highest Posterior Density. Top panel: Probability of dynamic over time. Shading and labels indicate dynamic categories. 2nd panel: Posterior distribution of estimated linear position over time. Red triangle indicates animal's position. 3rd panel: Posterior distribution plot, where black designated the position bins that are included in the 95\% highest posterior density (HPD) region. 4th panel: Cumulative HPD size. \textbf{(E)} Average Cumulative 95\% HPD size for each dynamic category.}
 \label{4}
 \end{figure*}
@@ -397,14 +397,14 @@ Both code bases rely on the following python packages: Numpy \cite{vanderWaltNum
 
 \begin{figure*}%[tbhp]
 \centering
-\includegraphics[width=0.80\linewidth]{figures/Figure2-supplemental2/Figure2_v3-supplemental2}
+\includegraphics[width=0.80\linewidth]{figures/Figure2-supplemental2/Figure2_v4-supplemental2}
 \caption{A-C. Examples of continuous replays. Left panel uses the same conventions as Figure 2A and 2B. Right panel shows the 1D MAP estimate projected back to 2D as in Figure 2C. Color indicates time. Light grey lines indicate the animal's position over the entire epoch.}
 \label{fig:Figure2-Figure supplement 2}
 \end{figure*}
 
 \begin{figure*}%[tbhp]
 \centering
-\includegraphics[width=0.80\linewidth]{figures/Figure3-supplemental1/Figure3_v3_supplemental1}
+\includegraphics[width=0.80\linewidth]{figures/Figure3-supplemental1/Figure3_v4_supplemental1}
 \caption{More examples of replays that would not be well-characterized by using the standard decoder. Conventions are the same as in Figure 3. \textbf{(A)} A continuous replay that starts in the left arm back toward the center well, jumps to the right arm and continues back toward the center well. \textbf{(B)} A continuous replay that travels down the right arm toward the center well, proceeds past the choice point toward the left well and then returns back to the choice point. \textbf{(C)} A replay that starts down the left arm toward the center arm and turns into a stationary trajectory near the choice point. \textbf{(D)} The first half is a fragmented replay and the second half is unclassified. \textbf{(E)} A stationary trajectory in the first half of the SWR on the right arm and then a stationary trajectory in the SWR at the left well. \textbf{(F)} A stationary trajectory that starts at the animal's position at the center well, then jumps to the left well and comes back toward the center well.
 }
 \label{fig:Figure3-Figure supplement 1}
