@@ -43,6 +43,10 @@ In one time step (2 ms),
 movement_var = 6.0
 replay_speed = 1
 model = NumbaKDE
+'''Bandwith is the standard deviation of the gaussian kernel. The first four
+entries correspond to the bandwidth for the marks. The last two for the
+position dimensions.
+'''
 model_kwargs = {
     'bandwidth': np.array([24.0, 24.0, 24.0, 24.0, 6.0, 6.0])
 }
