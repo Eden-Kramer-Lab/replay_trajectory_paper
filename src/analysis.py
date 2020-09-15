@@ -270,12 +270,6 @@ def get_replay_distance_metrics(results, ripple_position_info, ripple_spikes,
         track_graph, map_estimate, actual_positions,
         actual_track_segment_ids, position_info)
 
-    SMOOTH_SIGMA = 0.001
-    replay_distance_from_actual_position = gaussian_smooth(
-        replay_distance_from_actual_position, SMOOTH_SIGMA, sampling_frequency)
-    replay_distance_from_center_well = gaussian_smooth(
-        replay_distance_from_center_well, SMOOTH_SIGMA, sampling_frequency)
-
     try:
         replay_total_displacement = np.abs(
             replay_distance_from_actual_position[-1] -
@@ -286,7 +280,7 @@ def get_replay_distance_metrics(results, ripple_position_info, ripple_spikes,
     time = np.asarray(posterior.time)
     map_estimate = map_estimate.squeeze()
     replay_speed = np.abs(np.gradient(
-        replay_distance_from_actual_position, time))
+        replay_distance_from_center_well, time))
     replay_velocity_actual_position = np.gradient(
         replay_distance_from_actual_position, time)
     replay_velocity_center_well = np.gradient(
