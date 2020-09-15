@@ -272,8 +272,8 @@ def get_replay_distance_metrics(results, ripple_position_info, ripple_spikes,
 
     try:
         replay_total_displacement = np.abs(
-            replay_distance_from_actual_position[-1] -
-            replay_distance_from_actual_position[0])
+            replay_distance_from_center_well[-1] -
+            replay_distance_from_center_well[0])
     except IndexError:
         replay_total_displacement = np.nan
 
@@ -307,7 +307,7 @@ def get_replay_distance_metrics(results, ripple_position_info, ripple_spikes,
             replay_distance_from_center_well),
         'replay_linear_position': np.mean(map_estimate),
         'replay_total_distance': np.sum(
-            np.abs(np.diff(replay_distance_from_actual_position))),
+            np.abs(np.diff(replay_distance_from_center_well))),
         'replay_total_displacement': replay_total_displacement,
         'state_order': get_state_order(is_classified),
         'spatial_coverage': np.mean(spatial_coverage),
