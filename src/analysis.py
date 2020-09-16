@@ -281,6 +281,9 @@ def get_replay_distance_metrics(results, ripple_position_info, ripple_spikes,
     map_estimate = map_estimate.squeeze()
     replay_speed = np.abs(np.gradient(
         replay_distance_from_center_well, time))
+    SMOOTH_SIGMA = 0.0025
+    replay_speed = gaussian_smooth(
+        replay_speed, SMOOTH_SIGMA, sampling_frequency)
     replay_velocity_actual_position = np.gradient(
         replay_distance_from_actual_position, time)
     replay_velocity_center_well = np.gradient(
