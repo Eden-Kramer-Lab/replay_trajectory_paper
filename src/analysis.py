@@ -298,6 +298,8 @@ def get_replay_distance_metrics(results, ripple_position_info, ripple_spikes,
                        > 0).sum("position").values[0]
     spatial_coverage_percentage = (isin_hpd.sum("position") /
                                    n_position_bins).values
+    distance_change = np.abs(np.diff(replay_distance_from_center_well))
+    distance_change = np.insert(distance_change, 0, 0)
 
     metrics = {
         'replay_distance_from_actual_position': np.mean(
@@ -309,8 +311,7 @@ def get_replay_distance_metrics(results, ripple_position_info, ripple_spikes,
         'replay_distance_from_center_well': np.mean(
             replay_distance_from_center_well),
         'replay_linear_position': np.mean(map_estimate),
-        'replay_total_distance': np.sum(
-            np.abs(np.diff(replay_distance_from_center_well))),
+        'replay_total_distance': np.sum(distance_change),
         'replay_total_displacement': replay_total_displacement,
         'state_order': get_state_order(is_classified),
         'spatial_coverage': np.mean(spatial_coverage),
@@ -338,8 +339,7 @@ def get_replay_distance_metrics(results, ripple_position_info, ripple_spikes,
             metrics[f'{state}_replay_linear_position'] = np.mean(
                 map_estimate[above_threshold])  # cm
             metrics[f'{state}_replay_total_distance'] = np.sum(
-                np.abs(np.diff(replay_distance_from_center_well[
-                    above_threshold])))  # cm
+                distance_change[above_threshold])  # cm
             metrics[f'{state}_min_time'] = np.min(time[above_threshold])  # s
             metrics[f'{state}_max_time'] = np.max(time[above_threshold])  # s
             metrics[f'{state}_n_unique_spiking'] = (
