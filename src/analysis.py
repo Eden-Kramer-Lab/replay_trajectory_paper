@@ -353,6 +353,18 @@ def get_replay_distance_metrics(results, ripple_position_info, ripple_spikes,
                 spatial_coverage[above_threshold])  # cm
             metrics[f'{state}_spatial_coverage_percentage'] = np.median(
                 spatial_coverage_percentage[above_threshold])
+            metrics[f"{state}_Hov_avg_prob"] = float(
+                probability.sel(state="Hover").isel(
+                    time=above_threshold).mean()
+            )
+            metrics[f"{state}_Cont_avg_prob"] = float(
+                probability.sel(state="Continuous").isel(
+                    time=above_threshold).mean()
+            )
+            metrics[f"{state}_Frag_avg_prob"] = float(
+                probability.sel(state="Fragmented").isel(
+                    time=above_threshold).mean()
+            )
 
     return metrics
 
