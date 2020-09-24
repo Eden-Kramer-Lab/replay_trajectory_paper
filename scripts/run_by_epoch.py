@@ -411,7 +411,7 @@ def clusterless_analysis_1D(epoch_key, plot_ripple_figures=False):
                     group=f'/{data_type}/{dim}/classifier/ripples/')
 
     logging.info('Saving replay_info...')
-    replay_info = get_replay_info(
+    replay_info, replay_linear_position_hover = get_replay_info(
         results, ripple_spikes, data['ripple_times'], data['position_info'],
         track_graph, SAMPLING_FREQUENCY, PROBABILITY_THRESHOLD, epoch_key,
         classifier)
@@ -420,6 +420,12 @@ def clusterless_analysis_1D(epoch_key, plot_ripple_figures=False):
     replay_info_filename = os.path.join(
         PROCESSED_DATA_DIR, f'{epoch_identifier}_replay_info_{prob:02d}.csv')
     replay_info.to_csv(replay_info_filename)
+
+    replay_linear_position_hover_filename = os.path.join(
+        PROCESSED_DATA_DIR,
+        f'{epoch_identifier}_replay_linear_position_hover_{prob:02d}.npy')
+    np.save(replay_linear_position_hover_filename,
+            replay_linear_position_hover)
 
     logging.info('Plotting ripple figures...')
 

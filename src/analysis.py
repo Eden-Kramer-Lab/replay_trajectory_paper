@@ -1,6 +1,9 @@
+import itertools
+
 import networkx as nx
 import numpy as np
 import pandas as pd
+import scipy
 import xarray as xr
 from loren_frank_data_processing.track_segment_classification import (
     get_track_segments_from_graph, project_points_to_segment)
@@ -90,7 +93,18 @@ def get_replay_info(results, ripple_spikes, ripple_times, position_info,
     replay_info['max_linear_distance'] = list(
         classifier.distance_between_nodes_[center_well_id].values())[-1]
 
-    return replay_info
+    replay_linear_position_hover = [
+        get_replay_linear_position_by_state(
+            ripple_number, is_classified, results, state="Hover"
+        )
+        for ripple_number in ripple_times.index
+    ]
+
+    replay_linear_position_hover = np.asarray(
+        list(itertools.chain.from_iterable(replay_linear_position_hover))
+    ) / min_max.loc[3].linear_position.max()
+
+    return replay_info, replay_linear_position_hover
 
 
 def get_sleep_replay_info(results, ripple_spikes, ripple_times, position_info,
@@ -639,3 +653,23 @@ def gaussian_smooth(data, sigma, sampling_frequency, axis=0):
     '''
     return gaussian_filter1d(
         data, sigma * sampling_frequency, axis=axis)
+
+
+def get_replay_linear_position_by_state(
+    ripple_number, is_classified, results, state="Hover"
+):
+    posterior = (
+        results.sel(ripple_number=ripple_number)
+        .acausal_posterior.dropna("time", how="all")
+        .assign_coords(time=lambda ds: ds.time / np.timedelta64(1, "s"))
+    )
+    is_classified = (
+        is_classified.sel(ripple_number=ripple_number)
+        .dropna("time", how="all")
+        .assign_coords(time=lambda ds: ds.time / np.timedelta64(1, "s"))
+    )
+    map_estimate = maximum_a_posteriori_estimate(posterior.sum("state"))
+
+    labels, n_labels = scipy.ndimage.label(is_classified.sel(state=state))
+
+    return [np.mean(map_estimate[labels == l]) for l in range(1, n_labels + 1)]
