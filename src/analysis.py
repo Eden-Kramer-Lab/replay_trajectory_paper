@@ -97,7 +97,9 @@ def get_replay_info(results, ripple_spikes, ripple_times, position_info,
         get_replay_linear_position_by_state(
             ripple_number, is_classified, results, state="Hover"
         )
-        for ripple_number in ripple_times.index
+        for ripple_number in ripple_times.index[
+            replay_info.Hover_replay_distance_from_actual_position > 30
+        ]
     ]
 
     replay_linear_position_hover = np.asarray(
