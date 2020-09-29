@@ -1116,17 +1116,17 @@ def make_classifier_movie(
     writer = Writer(fps=frame_rate, metadata=dict(artist="Me"), bitrate=1800)
 
     fig, axes = plt.subplots(
-        1,
-        3,
-        figsize=(14, 7),
-        gridspec_kw={"width_ratios": [10, 10, 1]},
+        2,
+        2,
+        figsize=(12, 8),
+        gridspec_kw={"height_ratios": [5, 2]},
         constrained_layout=False,
     )
 
     # Plot 1
-    axes[0].set_facecolor("black")
+    axes[0, 0].set_facecolor("black")
     position_2d = data["position_info"].loc[:, ["x_position", "y_position"]]
-    axes[0].plot(
+    axes[0, 0].plot(
         position_2d.values[:, 0],
         position_2d.values[:, 1],
         color="lightgrey",
@@ -1134,48 +1134,59 @@ def make_classifier_movie(
         zorder=1,
     )
 
-    axes[0].set_xlim(
+    axes[0, 0].set_xlim(
         data["position_info"].x_position.min() - 1,
         data["position_info"].x_position.max() + 1,
     )
-    axes[0].set_ylim(
+    axes[0, 0].set_ylim(
         data["position_info"].y_position.min() + 1,
         data["position_info"].y_position.max() + 1,
     )
-    axes[0].set_xlabel("x-position")
-    axes[0].set_ylabel("y-position")
+    axes[0, 0].set_xlabel("X-Position [cm]", fontsize=18)
+    axes[0, 0].set_ylabel("Y-Position [cm]", fontsize=18)
+    axes[0, 0].tick_params(labelsize=16)
+    axes[0, 0].set_title('Decoded Position', fontsize=20)
 
     position = np.asarray(position)
-    position_dot = axes[0].scatter(
-        [], [], s=80, zorder=102, color="b", label="Actual")
-    (position_line,) = axes[0].plot([], [], "b-", linewidth=3)
+    position_dot = axes[0, 0].scatter(
+        [], [], s=100, zorder=102, color="magenta", label="Actual")
+    (position_line,) = axes[0, 0].plot([], [], linewidth=3, color="magenta")
 
-    map_dot = axes[0].scatter([], [], s=80, zorder=102,
-                              color="r", label="Decoded")
-    (map_line,) = axes[0].plot([], [], "r-", linewidth=3)
-    axes[0].legend(fontsize=9, loc="upper right")
+    map_dot = axes[0, 0].scatter([], [], s=100, zorder=102,
+                              color="lime", label="Decoded")
+    (map_line,) = axes[0, 0].plot([], [], linewidth=3, color="lime")
+    axes[1, 0].legend(
+            (position_dot, map_dot),
+            ('Actual Position', 'Decoded Position'),
+            fontsize=16,
+            loc="center",
+            frameon=True)
+    axes[1, 0].axis("off")
 
     # Plot 2
     time = (MILLISECONDS_TO_SECONDS *
             probabilities.time.values / np.timedelta64(1, "s"))
-    (hover_line,) = axes[1].plot([], [], STATE_COLORS["Hover"], linewidth=3)
-    (cont_line,) = axes[1].plot(
-        [], [], STATE_COLORS["Continuous"], linewidth=3)
-    (frag_line,) = axes[1].plot(
-        [], [], STATE_COLORS["Fragmented"], linewidth=3)
-    axes[1].set_ylim((0, 1.01))
-    axes[1].set_xlim((time.min(), time.max()))
-    axes[1].set_xlabel("Time [ms]")
-    axes[1].set_ylabel("Probability")
+    (hover_line,) = axes[0, 1].plot(
+        [], [], STATE_COLORS["Hover"], linewidth=3, clip_on=False)
+    (cont_line,) = axes[0, 1].plot(
+        [], [], STATE_COLORS["Continuous"], linewidth=3, clip_on=False)
+    (frag_line,) = axes[0, 1].plot(
+        [], [], STATE_COLORS["Fragmented"], linewidth=3, clip_on=False)
+    axes[0, 1].set_ylim((0, 1))
+    axes[0, 1].set_xlim((time.min(), time.max()))
+    axes[0, 1].set_xlabel("Time [ms]", fontsize=18)
+    axes[0, 1].set_ylabel("Probability", fontsize=18)
+    axes[0, 1].tick_params(labelsize=16)
+    axes[0, 1].set_title('Probability of Dynamic', fontsize=20)
 
-    axes[2].legend(
+    axes[1, 1].legend(
         (hover_line, cont_line, frag_line),
-        ("Hover", "Cont.", "Frag."),
-        fontsize=12,
-        loc="upper right",
-        frameon=False,
+        ("Stationary", "Continuous", "Fragmented"),
+        fontsize=16,
+        loc="center",
+        frameon=True,
     )
-    axes[2].axis("off")
+    axes[1, 1].axis("off")
 
     sns.despine()
     n_frames = map_position.shape[0]
