@@ -1,6 +1,9 @@
+import itertools
+
 import networkx as nx
 import numpy as np
 import pandas as pd
+import scipy
 import xarray as xr
 from loren_frank_data_processing.track_segment_classification import (
     get_track_segments_from_graph, project_points_to_segment)
@@ -90,7 +93,20 @@ def get_replay_info(results, ripple_spikes, ripple_times, position_info,
     replay_info['max_linear_distance'] = list(
         classifier.distance_between_nodes_[center_well_id].values())[-1]
 
-    return replay_info
+    replay_linear_position_hover = [
+        get_replay_linear_position_by_state(
+            ripple_number, is_classified, results, state="Hover"
+        )
+        for ripple_number in ripple_times.index[
+            replay_info.Hover_replay_distance_from_actual_position > 30
+        ]
+    ]
+
+    replay_linear_position_hover = np.asarray(
+        list(itertools.chain.from_iterable(replay_linear_position_hover))
+    ) / min_max.loc[3].linear_position.max()
+
+    return replay_info, replay_linear_position_hover
 
 
 def get_sleep_replay_info(results, ripple_spikes, ripple_times, position_info,
@@ -270,23 +286,20 @@ def get_replay_distance_metrics(results, ripple_position_info, ripple_spikes,
         track_graph, map_estimate, actual_positions,
         actual_track_segment_ids, position_info)
 
-    SMOOTH_SIGMA = 0.001
-    replay_distance_from_actual_position = gaussian_smooth(
-        replay_distance_from_actual_position, SMOOTH_SIGMA, sampling_frequency)
-    replay_distance_from_center_well = gaussian_smooth(
-        replay_distance_from_center_well, SMOOTH_SIGMA, sampling_frequency)
-
     try:
         replay_total_displacement = np.abs(
-            replay_distance_from_actual_position[-1] -
-            replay_distance_from_actual_position[0])
+            replay_distance_from_center_well[-1] -
+            replay_distance_from_center_well[0])
     except IndexError:
         replay_total_displacement = np.nan
 
     time = np.asarray(posterior.time)
     map_estimate = map_estimate.squeeze()
     replay_speed = np.abs(np.gradient(
-        replay_distance_from_actual_position, time))
+        replay_distance_from_center_well, time))
+    SMOOTH_SIGMA = 0.0025
+    replay_speed = gaussian_smooth(
+        replay_speed, SMOOTH_SIGMA, sampling_frequency)
     replay_velocity_actual_position = np.gradient(
         replay_distance_from_actual_position, time)
     replay_velocity_center_well = np.gradient(
@@ -301,6 +314,8 @@ def get_replay_distance_metrics(results, ripple_position_info, ripple_spikes,
                        > 0).sum("position").values[0]
     spatial_coverage_percentage = (isin_hpd.sum("position") /
                                    n_position_bins).values
+    distance_change = np.abs(np.diff(replay_distance_from_center_well))
+    distance_change = np.insert(distance_change, 0, 0)
 
     metrics = {
         'replay_distance_from_actual_position': np.mean(
@@ -312,8 +327,7 @@ def get_replay_distance_metrics(results, ripple_position_info, ripple_spikes,
         'replay_distance_from_center_well': np.mean(
             replay_distance_from_center_well),
         'replay_linear_position': np.mean(map_estimate),
-        'replay_total_distance': np.sum(
-            np.abs(np.diff(replay_distance_from_actual_position))),
+        'replay_total_distance': np.sum(distance_change),
         'replay_total_displacement': replay_total_displacement,
         'state_order': get_state_order(is_classified),
         'spatial_coverage': np.mean(spatial_coverage),
@@ -341,8 +355,7 @@ def get_replay_distance_metrics(results, ripple_position_info, ripple_spikes,
             metrics[f'{state}_replay_linear_position'] = np.mean(
                 map_estimate[above_threshold])  # cm
             metrics[f'{state}_replay_total_distance'] = np.sum(
-                np.abs(np.diff(replay_distance_from_actual_position[
-                    above_threshold])))  # cm
+                distance_change[above_threshold])  # cm
             metrics[f'{state}_min_time'] = np.min(time[above_threshold])  # s
             metrics[f'{state}_max_time'] = np.max(time[above_threshold])  # s
             metrics[f'{state}_n_unique_spiking'] = (
@@ -356,6 +369,18 @@ def get_replay_distance_metrics(results, ripple_position_info, ripple_spikes,
                 spatial_coverage[above_threshold])  # cm
             metrics[f'{state}_spatial_coverage_percentage'] = np.median(
                 spatial_coverage_percentage[above_threshold])
+            metrics[f"{state}_Hov_avg_prob"] = float(
+                probability.sel(state="Hover").isel(
+                    time=above_threshold).mean()
+            )
+            metrics[f"{state}_Cont_avg_prob"] = float(
+                probability.sel(state="Continuous").isel(
+                    time=above_threshold).mean()
+            )
+            metrics[f"{state}_Frag_avg_prob"] = float(
+                probability.sel(state="Fragmented").isel(
+                    time=above_threshold).mean()
+            )
 
     return metrics
 
@@ -630,3 +655,23 @@ def gaussian_smooth(data, sigma, sampling_frequency, axis=0):
     '''
     return gaussian_filter1d(
         data, sigma * sampling_frequency, axis=axis)
+
+
+def get_replay_linear_position_by_state(
+    ripple_number, is_classified, results, state="Hover"
+):
+    posterior = (
+        results.sel(ripple_number=ripple_number)
+        .acausal_posterior.dropna("time", how="all")
+        .assign_coords(time=lambda ds: ds.time / np.timedelta64(1, "s"))
+    )
+    is_classified = (
+        is_classified.sel(ripple_number=ripple_number)
+        .dropna("time", how="all")
+        .assign_coords(time=lambda ds: ds.time / np.timedelta64(1, "s"))
+    )
+    map_estimate = maximum_a_posteriori_estimate(posterior.sum("state"))
+
+    labels, n_labels = scipy.ndimage.label(is_classified.sel(state=state))
+
+    return [np.mean(map_estimate[labels == l]) for l in range(1, n_labels + 1)]

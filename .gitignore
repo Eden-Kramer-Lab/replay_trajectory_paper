@@ -64,6 +64,7 @@ coverage.xml
 *.pkl
 *.docx
 *.pdf
+*.npy
 !Figure1_v*.pdf
 !Figure2_v*.pdf
 !Figure3_v*.pdf
