@@ -39,6 +39,7 @@ def plot_2D_results(spike_times, data, results_2D, classifier_2D,
         )
         axes[0].eventplot(
             times, lineoffsets=tetrode_ind + 1, linewidth=1, color="black",
+            clip_on=False
         )
 
     axes[0].set_xlim(
@@ -52,7 +53,7 @@ def plot_2D_results(spike_times, data, results_2D, classifier_2D,
     axes[0].set_xlabel("Time [ms]")
 
     axes[0].set_yticks((1, n_tetrodes))
-    axes[0].set_ylim((0, n_tetrodes + 0.4))
+    axes[0].set_ylim((1, n_tetrodes))
     if data_type == "sorted_spikes":
         axes[0].set_ylabel("Cells")
     else:
@@ -81,7 +82,7 @@ def plot_2D_results(spike_times, data, results_2D, classifier_2D,
     )
     axes[1].set_xlabel("Time [ms]")
 
-    axes[1].set_ylim((0, 1.05))
+    axes[1].set_ylim((0, 1))
     axes[1].set_yticks((0, 1))
     axes[1].set_ylabel("Probability")
 
@@ -178,7 +179,7 @@ def plot_2D_results(spike_times, data, results_2D, classifier_2D,
         zorder=200,
     )
     plt.suptitle(data_type.replace("_", " ").title(), y=1.05)
-    sns.despine()
+    sns.despine(offset=5)
 
     animal, day, epoch = epoch_key
     fig_name = (

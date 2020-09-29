@@ -6,7 +6,7 @@ import numpy as np
 import seaborn as sns
 from src.analysis import (get_is_classified, get_probability,
                           highest_posterior_density)
-from src.figure_utilities import ONE_COLUMN, PAGE_HEIGHT, save_figure
+from src.figure_utilities import TWO_COLUMN, PAGE_HEIGHT, save_figure
 from src.parameters import PROBABILITY_THRESHOLD, STATE_COLORS
 from src.visualization import plot_1D_wtrack_landmarks
 
@@ -38,7 +38,7 @@ def plot_clusterless_1D_results_hpd(
         3,
         1,
         constrained_layout=True,
-        figsize=(0.6 * ONE_COLUMN, 0.9 * PAGE_HEIGHT / 3),
+        figsize=(TWO_COLUMN / 4, 0.8 * PAGE_HEIGHT / 3),
         gridspec_kw={"height_ratios": [1, 3, 1]},
     )
 
