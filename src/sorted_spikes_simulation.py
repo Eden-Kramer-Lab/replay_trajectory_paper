@@ -4,16 +4,16 @@ from replay_trajectory_classification.simulate import (
     simulate_place_field_firing_rate, simulate_time)
 
 SAMPLING_FREQUENCY = 1000
-TRACK_HEIGHT = 180
+TRACK_LENGTH = 180
 RUNNING_SPEED = 15
 PLACE_FIELD_VARIANCE = 6.0 ** 2
-PLACE_FIELD_MEANS = np.arange(0, TRACK_HEIGHT + 10, 10)
+PLACE_FIELD_MEANS = np.arange(0, TRACK_LENGTH + 10, 10)
 N_RUNS = 15
-REPLAY_SPEEDUP = 120.0
+REPLAY_SPEEDUP = 60.0
 
 
 def make_simulated_run_data(sampling_frequency=SAMPLING_FREQUENCY,
-                            track_height=TRACK_HEIGHT,
+                            track_length=TRACK_LENGTH,
                             running_speed=RUNNING_SPEED, n_runs=N_RUNS,
                             place_field_variance=PLACE_FIELD_VARIANCE,
                             place_field_means=PLACE_FIELD_MEANS):
@@ -23,7 +23,7 @@ def make_simulated_run_data(sampling_frequency=SAMPLING_FREQUENCY,
     Parameters
     ----------
     sampling_frequency : float, optional
-    track_height : float, optional
+    track_length : float, optional
     running_speed : float, optional
     n_runs : int, optional
     place_field_variance : float, optional
@@ -39,11 +39,11 @@ def make_simulated_run_data(sampling_frequency=SAMPLING_FREQUENCY,
 
     '''
     n_samples = int(n_runs * sampling_frequency *
-                    2 * track_height / running_speed)
+                    2 * track_length / running_speed)
 
     time = simulate_time(n_samples, sampling_frequency)
     linear_distance = simulate_linear_distance(
-        time, track_height, running_speed)
+        time, track_length, running_speed)
 
     place_fields = np.stack(
         [simulate_place_field_firing_rate(place_field_mean, linear_distance,
@@ -59,17 +59,17 @@ def make_simulated_run_data(sampling_frequency=SAMPLING_FREQUENCY,
 
 
 def make_continuous_replay(sampling_frequency=SAMPLING_FREQUENCY,
-                           track_height=TRACK_HEIGHT,
+                           track_length=TRACK_LENGTH,
                            running_speed=RUNNING_SPEED,
                            place_field_means=PLACE_FIELD_MEANS,
                            replay_speedup=REPLAY_SPEEDUP):
 
     replay_speed = running_speed * replay_speedup
     n_samples = int(0.5 * sampling_frequency *
-                    2 * track_height / replay_speed)
+                    2 * track_length / replay_speed)
     replay_time = simulate_time(n_samples, sampling_frequency)
     true_replay_position = simulate_linear_distance(
-        replay_time, track_height, replay_speed)
+        replay_time, track_length, replay_speed)
 
     min_times_ind = np.argmin(
         np.abs(true_replay_position[:, np.newaxis] - place_field_means),
@@ -84,7 +84,8 @@ def make_continuous_replay(sampling_frequency=SAMPLING_FREQUENCY,
 
 def make_hover_replay(hover_neuron_ind=None,
                       place_field_means=PLACE_FIELD_MEANS,
-                      sampling_frequency=SAMPLING_FREQUENCY):
+                      sampling_frequency=SAMPLING_FREQUENCY,
+                      spike_step=6):
 
     n_neurons = place_field_means.shape[0]
     if hover_neuron_ind is None:
@@ -93,10 +94,10 @@ def make_hover_replay(hover_neuron_ind=None,
     N_TIME = 50
     replay_time = np.arange(N_TIME) / sampling_frequency
 
-    spike_time_ind = np.arange(0, N_TIME, 2)
+    spike_time_ind = np.arange(0, N_TIME, spike_step)
 
     test_spikes = np.zeros((N_TIME, n_neurons))
-    neuron_ind = np.ones((N_TIME // 2,), dtype=np.int) * hover_neuron_ind
+    neuron_ind = np.ones((spike_time_ind.size,), dtype=np.int) * hover_neuron_ind
 
     test_spikes[(spike_time_ind, neuron_ind)] = 1.0
 
@@ -152,7 +153,7 @@ def make_fragmented_continuous_fragmented_replay(
 
 def make_hover_continuous_fragmented_replay(
         sampling_frequency=SAMPLING_FREQUENCY):
-    _, test_spikes1 = make_hover_replay(hover_neuron_ind=1)
+    _, test_spikes1 = make_hover_replay(hover_neuron_ind=0)
     _, test_spikes2 = make_continuous_replay()
     _, test_spikes3 = make_fragmented_replay()
     _, test_spikes4 = make_fragmented_replay()
@@ -163,6 +164,58 @@ def make_hover_continuous_fragmented_replay(
     replay_time = np.arange(test_spikes.shape[0]) / sampling_frequency
 
     return replay_time, test_spikes
+
+def make_no_spikes(n_time=10, place_field_means=PLACE_FIELD_MEANS,
+                   sampling_frequency=SAMPLING_FREQUENCY):
+    replay_time = np.arange(n_time) / sampling_frequency
+    n_neurons = place_field_means.shape[0]
+    test_spikes = np.zeros((n_time, n_neurons))
+
+    return replay_time, test_spikes
+
+def make_fragmented_hover_continuous_replay(
+        sampling_frequency=SAMPLING_FREQUENCY):
+
+    test_spikes = np.concatenate(
+        [make_fragmented_replay()[1],
+         make_fragmented_replay()[1],
+         make_hover_replay(hover_neuron_ind=18)[1],
+         make_continuous_replay()[1],
+        ])
+    replay_time = np.arange(test_spikes.shape[0]) / sampling_frequency
+
+    return replay_time, test_spikes
+
+def make_fragmented_continuous_hover_replay(
+        sampling_frequency=SAMPLING_FREQUENCY):
+
+    test_spikes = np.concatenate(
+        [make_fragmented_replay()[1],
+         make_fragmented_replay()[1],
+         make_continuous_replay()[1],
+         make_hover_replay(hover_neuron_ind=18)[1],
+        ])
+    replay_time = np.arange(test_spikes.shape[0]) / sampling_frequency
+
+    return replay_time, test_spikes
+
+
+# def make_fragmented_hover_continuous_replay(
+#         sampling_frequency=SAMPLING_FREQUENCY):
+
+#     test_spikes = np.concatenate(
+#         [make_fragmented_replay()[1],
+#          make_fragmented_replay()[1],
+#          make_fragmented_replay()[1],
+#          make_hover_replay(hover_neuron_ind=12)[1],
+#          make_hover_replay(hover_neuron_ind=0)[1],
+#          make_continuous_replay()[1],
+#          make_fragmented_replay()[1],
+#          make_fragmented_replay()[1],
+#         ])
+#     replay_time = np.arange(test_spikes.shape[0]) / sampling_frequency
+
+#     return replay_time, test_spikes
 
 
 def make_constant_velocity_replay(replay_speed=1000,
