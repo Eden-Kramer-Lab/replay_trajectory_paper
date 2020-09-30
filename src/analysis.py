@@ -230,18 +230,25 @@ def get_is_classified(probability, probablity_threshold):
     is_classified : xarray.DataArray
 
     '''
-    is_classified = probability > probablity_threshold
-    is_classified.loc[dict(state='Hover-Continuous-Mix')] = (
-        is_classified.sel(state='Hover-Continuous-Mix') &
-        ~is_classified.sel(state='Hover') &
-        ~is_classified.sel(state='Continuous') &
-        (probability.sel(state='Fragmented') < (1 - probablity_threshold) / 2))
+    if probablity_threshold < 1.00:
+        is_classified = probability > probablity_threshold
+        is_classified.loc[dict(state='Hover-Continuous-Mix')] = (
+            is_classified.sel(state='Hover-Continuous-Mix') &
+            ~is_classified.sel(state='Hover') &
+            ~is_classified.sel(state='Continuous') &
+            (probability.sel(state='Fragmented') <
+             (1 - probablity_threshold) / 2))
 
-    is_classified.loc[dict(state='Fragmented-Continuous-Mix')] = (
-        is_classified.sel(state='Fragmented-Continuous-Mix') &
-        ~is_classified.sel(state='Fragmented') &
-        ~is_classified.sel(state='Continuous') &
-        (probability.sel(state='Hover') < (1 - probablity_threshold) / 2))
+        is_classified.loc[dict(state='Fragmented-Continuous-Mix')] = (
+            is_classified.sel(state='Fragmented-Continuous-Mix') &
+            ~is_classified.sel(state='Fragmented') &
+            ~is_classified.sel(state='Continuous') &
+            (probability.sel(state='Hover') < (1 - probablity_threshold) / 2))
+    else:
+        is_classified = ((probability.copy() * 0.0).fillna(False)).astype(bool)
+        A = probability.sel(state=["Hover", "Continuous", "Fragmented"]).values
+        A = A.argmax(axis=-1)[..., None] == np.arange(A.shape[-1])
+        is_classified.values = np.concatenate((A, np.zeros((*A.shape[:2], 2), dtype=bool)), axis=-1)
     is_classified = is_classified.rename('is_classified')
     is_classified = is_classified.where(~np.isnan(probability))
 
