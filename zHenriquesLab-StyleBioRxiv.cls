@@ -124,6 +124,7 @@
 \topsep           1.3ex
 \parsep             \z@
 \itemsep            \z@
+\setlength{\parskip}{0.5em}
 
 %%
 \abovedisplayskip       0pt plus2pt minus5pt%
@@ -313,7 +314,7 @@
 \RequirePackage{chapterbib}
 \RequirePackage[sectionbib,numbers,sort&compress,merge,round]{natbib}
 \setlength{\bibsep}{0.0pt}
-\bibliographystyle{zHenriquesLab-StyleBib}
+\bibliographystyle{vancouver-elife}
 \renewcommand{\bibsection}{} % Remove header
 \renewcommand\bibfont{\normalfont\sffamily\fontsize{6}{8}\selectfont} % set font to be sans serif
 
@@ -322,6 +323,11 @@
 \def\tagform@#1{\maketag@@@{\bfseries(\ignorespaces#1\unskip\@@italiccorr)}}
 \renewcommand{\eqref}[1]{\textup{{\normalfont Eq.~(\ref{#1}}\normalfont)}}
 % \makeatother
+
+\definecolor{eLifeDarkBlue}{HTML}{273B81}
+\definecolor{eLifeLightBlue}{HTML}{0A9DD9}
+\definecolor{eLifeMediumGrey}{HTML}{6D6E70}
+\definecolor{eLifeLightGrey}{HTML}{929497}
 
 %% Title
 \def\maketitle{\par
@@ -406,7 +412,7 @@
 %%
 \newenvironment{biography}[1]{%
 \footnotesize\unitlength 1mm\bigskip\bigskip\bigskip\parskip=0pt\par%
-\rule{0pt}{39mm}\vspace{-39mm}\par%   garantees correct page breaking
+\rule{0pt}{39mm}\vspace{-39mm}\par%   guarantees correct page breaking
 \noindent\setbox0\hbox{\framebox(25,32){}}%   box containing the frame
 \ht0=37mm\count10=\ht0\divide\count10 by\baselineskip%  calculates lines
 \global\hangindent29mm\global\hangafter-\count10%
