@@ -616,7 +616,7 @@ def plot_replay_distance_from_actual_position(replay_info, kind='strip',
         ax = plt.gca()
     _plot_category(replay_info, 'replay_distance_from_actual_position',
                    kind=kind, ax=ax, **kwargs)
-    ax.set_xlabel('Average distance from animal position [cm]')
+    ax.set_xlabel('Average distance\nfrom animal position [cm]')
 
 
 def plot_replay_distance_from_center_well(replay_info, kind='strip', ax=None,
