@@ -13,9 +13,9 @@ dependencies:
 - tqdm
 - xarray
 - dask
-- loren_frank_data_processing
-- ripple_detection
-- replay_trajectory_classification
+- "loren_frank_data_processing == 0.9.15.dev0"
+- "ripple_detection == 0.1.9.dev0"
+- "replay_trajectory_classification == 0.7.7.dev0"
 - jupyter
 - nb_conda
 - setuptools
