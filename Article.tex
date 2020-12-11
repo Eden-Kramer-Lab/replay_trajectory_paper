@@ -20,20 +20,18 @@
 \author[1]{Eric L. Denovellis}
 \author[2, 3]{Anna K. Gillespie}
 \author[2, 3]{Michael E. Coulter}
-\author[4]{Kenneth Kay}
-\author[5]{Marielena Sosa}
-\author[6]{Jason E. Chung}
-\author[7]{Uri T. Eden}
+\author[4]{Marielena Sosa}
+\author[5]{Jason E. Chung}
+\author[6]{Uri T. Eden}
 \author[1, 2, 3, \Letter]{Loren M. Frank}
 
 
 \affil[1]{Howard Hughes Medical Institute, University of California, San Francisco, San Francisco, California}
 \affil[2]{Departments of Physiology and Psychiatry, University of California, San Francisco, San Francisco, California}
 \affil[3]{Kavli Institute for Fundamental Neuroscience, University of California, San Francisco, San Francisco, California}
-\affil[4]{Mortimer B. Zuckerman Mind Brain Behavior Institute, Columbia University, New York, New York}
-\affil[5]{Department of Neurobiology, Stanford University School of Medicine, Stanford, CA}
-\affil[6]{Department of Neurological Surgery, University of California, San Francisco, California}
-\affil[7]{Department of Mathematics and Statistics, Boston University, Boston, Massachusetts}
+\affil[4]{Department of Neurobiology, Stanford University School of Medicine, Stanford, CA}
+\affil[5]{Department of Neurological Surgery, University of California, San Francisco, California}
+\affil[6]{Department of Mathematics and Statistics, Boston University, Boston, Massachusetts}
 
 
 \maketitle
@@ -94,7 +92,7 @@ Next, we specify movement dynamic models for how latent position---the "mental" 
 
 In the stationary movement dynamic, the latent position does not change between time steps. The state transition matrix can thus be defined as an identity matrix, which predicts the next position will be the same as the last position (subject to the resolution of the position bin). In the continuous movement dynamic, the latent position is most likely to be "spatially close" to the position in the previous time step, so we use a Gaussian random walk state transition matrix. This means that, for a given latent position, the probability of moving to another position is modeled by a Gaussian centered at that position and "spatially close" is defined by the variance of the Gaussian. In our case, since replay has been shown to move at speeds much faster than the animal's speed \cite{DavidsonHippocampalReplayExtended2009, PfeifferAutoassociativedynamicsgeneration2015}, we set the variance of the Gaussian to 6.0 cm. This ensures that with a 2 ms time step, the latent position is 95\% likely to be within 4.90 cm of the previous latent position (or equivalently, this means that latent speeds from 0 to \texttildelow25 m/s are most likely).  Finally, in the fragmented movement dynamic, the latent position can move to any available position instantaneously. We model this using a uniform state transition matrix, which makes transitions to each position equally likely.
 
-Finally, we specify how likely each movement dynamic is to persist in time versus change to another dynamic (Figure \ref{1}D) via a state transition matrix between dynamics. In order to be conservative, we assume that each movement dynamic is likely to dominate for \texttildelow100 ms, which is approximately the duration of a SWR event. There is, however, a small probability of switching to one of the other movement dynamics. Accordingly, we set the probability of staying in a dynamic to 0.98 for each 2 ms time step, which corresponds to an expected duration of 100 ms for staying in a particular dynamic (the Markov assumption of the model means that the probability of staying in a dynamic follows a geometric distribution). Importantly, the data drives the estimated dynamic, so even if the probability of a particular movement dynamic is high, data providing clear evidence for a change in dynamic can, within the time frame of \texttildelow10 ms, drive a change to a different estimated dynamic, as in our simulated example. In line with this, note that below we show that our results are relatively insensitive to the value of this parameter.
+Finally, we specify how likely each movement dynamic is to persist in time versus change to another dynamic (Figure \ref{1}D) via a state transition matrix between dynamics. In order to be conservative with respect to switching between dynamics, we assume that each movement dynamic is likely to dominate for \texttildelow100 ms, which is approximately the duration of a SWR event. There is, however, a small probability of switching to one of the other movement dynamics. Accordingly, we set the probability of staying in a dynamic to 0.98 for each 2 ms time step, which corresponds to an expected duration of 100 ms for staying in a particular dynamic (the Markov assumption of the model means that the probability of staying in a dynamic follows a geometric distribution). Importantly, the data drives the estimated dynamic, so even if the probability of a particular movement dynamic is high, data providing clear evidence for a change in dynamic can, within the time frame of \texttildelow10 ms, drive a change to a different estimated dynamic, as in our simulated example. In line with this, note that below we show that our results are relatively insensitive to the value of this parameter.
 
 Once we have specified the data and the movement dynamic models, we have fully specified the state space model. We use acausal decoding, meaning that we use all information from both past and future spikes, to estimate the joint posterior probability of position and dynamic (see Methods). With this, we can summarize the resulting posterior probability with two quantities: the probability of each movement dynamic over time (by integrating out position) and the probability of latent position over time, irrespective of movement dynamic (by summing over the movement dynamics; Figure \ref{1}E, left and right plot respectively). 
 
@@ -177,7 +175,7 @@ Importantly, the spatially coherent events most often expressed a dynamic that w
 
 These results challenge the long-held notion that hippocampal replay trajectories necessarily proceed at many times the speed of the animal \cite{NadasdyReplayTimeCompression1999, LeeMemorySequentialExperience2002, DavidsonHippocampalReplayExtended2009}. Instead, there is a much richer variety of speeds the animal can use to retrieve information about prior experience or generate possible future events, including slower moving representations that activate a spatially compact set of nearby locations and stationary representations of single locations. Interestingly, a previous paper \cite{FarooqEmergencepreconfiguredplastic2019} reported that these stationary representations were most prevalent in juvenile rats and decreased to "chance" levels when the rats reached adulthood. Here, we show that they do not disappear, but are a very common occurrence with adult rats. We believe that the difference in these findings is a result of defining "chance" levels of occurrence of these events, using large time bins, and using a restrictive decoding model. We also note that we chose to include a stationary distribution to explicitly evaluate the prevalence of stationary events in adult animals, but in principle a model with just continuous and fragmented dynamics could capture these events as well, as the continuous dynamic includes movement speeds close to 0 m/s.
 
-We hypothesize that his large set of events supports the ability to rapidly retrieve representations of individual places and snippets of real-world experience. Previous findings demonstrated that SWRs with movement- or immobility-related activity engage specific patterns of spiking activity outside the hippocampus \cite{JaiDistincthippocampalcorticalmemory2017, JadhavCoordinatedExcitationInhibition2016}. Thus, we would expect that the large set of events with slow dynamics would also engage specific patterns of activity outside the hippocampus, perhaps allowing animals to evaluate the value of specific locations or short movement trajectories without having to generate full trajectories to or through them \cite{YuHippocampalcorticalinteraction2015}. 
+We hypothesize that this large set of events supports the ability to rapidly retrieve representations of individual places and snippets of real-world experience. Previous findings demonstrated that SWRs with movement- or immobility-related activity engage specific patterns of spiking activity outside the hippocampus \cite{JaiDistincthippocampalcorticalmemory2017, JadhavCoordinatedExcitationInhibition2016}. Thus, we would expect that the large set of events with slow dynamics would also engage specific patterns of activity outside the hippocampus, perhaps allowing animals to evaluate the value of specific locations or short movement trajectories without having to generate full trajectories to or through them \cite{YuHippocampalcorticalinteraction2015}. 
  
 Our results may also explain the seeming conflict between Stella and colleagues \cite{StellaHippocampalReactivationRandom2019}, who reported that hippocampal replay trajectories followed Brownian-like diffusion dynamics, and Pfeiffer and Foster \cite{PfeifferAutoassociativedynamicsgeneration2015}, who reported that replay trajectories contained jumps in position. We found that while replay speeds are on average distributed log normally, there are still definitive "jumps" from one position to another in a small subset of the replays. Because our model makes it possible to identify different dynamics within the same SWR, we are able to identify both types of sequences. 
 
@@ -204,7 +202,7 @@ The authors declare that no competing interests exist.
 \end{interests}
 
 \begin{contributions}
-E.L.D. conceived of the model and did the analysis with help from U.T.E, A.K.G., and M.E.C. E.L.D and L.M.F wrote the manuscript with help from A.K.G. and M.E.C. A.K.G, K.K., M.S., J.E.C. contributed data to this manuscript.
+E.L.D. conceived of the model and did the analysis with help from U.T.E, A.K.G., and M.E.C. E.L.D and L.M.F wrote the manuscript with help from A.K.G. and M.E.C. A.K.G, M.S., J.E.C. contributed data to this manuscript.
 \end{contributions}
 
 \section*{References}
@@ -459,4 +457,6 @@ Both code bases rely on the following python packages: Numpy \cite{vanderWaltNum
 
 
 
+
+Finally, we specify how likely each movement dynamic is to persist in time versus change to another dynamic (Figure \ref{1}D) via a state transition matrix between dynamics. In order to be conservative with respect to switching between dynamics, we assume that each movement dynamic is likely to dominate for \texttildelow100 ms, which is approximately the duration of a SWR event. There is, however,
 
