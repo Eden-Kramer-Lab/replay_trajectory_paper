@@ -12,15 +12,16 @@ from loren_frank_data_processing import (get_all_multiunit_indicators,
                                          make_tetrode_dataframe)
 from ripple_detection import (Kay_ripple_detector,
                               get_multiunit_population_firing_rate)
-from ripple_detection.core import _get_ripplefilter_kernel
-from scipy.signal import filtfilt
-
-from .parameters import _BRAIN_AREAS, _MARKS, ANIMALS, SAMPLING_FREQUENCY
+from ripple_detection.core import _get_ripplefilter_kernel, gaussian_smooth
+from scipy.fftpack import next_fast_len
+from scipy.signal import filtfilt, hilbert
+from scipy.stats import zscore
+from src.parameters import _BRAIN_AREAS, ANIMALS, SAMPLING_FREQUENCY
 
 logger = getLogger(__name__)
 
 
-def filter_ripple_band(data, sampling_frequency=1500):
+def filter_ripple_band(data):
     '''Returns a bandpass filtered signal between 150-250 Hz
 
     Parameters
@@ -33,11 +34,32 @@ def filter_ripple_band(data, sampling_frequency=1500):
 
     '''
     filter_numerator, filter_denominator = _get_ripplefilter_kernel()
-    is_nan = np.isnan(data)
+    is_nan = np.any(np.isnan(data), axis=-1)
     filtered_data = np.full_like(data, np.nan)
     filtered_data[~is_nan] = filtfilt(
         filter_numerator, filter_denominator, data[~is_nan], axis=0)
     return filtered_data
+
+
+def get_envelope(data, axis=0):
+    '''Extracts the instantaneous amplitude (envelope) of an analytic
+    signal using the Hilbert transform'''
+    n_samples = data.shape[axis]
+    instantaneous_amplitude = np.abs(
+        hilbert(data, N=next_fast_len(n_samples), axis=axis))
+    return np.take(instantaneous_amplitude, np.arange(n_samples), axis=axis)
+
+
+def get_ripple_consensus_trace(ripple_filtered_lfps, sampling_frequency):
+    SMOOTHING_SIGMA = 0.004
+    ripple_consensus_trace = np.full_like(ripple_filtered_lfps, np.nan)
+    not_null = np.all(pd.notnull(ripple_filtered_lfps), axis=1)
+    ripple_consensus_trace[not_null] = get_envelope(
+        np.asarray(ripple_filtered_lfps)[not_null])
+    ripple_consensus_trace = np.sum(ripple_consensus_trace ** 2, axis=1)
+    ripple_consensus_trace[not_null] = gaussian_smooth(
+        ripple_consensus_trace[not_null], SMOOTHING_SIGMA, sampling_frequency)
+    return np.sqrt(ripple_consensus_trace)
 
 
 def get_ripple_times(epoch_key, sampling_frequency=1500,
@@ -57,19 +79,28 @@ def get_ripple_times(epoch_key, sampling_frequency=1500,
             tetrode_info.area.astype(str).str.upper().isin(brain_areas))
         tetrode_keys = tetrode_info.loc[is_brain_areas].index
 
-    lfps = get_LFPs(tetrode_keys, ANIMALS).reindex(time)
+    ripple_lfps = get_LFPs(tetrode_keys, ANIMALS).reindex(time)
     ripple_filtered_lfps = pd.DataFrame(
-        np.stack([filter_ripple_band(
-            lfps.values[:, ind], sampling_frequency=1500)
-            for ind in np.arange(lfps.shape[1])], axis=1),
-        index=lfps.index)
+        filter_ripple_band(np.asarray(ripple_lfps)),
+        index=ripple_lfps.index)
 
     ripple_times = Kay_ripple_detector(
-        time, lfps.values, speed.values, sampling_frequency,
+        time, ripple_lfps.values, speed.values, sampling_frequency,
         zscore_threshold=2.0, close_ripple_threshold=np.timedelta64(0, 'ms'),
         minimum_duration=np.timedelta64(15, 'ms'))
 
-    return ripple_times, ripple_filtered_lfps, lfps
+    ripple_consensus_trace = pd.DataFrame(
+        get_ripple_consensus_trace(
+            ripple_filtered_lfps, sampling_frequency),
+        index=ripple_filtered_lfps.index,
+        columns=['ripple_consensus_trace'])
+    ripple_consensus_trace_zscore = pd.DataFrame(
+        zscore(ripple_consensus_trace, nan_policy='omit'),
+        index=ripple_filtered_lfps.index,
+        columns=['ripple_consensus_trace_zscore'])
+
+    return (ripple_times, ripple_filtered_lfps, ripple_lfps,
+            ripple_consensus_trace_zscore)
 
 
 def load_data(epoch_key, brain_areas=None):
@@ -124,8 +155,8 @@ def load_data(epoch_key, brain_areas=None):
         columns=['firing_rate'])
 
     logger.info('Finding ripple times...')
-    ripple_times, ripple_filtered_lfps, ripple_lfps = get_ripple_times(
-        epoch_key)
+    (ripple_times, ripple_filtered_lfps, ripple_lfps,
+     ripple_consensus_trace_zscore) = get_ripple_times(epoch_key)
 
     ripple_times = ripple_times.assign(
         duration=lambda df: (df.end_time - df.start_time).dt.total_seconds())
@@ -139,6 +170,7 @@ def load_data(epoch_key, brain_areas=None):
         'tetrode_info': tetrode_info,
         'ripple_filtered_lfps': ripple_filtered_lfps,
         'ripple_lfps': ripple_lfps,
+        'ripple_consensus_trace_zscore': ripple_consensus_trace_zscore,
         'multiunit_firing_rate': multiunit_firing_rate,
         'sampling_frequency': SAMPLING_FREQUENCY,
     }
