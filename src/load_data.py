@@ -116,6 +116,7 @@ def load_data(epoch_key, brain_areas=None):
     def _time_function(*args, **kwargs):
         return time
 
+    logger.info('Loading position info...')
     position_info = (
         get_interpolated_position_dataframe(
             epoch_key, ANIMALS, _time_function)
@@ -130,6 +131,7 @@ def load_data(epoch_key, brain_areas=None):
     lfps = get_LFPs(tetrode_keys, ANIMALS)
     lfps = lfps.resample('2ms').mean().fillna(method='pad').reindex(time)
 
+    logger.info('Loading spikes...')
     try:
         neuron_info = make_neuron_dataframe(ANIMALS).xs(
             epoch_key, drop_level=False)
@@ -142,6 +144,7 @@ def load_data(epoch_key, brain_areas=None):
     except KeyError:
         spikes = None
 
+    logger.info('Loading multiunit...')
     tetrode_info = tetrode_info.loc[is_brain_areas]
     multiunit = (get_all_multiunit_indicators(
         tetrode_info.index, ANIMALS, _time_function)
