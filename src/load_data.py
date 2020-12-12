@@ -145,7 +145,6 @@ def load_data(epoch_key, brain_areas=None):
     tetrode_info = tetrode_info.loc[is_brain_areas]
     multiunit = (get_all_multiunit_indicators(
         tetrode_info.index, ANIMALS, _time_function)
-        .sel(features=_MARKS)
         .reindex({'time': time}))
     multiunit_spikes = (np.any(~np.isnan(multiunit.values), axis=1)
                         ).astype(np.float)
@@ -283,7 +282,6 @@ def load_sleep_data(epoch_key, brain_areas=None):
     multiunit = (
         get_all_multiunit_indicators(
             tetrode_info.index, ANIMALS, _time_function)
-        .sel(features=_MARKS)
         .reindex({"time": time})
     )
     multiunit_spikes = (
