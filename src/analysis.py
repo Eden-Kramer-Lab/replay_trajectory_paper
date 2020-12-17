@@ -12,7 +12,7 @@ from scipy.ndimage.filters import gaussian_filter1d
 
 def get_replay_info(results, ripple_spikes, ripple_times, position_info,
                     track_graph, sampling_frequency, probability_threshold,
-                    epoch_key, classifier):
+                    epoch_key, classifier, ripple_consensus_trace_zscore):
     '''
 
     Parameters
@@ -34,6 +34,17 @@ def get_replay_info(results, ripple_spikes, ripple_times, position_info,
     '''
     probability = get_probability(results)
     is_classified = get_is_classified(probability, probability_threshold)
+
+    new_index = pd.Index(np.unique(np.concatenate(
+        (ripple_consensus_trace_zscore.index, position_info.index))),
+        name='time')
+    ripple_consensus_trace_zscore = (ripple_consensus_trace_zscore
+                                     .reindex(index=new_index)
+                                     .interpolate(method='linear')
+                                     .reindex(index=position_info.index)
+                                     )
+    ripple_consensus_trace_zscore = reshape_to_segments(
+        ripple_consensus_trace_zscore, ripple_times)
 
     duration = (is_classified.sum('time') / sampling_frequency)
     duration = duration.to_dataframe().unstack(level=1)
@@ -66,7 +77,7 @@ def get_replay_info(results, ripple_spikes, ripple_times, position_info,
         [get_replay_distance_metrics(
             results, ripple_position_info, ripple_spikes, ripple_number,
             position_info, track_graph, sampling_frequency, is_classified,
-            probability)
+            probability, ripple_consensus_trace_zscore)
          for ripple_number in ripple_times.index], index=ripple_times.index)
     replay_info = pd.concat((ripple_times, duration, metrics), axis=1)
     animal, day, epoch = epoch_key
@@ -248,7 +259,8 @@ def get_is_classified(probability, probablity_threshold):
         is_classified = ((probability.copy() * 0.0).fillna(False)).astype(bool)
         A = probability.sel(state=["Hover", "Continuous", "Fragmented"]).values
         A = A.argmax(axis=-1)[..., None] == np.arange(A.shape[-1])
-        is_classified.values = np.concatenate((A, np.zeros((*A.shape[:2], 2), dtype=bool)), axis=-1)
+        is_classified.values = np.concatenate(
+            (A, np.zeros((*A.shape[:2], 2), dtype=bool)), axis=-1)
     is_classified = is_classified.rename('is_classified')
     is_classified = is_classified.where(~np.isnan(probability))
 
@@ -258,7 +270,7 @@ def get_is_classified(probability, probablity_threshold):
 def get_replay_distance_metrics(results, ripple_position_info, ripple_spikes,
                                 ripple_number, position_info, track_graph,
                                 sampling_frequency, is_classified,
-                                probability):
+                                probability, ripple_consensus_trace_zscore):
     posterior = (results
                  .sel(ripple_number=ripple_number)
                  .acausal_posterior
@@ -271,6 +283,9 @@ def get_replay_distance_metrics(results, ripple_position_info, ripple_spikes,
         .dropna('time', how='all')
         .assign_coords(
             time=lambda ds: ds.time / np.timedelta64(1, 's')))
+    is_unclassified = (is_classified.sum('state') < 1).assign_coords(
+        state='Unclassified')
+    is_classified = xr.concat((is_classified, is_unclassified), dim='state')
     probability = (
         probability
         .sel(ripple_number=ripple_number)
@@ -279,6 +294,8 @@ def get_replay_distance_metrics(results, ripple_position_info, ripple_spikes,
             time=lambda ds: ds.time / np.timedelta64(1, 's'))
     )
     ripple_spikes = ripple_spikes.loc[ripple_number]
+    ripple_consensus_trace_zscore = np.asarray(
+        ripple_consensus_trace_zscore.loc[ripple_number])
     map_estimate = maximum_a_posteriori_estimate(posterior.sum('state'))
 
     actual_positions = (ripple_position_info
@@ -339,6 +356,10 @@ def get_replay_distance_metrics(results, ripple_position_info, ripple_spikes,
         'state_order': get_state_order(is_classified),
         'spatial_coverage': np.mean(spatial_coverage),
         'spatial_coverage_percentage': np.mean(spatial_coverage_percentage),
+        'mean_ripple_consensus_trace_zscore': np.mean(
+            ripple_consensus_trace_zscore),
+        'max_ripple_consensus_trace_zscore': np.max(
+            ripple_consensus_trace_zscore),
     }
 
     for state, above_threshold in is_classified.groupby('state'):
@@ -346,8 +367,14 @@ def get_replay_distance_metrics(results, ripple_position_info, ripple_spikes,
         try:
             metrics[f'{state}_max_probability'] = np.max(
                 np.asarray(probability.sel(state=state)))
-        except ValueError:
+        except (KeyError, ValueError):
             metrics[f'{state}_max_probability'] = np.nan
+
+        metrics[f'{state}_duration'] = duration(
+            above_threshold, sampling_frequency)
+        metrics[f'{state}_fraction_of_time'] = fraction_of_time(
+            above_threshold, time)
+
         if np.any(above_threshold):
             metrics[f'{state}_replay_distance_from_actual_position'] = np.mean(
                 replay_distance_from_actual_position[above_threshold])  # cm
@@ -365,13 +392,18 @@ def get_replay_distance_metrics(results, ripple_position_info, ripple_spikes,
                 distance_change[above_threshold])  # cm
             metrics[f'{state}_min_time'] = np.min(time[above_threshold])  # s
             metrics[f'{state}_max_time'] = np.max(time[above_threshold])  # s
-            metrics[f'{state}_n_unique_spiking'] = (
-                ripple_spikes.iloc[above_threshold].sum(axis=0) > 0).sum()
-            metrics[f'{state}_n_total_spikes'] = (
-                ripple_spikes.iloc[above_threshold].sum(axis=0)).sum()
-            metrics[f'{state}_population_rate'] = (
-                sampling_frequency *
-                ripple_spikes.iloc[above_threshold].to_numpy().mean())
+            metrics[f'{state}_n_unique_spiking'] = n_tetrodes_active(
+                ripple_spikes.iloc[above_threshold])
+            metrics[f'{state}_n_total_spikes'] = n_total_spikes(
+                ripple_spikes.iloc[above_threshold])
+            metrics[f'{state}_median_fraction_spikes_under_6_ms'] = np.nanmedian(
+                fraction_spikes_less_than_6_ms(
+                    ripple_spikes.iloc[above_threshold], sampling_frequency)
+            )
+            metrics[f'{state}_population_rate'] = population_rate(
+                ripple_spikes.iloc[above_threshold], sampling_frequency)
+            metrics[f'{state}_median_spikes_per_bin'] = median_spikes_per_bin(
+                ripple_spikes.loc[above_threshold])
             metrics[f'{state}_spatial_coverage'] = np.median(
                 spatial_coverage[above_threshold])  # cm
             metrics[f'{state}_spatial_coverage_percentage'] = np.median(
@@ -388,6 +420,10 @@ def get_replay_distance_metrics(results, ripple_position_info, ripple_spikes,
                 probability.sel(state="Fragmented").isel(
                     time=above_threshold).mean()
             )
+            metrics[f"{state}_mean_ripple_consensus_trace_zscore"] = np.mean(
+                ripple_consensus_trace_zscore[above_threshold])
+            metrics[f"{state}_max_ripple_consensus_trace_zscore"] = np.max(
+                ripple_consensus_trace_zscore[above_threshold])
 
     return metrics
 
@@ -398,6 +434,42 @@ def get_n_unique_spiking(ripple_spikes):
 
 def get_n_total_spikes(ripple_spikes):
     return ripple_spikes.groupby('ripple_number').sum().sum(axis=1)
+
+
+def n_tetrodes_active(spikes):
+    return (np.asarray(spikes).sum(axis=0) > 0).sum()
+
+
+def n_total_spikes(spikes):
+    return np.asarray(spikes).sum().astype(int)
+
+
+def median_spikes_per_bin(spikes):
+    return np.median(np.asarray(spikes).sum(axis=1))
+
+
+def _fraction_spikes_less_than_6_ms(spikes, sampling_frequency):
+    interspike_interval = (
+        1000 * np.diff(np.nonzero(spikes)[0]) / sampling_frequency)  # ms
+    return np.nanmean(interspike_interval < 6)
+
+
+def fraction_spikes_less_than_6_ms(spikes, sampling_frequency):
+    return np.asarray(
+        [_fraction_spikes_less_than_6_ms(spikes_per_tetrode, sampling_frequency)
+         for spikes_per_tetrode in np.asarray(spikes).T])
+
+
+def duration(above_threshold, sampling_frequency):
+    return np.nansum(np.asarray(above_threshold)) / sampling_frequency  # ms
+
+
+def fraction_of_time(above_threshold, time):
+    return np.nansum(np.asarray(above_threshold)) / len(time)
+
+
+def population_rate(spikes, sampling_frequency):
+    return sampling_frequency * np.asarray(spikes).mean()
 
 
 def maximum_a_posteriori_estimate(posterior_density):
@@ -681,4 +753,5 @@ def get_replay_linear_position_by_state(
 
     labels, n_labels = scipy.ndimage.label(is_classified.sel(state=state))
 
-    return [np.mean(map_estimate[labels == l]) for l in range(1, n_labels + 1)]
+    return [np.mean(map_estimate[labels == label])
+            for label in range(1, n_labels + 1)]

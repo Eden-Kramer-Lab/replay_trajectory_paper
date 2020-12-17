@@ -163,6 +163,14 @@ def load_data(epoch_key, brain_areas=None):
     ripple_times = ripple_times.assign(
         duration=lambda df: (df.end_time - df.start_time).dt.total_seconds())
 
+    new_index = pd.Index(np.unique(np.concatenate(
+        (ripple_consensus_trace_zscore.index, time))), name='time')
+    ripple_consensus_trace_zscore = (ripple_consensus_trace_zscore
+                                     .reindex(index=new_index)
+                                     .interpolate(method='linear')
+                                     .reindex(index=time)
+                                     )
+
     return {
         'position_info': position_info,
         'ripple_times': ripple_times,

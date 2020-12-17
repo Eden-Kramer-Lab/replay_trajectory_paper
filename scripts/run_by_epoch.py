@@ -420,7 +420,7 @@ def clusterless_analysis_1D(epoch_key, plot_ripple_figures=False):
     replay_info, replay_linear_position_hover = get_replay_info(
         results, ripple_spikes, data['ripple_times'], data['position_info'],
         track_graph, SAMPLING_FREQUENCY, PROBABILITY_THRESHOLD, epoch_key,
-        classifier)
+        classifier, data["ripple_consensus_trace_zscore"])
     epoch_identifier = f'{animal}_{day:02d}_{epoch:02d}_{data_type}_{dim}'
     prob = int(PROBABILITY_THRESHOLD * 100)
     replay_info_filename = os.path.join(
