@@ -18,7 +18,7 @@ from scipy.ndimage import label
 from src.analysis import (get_linear_position_order, get_place_field_max,
                           get_replay_info, reshape_to_segments)
 from src.load_data import load_data
-from src.parameters import (ANIMALS, FIGURE_DIR, PROBABILITY_THRESHOLD,
+from src.parameters import (_MARKS, ANIMALS, FIGURE_DIR, PROBABILITY_THRESHOLD,
                             PROCESSED_DATA_DIR, SAMPLING_FREQUENCY,
                             TRANSITION_TO_CATEGORY,
                             continuous_transition_types, discrete_diag,
@@ -42,6 +42,7 @@ def sorted_spikes_analysis_1D(epoch_key, plot_ripple_figures=False):
     logging.info('Loading data...')
     data = load_data(epoch_key)
 
+    data['multiunit'] = data['multiunit'].sel(features=_MARKS)
     is_training = data['position_info'].speed > 4
     position = data['position_info'].loc[:, 'linear_position']
     track_graph, center_well_id = make_track_graph(epoch_key, ANIMALS)
@@ -206,6 +207,7 @@ def sorted_spikes_analysis_2D(epoch_key, plot_ripple_figures=False):
 
     logging.info('Loading data...')
     data = load_data(epoch_key)
+    data['multiunit'] = data['multiunit'].sel(features=_MARKS)
 
     is_training = data['position_info'].speed > 4
     position = data['position_info'].loc[:, ['x_position', 'y_position']]
@@ -345,6 +347,7 @@ def clusterless_analysis_1D(epoch_key, plot_ripple_figures=False):
 
     logging.info('Loading data...')
     data = load_data(epoch_key)
+    data['multiunit'] = data['multiunit'].sel(features=_MARKS)
 
     is_training = data['position_info'].speed > 4
     position = data['position_info'].loc[:, 'linear_position']
@@ -491,6 +494,7 @@ def clusterless_analysis_2D(epoch_key, plot_ripple_figures=False):
 
     logging.info('Loading data...')
     data = load_data(epoch_key)
+    data['multiunit'] = data['multiunit'].sel(features=_MARKS)
     position = data['position_info'].loc[:, ['x_position', 'y_position']]
     is_training = data['position_info'].speed > 4
 
