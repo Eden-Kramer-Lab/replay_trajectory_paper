@@ -298,12 +298,11 @@ def get_replay_distance_metrics(results, ripple_position_info, ripple_spikes,
         ripple_consensus_trace_zscore.loc[ripple_number])
     map_estimate = maximum_a_posteriori_estimate(posterior.sum('state'))
 
-    actual_positions = (ripple_position_info
-                        .loc[ripple_number, ['x_position', 'y_position']]
-                        .values)
-    actual_track_segment_ids = (ripple_position_info
-                                .loc[ripple_number, 'track_segment_id']
-                                .values.squeeze().astype(int))
+    actual_positions = np.asarray(
+        ripple_position_info.loc[ripple_number, ['x_position', 'y_position']])
+    actual_track_segment_ids = np.asarray(
+        ripple_position_info.loc[ripple_number, 'track_segment_id']
+    ).squeeze().astype(int)
 
     (replay_distance_from_actual_position,
      replay_distance_from_center_well) = calculate_replay_distance(
