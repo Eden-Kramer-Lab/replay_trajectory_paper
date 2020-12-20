@@ -1153,14 +1153,14 @@ def make_classifier_movie(
     (position_line,) = axes[0, 0].plot([], [], linewidth=3, color="magenta")
 
     map_dot = axes[0, 0].scatter([], [], s=100, zorder=102,
-                              color="lime", label="Decoded")
+                                 color="lime", label="Decoded")
     (map_line,) = axes[0, 0].plot([], [], linewidth=3, color="lime")
     axes[1, 0].legend(
-            (position_dot, map_dot),
-            ('Actual Position', 'Decoded Position'),
-            fontsize=16,
-            loc="center",
-            frameon=True)
+        (position_dot, map_dot),
+        ('Actual Position', 'Decoded Position'),
+        fontsize=16,
+        loc="center",
+        frameon=True)
     axes[1, 0].axis("off")
 
     # Plot 2
