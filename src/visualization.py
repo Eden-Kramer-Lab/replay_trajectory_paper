@@ -1226,3 +1226,142 @@ def make_classifier_movie(
         movie.save(movie_name, writer=writer)
 
     return fig, movie
+
+
+def plot_classifier_time_slice(
+    time_slice,
+    classifier,
+    results,
+    data,
+    posterior_type="acausal_posterior",
+    figsize=(30, 15),
+):
+    cmap = copy.copy(plt.get_cmap('bone_r'))
+    cmap.set_bad(color="lightgrey", alpha=1.0)
+
+    fig, axes = plt.subplots(
+        5,
+        1,
+        figsize=figsize,
+        sharex=True,
+        constrained_layout=True,
+        gridspec_kw={"height_ratios": [1, 4, 1, 1, 1]},
+    )
+
+    # ax 0
+    probability = (results[posterior_type]
+                   .sel(time=time_slice)
+                   .sum("position")
+                   .assign_coords(
+        time=lambda ds: ds.time / np.timedelta64(1, 's'),
+    ))
+    for state, prob in zip(probability.state.values, probability.values.T):
+        axes[0].plot(
+            probability.time,
+            prob,
+            linewidth=1,
+            color=STATE_COLORS[state],
+            clip_on=False,
+            label=state,
+        )
+    axes[0].set_ylabel("Probability")
+    axes[0].set_xlabel("")
+    axes[0].set_ylim((0, 1))
+    axes[0].set_yticks((0, 1))
+
+    is_classified = get_is_classified(
+        get_probability(results.sel(time=time_slice)),
+        PROBABILITY_THRESHOLD)
+
+    for state, is_class in zip(is_classified.state.values,
+                               is_classified.values.T):
+        if is_class.sum() > 0:
+            axes[0].fill_between(
+                probability.time,
+                is_class,
+                where=is_class.astype(bool),
+                alpha=0.25,
+                color=STATE_COLORS[state],
+            )
+
+    # ax 1
+    (results[posterior_type]
+     .sel(time=time_slice)
+     .sum('state')
+     .where(classifier.is_track_interior_)
+     .assign_coords(
+        time=lambda ds: ds.time /
+        np.timedelta64(1, 's'))
+     .plot(
+         x="time", y="position",
+         robust=True,
+         ax=axes[1],
+         cmap=cmap,
+         vmin=0.0,
+         add_colorbar=False,
+    ))
+
+    axes[1].scatter(
+        data["position_info"].loc[time_slice].index / np.timedelta64(1, 's'),
+        data["position_info"]
+        .loc[time_slice]
+        .linear_position,
+        color="magenta",
+        alpha=0.8,
+        s=1,
+    )
+    axes[1].set_xlabel("")
+    max_position = np.ceil(
+        np.asarray(data['position_info'].linear_position).max()).astype(int)
+    axes[1].set_ylim((0, max_position))
+    axes[1].set_yticks((0, max_position))
+    axes[1].set_ylabel("Position [cm]")
+
+    # ax 2
+
+    axes[2].fill_between(
+        data["multiunit_firing_rate"].loc[time_slice].index /
+        np.timedelta64(1, 's'),
+        data["multiunit_firing_rate"].loc[time_slice].squeeze(),
+        color="black",
+    )
+    axes[2].set_ylabel("Multiunit\nFiring Rate\n[spikes / s]")
+    axes[2].set_ylim((0, 150))
+    axes[2].set_yticks((0, 50, 100, 150))
+
+    # ax 2
+
+    axes[3].fill_between(
+        data["ripple_consensus_trace_zscore"].loc[time_slice].index /
+        np.timedelta64(1, 's'),
+        data["ripple_consensus_trace_zscore"].loc[time_slice].squeeze(),
+        color="black",
+    )
+    axes[3].set_ylabel("Ripple\nConsensus\nZ-score")
+    is_ripple = ((data['ripple_times'].start_time > time_slice[0].values) &
+                 (data['ripple_times'].end_time < time_slice[-1].values))
+    for ripple in data['ripple_times'].loc[is_ripple].itertuples():
+        zscore = data["ripple_consensus_trace_zscore"].loc[
+            ripple.start_time:ripple.end_time]
+        axes[3].scatter(zscore.ripple_consensus_trace_zscore.idxmax() /
+                        np.timedelta64(1, 's'),
+                        zscore.max(),
+                        zorder=100,
+                        marker='*',
+                        color='red')
+
+    # ax 4
+    axes[4].fill_between(
+        data["position_info"].loc[time_slice].index / np.timedelta64(1, 's'),
+        data["position_info"]
+        .loc[time_slice]
+        .speed.values.squeeze(),
+        color="lightgrey",
+        linewidth=1,
+        alpha=0.7,
+    )
+    axes[4].set_ylim((0, 50))
+    axes[4].set_yticks((0, 50))
+    axes[4].set_ylabel("Speed\n[cm / s]")
+    axes[4].set_xlabel("Time [s]")
+    sns.despine(offset=5)
