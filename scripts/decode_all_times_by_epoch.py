@@ -104,6 +104,8 @@ def clusterless_analysis_1D(epoch_key, plot_ripple_figures=False):
                 group=f'/{data_type}/{dim}/classifier/run/')
 
     if plot_ripple_figures:
+        os.makedirs(os.path.join(FIGURE_DIR, 'run_decode'),  exist_ok=True)
+
         time_ind = list(range(0, len(results.time), 20_000))
 
         for slice_ind, (start_ind, end_ind) in enumerate(
