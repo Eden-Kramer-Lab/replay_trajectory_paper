@@ -18,7 +18,7 @@ from scipy.ndimage import label
 from src.analysis import (get_linear_position_order, get_place_field_max,
                           get_replay_info, reshape_to_segments)
 from src.load_data import load_data
-from src.parameters import (_MARKS, ANIMALS, FIGURE_DIR, PROBABILITY_THRESHOLD,
+from src.parameters import (ANIMALS, FIGURE_DIR, PROBABILITY_THRESHOLD,
                             PROCESSED_DATA_DIR, SAMPLING_FREQUENCY,
                             TRANSITION_TO_CATEGORY,
                             continuous_transition_types, discrete_diag,
@@ -35,14 +35,14 @@ logging.basicConfig(level='INFO', format=FORMAT, datefmt='%d-%b-%y %H:%M:%S')
 plt.switch_backend('agg')
 
 
-def sorted_spikes_analysis_1D(epoch_key, plot_ripple_figures=False):
+def sorted_spikes_analysis_1D(epoch_key, plot_ripple_figures=False,
+                              exclude_interneuron_spikes=False):
     animal, day, epoch = epoch_key
     data_type, dim = 'sorted_spikes', '1D'
 
     logging.info('Loading data...')
-    data = load_data(epoch_key)
-
-    data['multiunit'] = data['multiunit'].sel(features=_MARKS)
+    data = load_data(epoch_key,
+                     exclude_interneuron_spikes=exclude_interneuron_spikes)
     is_training = data['position_info'].speed > 4
     position = data['position_info'].loc[:, 'linear_position']
     track_graph, center_well_id = make_track_graph(epoch_key, ANIMALS)
@@ -201,13 +201,14 @@ def sorted_spikes_analysis_1D(epoch_key, plot_ripple_figures=False):
     logging.info('Done...')
 
 
-def sorted_spikes_analysis_2D(epoch_key, plot_ripple_figures=False):
+def sorted_spikes_analysis_2D(epoch_key, plot_ripple_figures=False,
+                              exclude_interneuron_spikes=False):
     animal, day, epoch = epoch_key
     data_type, dim = 'sorted_spikes', '2D'
 
     logging.info('Loading data...')
-    data = load_data(epoch_key)
-    data['multiunit'] = data['multiunit'].sel(features=_MARKS)
+    data = load_data(epoch_key,
+                     exclude_interneuron_spikes=exclude_interneuron_spikes)
 
     is_training = data['position_info'].speed > 4
     position = data['position_info'].loc[:, ['x_position', 'y_position']]
@@ -341,26 +342,39 @@ def sorted_spikes_analysis_2D(epoch_key, plot_ripple_figures=False):
     logging.info('Done...')
 
 
-def clusterless_analysis_1D(epoch_key, plot_ripple_figures=False):
+def clusterless_analysis_1D(epoch_key, plot_ripple_figures=False,
+                            exclude_interneuron_spikes=False):
     animal, day, epoch = epoch_key
     data_type, dim = 'clusterless', '1D'
 
     logging.info('Loading data...')
-    data = load_data(epoch_key)
-    data['multiunit'] = data['multiunit'].sel(features=_MARKS)
+    data = load_data(epoch_key,
+                     exclude_interneuron_spikes=exclude_interneuron_spikes)
 
     is_training = data['position_info'].speed > 4
     position = data['position_info'].loc[:, 'linear_position']
     track_graph, center_well_id = make_track_graph(epoch_key, ANIMALS)
 
-    model_name = os.path.join(
-        PROCESSED_DATA_DIR,
-        f'{animal}_{day:02}_{epoch:02}_{data_type}_{dim}_model.pkl')
+    if not exclude_interneuron_spikes:
+        model_name = os.path.join(
+            PROCESSED_DATA_DIR,
+            f'{animal}_{day:02}_{epoch:02}_{data_type}_{dim}_model.pkl')
+        group = f'/{data_type}/{dim}/classifier/ripples/'
+        epoch_identifier = f'{animal}_{day:02d}_{epoch:02d}_{data_type}_{dim}'
+    else:
+        model_name = os.path.join(
+            PROCESSED_DATA_DIR,
+            f'{animal}_{day:02}_{epoch:02}_{data_type}_{dim}'
+            '_no_interneuron_model.pkl')
+        group = f'/{data_type}/{dim}/no_interneuron/classifier/ripples/'
+        epoch_identifier = (f'{animal}_{day:02d}_{epoch:02d}_{data_type}_{dim}'
+                            '_no_interneuron')
+
     try:
         results = xr.open_dataset(
             os.path.join(
                 PROCESSED_DATA_DIR, f'{animal}_{day:02}_{epoch:02}.nc'),
-            group=f'/{data_type}/{dim}/classifier/ripples/')
+            group=group)
         logging.info('Found existing results. Loading...')
         ripple_times = data['ripple_times'].loc[:, ['start_time', 'end_time']]
         spikes = (((data['multiunit'].sum('features') > 0) * 1.0)
@@ -417,14 +431,13 @@ def clusterless_analysis_1D(epoch_key, plot_ripple_figures=False):
         logging.info('Saving results...')
         save_xarray(PROCESSED_DATA_DIR, epoch_key,
                     results.drop(['likelihood', 'causal_posterior']),
-                    group=f'/{data_type}/{dim}/classifier/ripples/')
+                    group=group)
 
     logging.info('Saving replay_info...')
     replay_info, replay_linear_position_hover = get_replay_info(
         results, ripple_spikes, data['ripple_times'], data['position_info'],
         track_graph, SAMPLING_FREQUENCY, PROBABILITY_THRESHOLD, epoch_key,
         classifier, data["ripple_consensus_trace_zscore"])
-    epoch_identifier = f'{animal}_{day:02d}_{epoch:02d}_{data_type}_{dim}'
     prob = int(PROBABILITY_THRESHOLD * 100)
     replay_info_filename = os.path.join(
         PROCESSED_DATA_DIR, f'{epoch_identifier}_replay_info_{prob:02d}.csv')
@@ -488,13 +501,15 @@ def clusterless_analysis_1D(epoch_key, plot_ripple_figures=False):
     logging.info('Done...')
 
 
-def clusterless_analysis_2D(epoch_key, plot_ripple_figures=False):
+def clusterless_analysis_2D(epoch_key, plot_ripple_figures=False,
+                            exclude_interneuron_spikes=False):
     animal, day, epoch = epoch_key
     data_type, dim = 'clusterless', '2D'
 
     logging.info('Loading data...')
-    data = load_data(epoch_key)
-    data['multiunit'] = data['multiunit'].sel(features=_MARKS)
+    data = load_data(epoch_key,
+                     exclude_interneuron_spikes=exclude_interneuron_spikes)
+
     position = data['position_info'].loc[:, ['x_position', 'y_position']]
     is_training = data['position_info'].speed > 4
 
@@ -641,6 +656,7 @@ def get_command_line_arguments():
     parser.add_argument('--n_workers', type=int, default=16)
     parser.add_argument('--threads_per_worker', type=int, default=1)
     parser.add_argument('--plot_ripple_figures', action='store_true')
+    parser.add_argument('--exclude_interneuron_spikes', action='store_true')
     parser.add_argument(
         '-d', '--debug',
         help='More verbose output for debugging',
@@ -676,7 +692,9 @@ def main():
 
     # Analysis Code
     run_analysis[(args.data_type, args.dim)](
-        epoch_key, plot_ripple_figures=args.plot_ripple_figures)
+        epoch_key,
+        plot_ripple_figures=args.plot_ripple_figures,
+        exclude_interneuron_spikes=args.exclude_interneuron_spikes)
 
 
 if __name__ == '__main__':
