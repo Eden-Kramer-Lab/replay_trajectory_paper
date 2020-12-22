@@ -30,6 +30,17 @@ def get_replay_info(results, spikes, ripple_times, position_info,
     replay_info : pandas.DataFrame, shape (n_ripples, n_covariates)
 
     '''
+
+    # Downsample the ripple consensus trace to match the spiking data sampling
+    # rate
+    new_index = pd.Index(np.unique(np.concatenate(
+        (ripple_consensus_trace_zscore.index, position_info.index))),
+        name='time')
+    ripple_consensus_trace_zscore = (ripple_consensus_trace_zscore
+                                     .reindex(index=new_index)
+                                     .interpolate(method='linear')
+                                     .reindex(index=position_info.index)
+                                     )
     replay_info = pd.DataFrame(
         [get_ripple_replay_info(ripple, results, spikes,
                                 ripple_consensus_trace_zscore,
