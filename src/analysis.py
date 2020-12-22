@@ -1,5 +1,3 @@
-import itertools
-
 import networkx as nx
 import numpy as np
 import pandas as pd
@@ -10,7 +8,7 @@ from loren_frank_data_processing.track_segment_classification import (
 from scipy.ndimage.filters import gaussian_filter1d
 
 
-def get_replay_info(results, ripple_spikes, ripple_times, position_info,
+def get_replay_info(results, spikes, ripple_times, position_info,
                     track_graph, sampling_frequency, probability_threshold,
                     epoch_key, classifier, ripple_consensus_trace_zscore):
     '''
@@ -19,7 +17,7 @@ def get_replay_info(results, ripple_spikes, ripple_times, position_info,
     ----------
     results : xarray.Dataset, shape (n_ripples, n_position_bins, n_states,
                                      n_ripple_time)
-    ripple_spikes : pandas.DataFrame (n_ripples * n_ripple_time, n_neurons)
+    spikes : pandas.DataFrame (n_time, n_neurons)
     ripple_times : pandas.DataFrame (n_ripples, 2)
     position_info : pandas.DataFrame (n_time, n_covariates)
     track_graph : networkx.Graph
@@ -32,54 +30,13 @@ def get_replay_info(results, ripple_spikes, ripple_times, position_info,
     replay_info : pandas.DataFrame, shape (n_ripples, n_covariates)
 
     '''
-    probability = get_probability(results)
-    is_classified = get_is_classified(probability, probability_threshold)
+    replay_info = pd.DataFrame(
+        [get_ripple_replay_info(ripple, results, spikes,
+                                ripple_consensus_trace_zscore,
+                                position_info, sampling_frequency,
+                                probability_threshold, track_graph)
+         for ripple in ripple_times.itertuples()], index=ripple_times.index)
 
-    new_index = pd.Index(np.unique(np.concatenate(
-        (ripple_consensus_trace_zscore.index, position_info.index))),
-        name='time')
-    ripple_consensus_trace_zscore = (ripple_consensus_trace_zscore
-                                     .reindex(index=new_index)
-                                     .interpolate(method='linear')
-                                     .reindex(index=position_info.index)
-                                     )
-    ripple_consensus_trace_zscore = reshape_to_segments(
-        ripple_consensus_trace_zscore, ripple_times)
-
-    duration = (is_classified.sum('time') / sampling_frequency)
-    duration = duration.to_dataframe().unstack(level=1)
-    duration.columns = list(duration.columns.get_level_values('state'))
-    duration = duration.rename(
-        columns=lambda column_name: column_name + '_duration')
-    is_category = (duration > 0.0).rename(columns=lambda c: c.split('_')[0])
-    duration = pd.concat((duration, is_category), axis=1)
-    duration['is_classified'] = np.any(duration > 0.0, axis=1)
-    duration['n_unique_spiking'] = get_n_unique_spiking(ripple_spikes)
-    duration['n_total_spikes'] = get_n_total_spikes(ripple_spikes)
-    duration['population_rate'] = (ripple_spikes.groupby(
-        "ripple_number").mean().mean(axis=1) * sampling_frequency)
-
-    ripple_position_info = reshape_to_segments(position_info, ripple_times)
-    duration['actual_x_position'] = ripple_position_info.groupby(
-        'ripple_number').x_position.mean()
-    duration['actual_y_position'] = ripple_position_info.groupby(
-        'ripple_number').y_position.mean()
-    duration['actual_linear_distance'] = ripple_position_info.groupby(
-        'ripple_number').linear_distance.mean()
-    duration['actual_linear_position'] = ripple_position_info.groupby(
-        'ripple_number').linear_position.mean()
-    duration['actual_speed'] = ripple_position_info.groupby(
-        'ripple_number').speed.mean()
-    duration['actual_velocity_center_well'] = ripple_position_info.groupby(
-        'ripple_number').linear_velocity.mean()
-
-    metrics = pd.DataFrame(
-        [get_replay_distance_metrics(
-            results, ripple_position_info, ripple_spikes, ripple_number,
-            position_info, track_graph, sampling_frequency, is_classified,
-            probability, ripple_consensus_trace_zscore)
-         for ripple_number in ripple_times.index], index=ripple_times.index)
-    replay_info = pd.concat((ripple_times, duration, metrics), axis=1)
     animal, day, epoch = epoch_key
 
     replay_info['animal'] = animal
@@ -104,20 +61,7 @@ def get_replay_info(results, ripple_spikes, ripple_times, position_info,
     replay_info['max_linear_distance'] = list(
         classifier.distance_between_nodes_[center_well_id].values())[-1]
 
-    replay_linear_position_hover = [
-        get_replay_linear_position_by_state(
-            ripple_number, is_classified, results, state="Hover"
-        )
-        for ripple_number in ripple_times.index[
-            replay_info.Hover_replay_distance_from_actual_position > 30
-        ]
-    ]
-
-    replay_linear_position_hover = np.asarray(
-        list(itertools.chain.from_iterable(replay_linear_position_hover))
-    ) / min_max.loc[3].linear_position.max()
-
-    return replay_info, replay_linear_position_hover
+    return replay_info
 
 
 def get_sleep_replay_info(results, ripple_spikes, ripple_times, position_info,
@@ -267,41 +211,46 @@ def get_is_classified(probability, probablity_threshold):
     return is_classified
 
 
-def get_replay_distance_metrics(results, ripple_position_info, ripple_spikes,
-                                ripple_number, position_info, track_graph,
-                                sampling_frequency, is_classified,
-                                probability, ripple_consensus_trace_zscore):
-    posterior = (results
-                 .sel(ripple_number=ripple_number)
-                 .acausal_posterior
-                 .dropna('time', how='all')
-                 .assign_coords(
-                     time=lambda ds: ds.time / np.timedelta64(1, 's')))
-    is_classified = (
-        is_classified
-        .sel(ripple_number=ripple_number)
-        .dropna('time', how='all')
-        .assign_coords(
-            time=lambda ds: ds.time / np.timedelta64(1, 's')))
+def get_ripple_replay_info(ripple, results, spikes,
+                           ripple_consensus_trace_zscore, position_info,
+                           sampling_frequency, probability_threshold,
+                           track_graph):
+
+    start_time = ripple.start_time
+    end_time = ripple.end_time
+    ripple_duration = ripple.duration
+
+    ripple_time_slice = slice(start_time, end_time)
+
+    result = (results
+              .sel(ripple_number=ripple.Index)
+              .dropna('time', how='all')
+              .assign_coords(
+                  time=lambda ds: ds.time / np.timedelta64(1, 's')))
+    probability = get_probability(result)
+    is_classified = get_is_classified(
+        probability, probability_threshold).astype(bool)
     is_unclassified = (is_classified.sum('state') < 1).assign_coords(
         state='Unclassified')
     is_classified = xr.concat((is_classified, is_unclassified), dim='state')
-    probability = (
-        probability
-        .sel(ripple_number=ripple_number)
-        .dropna('time', how='all')
-        .assign_coords(
-            time=lambda ds: ds.time / np.timedelta64(1, 's'))
-    )
-    ripple_spikes = ripple_spikes.loc[ripple_number]
-    ripple_consensus_trace_zscore = np.asarray(
-        ripple_consensus_trace_zscore.loc[ripple_number])
+
+    classified = (~is_classified.sel(
+        state='Unclassified')).sum('time').values > 0
+
+    ripple_spikes = spikes.loc[ripple_time_slice]
+    ripple_consensus = np.asarray(
+        ripple_consensus_trace_zscore.loc[ripple_time_slice])
+
+    posterior = result.acausal_posterior
     map_estimate = maximum_a_posteriori_estimate(posterior.sum('state'))
 
+    ripple_position_info = position_info.loc[ripple_time_slice]
+
     actual_positions = np.asarray(
-        ripple_position_info.loc[ripple_number, ['x_position', 'y_position']])
+        ripple_position_info.loc[
+            ripple_time_slice, ['x_position', 'y_position']])
     actual_track_segment_ids = np.asarray(
-        ripple_position_info.loc[ripple_number, 'track_segment_id']
+        ripple_position_info.loc[ripple_time_slice, 'track_segment_id']
     ).squeeze().astype(int)
 
     (replay_distance_from_actual_position,
@@ -341,6 +290,32 @@ def get_replay_distance_metrics(results, ripple_position_info, ripple_spikes,
     distance_change = np.insert(distance_change, 0, 0)
 
     metrics = {
+        'start_time': start_time,
+        'end_time': end_time,
+        'duration': ripple_duration,
+        'is_classified': classified,
+        'n_unique_spiking': n_tetrodes_active(ripple_spikes),
+        'n_total_spikes': n_total_spikes(ripple_spikes),
+        'median_fraction_spikes_under_6_ms': np.nanmedian(
+            fraction_spikes_less_than_6_ms(
+                ripple_spikes, sampling_frequency)
+        ),
+        'median_spikes_per_bin': median_spikes_per_bin(
+            ripple_spikes),
+        'population_rate': population_rate(
+            ripple_spikes, sampling_frequency),
+        'actual_x_position': np.mean(
+            np.asarray(ripple_position_info.x_position)),
+        'actual_y_position': np.mean(
+            np.asarray(ripple_position_info.y_position)),
+        'actual_linear_distance': np.mean(
+            np.asarray(ripple_position_info.linear_distance)),
+        'actual_linear_position': np.mean(
+            np.asarray(ripple_position_info.linear_position)),
+        'actual_speed': np.mean(
+            np.asarray(ripple_position_info.speed)),
+        'actual_velocity_center_well': np.mean(
+            np.asarray(ripple_position_info.linear_velocity)),
         'replay_distance_from_actual_position': np.mean(
             replay_distance_from_actual_position),
         'replay_speed': np.mean(replay_speed),
@@ -356,13 +331,14 @@ def get_replay_distance_metrics(results, ripple_position_info, ripple_spikes,
         'spatial_coverage': np.mean(spatial_coverage),
         'spatial_coverage_percentage': np.mean(spatial_coverage_percentage),
         'mean_ripple_consensus_trace_zscore': np.mean(
-            ripple_consensus_trace_zscore),
+            ripple_consensus),
         'max_ripple_consensus_trace_zscore': np.max(
-            ripple_consensus_trace_zscore),
+            ripple_consensus),
     }
 
     for state, above_threshold in is_classified.groupby('state'):
         above_threshold = above_threshold.astype(bool).values.squeeze()
+        metrics[f'{state}'] = np.sum(above_threshold) > 0
         try:
             metrics[f'{state}_max_probability'] = np.max(
                 np.asarray(probability.sel(state=state)))
@@ -385,8 +361,8 @@ def get_replay_distance_metrics(results, ripple_position_info, ripple_spikes,
                 replay_velocity_center_well[above_threshold])  # cm / s
             metrics[f'{state}_replay_distance_from_center_well'] = np.mean(
                 replay_distance_from_center_well[above_threshold])  # cm
-            metrics[f'{state}_replay_linear_position'] = np.mean(
-                map_estimate[above_threshold])  # cm
+            metrics[f'{state}_replay_linear_position'] = get_replay_linear_position(
+                above_threshold, map_estimate)  # cm
             metrics[f'{state}_replay_total_distance'] = np.sum(
                 distance_change[above_threshold])  # cm
             metrics[f'{state}_min_time'] = np.min(time[above_threshold])  # s
@@ -420,11 +396,17 @@ def get_replay_distance_metrics(results, ripple_position_info, ripple_spikes,
                     time=above_threshold).mean()
             )
             metrics[f"{state}_mean_ripple_consensus_trace_zscore"] = np.mean(
-                ripple_consensus_trace_zscore[above_threshold])
+                ripple_consensus[above_threshold])
             metrics[f"{state}_max_ripple_consensus_trace_zscore"] = np.max(
-                ripple_consensus_trace_zscore[above_threshold])
+                ripple_consensus[above_threshold])
 
     return metrics
+
+
+def get_replay_linear_position(is_classified, map_estimate):
+    labels, n_labels = scipy.ndimage.label(is_classified)
+    return np.asarray([np.mean(map_estimate[labels == label])
+                       for label in range(1, n_labels + 1)])
 
 
 def get_n_unique_spiking(ripple_spikes):
@@ -455,7 +437,8 @@ def _fraction_spikes_less_than_6_ms(spikes, sampling_frequency):
 
 def fraction_spikes_less_than_6_ms(spikes, sampling_frequency):
     return np.asarray(
-        [_fraction_spikes_less_than_6_ms(spikes_per_tetrode, sampling_frequency)
+        [_fraction_spikes_less_than_6_ms(
+            spikes_per_tetrode, sampling_frequency)
          for spikes_per_tetrode in np.asarray(spikes).T])
 
 
@@ -733,24 +716,3 @@ def gaussian_smooth(data, sigma, sampling_frequency, axis=0):
     '''
     return gaussian_filter1d(
         data, sigma * sampling_frequency, axis=axis)
-
-
-def get_replay_linear_position_by_state(
-    ripple_number, is_classified, results, state="Hover"
-):
-    posterior = (
-        results.sel(ripple_number=ripple_number)
-        .acausal_posterior.dropna("time", how="all")
-        .assign_coords(time=lambda ds: ds.time / np.timedelta64(1, "s"))
-    )
-    is_classified = (
-        is_classified.sel(ripple_number=ripple_number)
-        .dropna("time", how="all")
-        .assign_coords(time=lambda ds: ds.time / np.timedelta64(1, "s"))
-    )
-    map_estimate = maximum_a_posteriori_estimate(posterior.sum("state"))
-
-    labels, n_labels = scipy.ndimage.label(is_classified.sel(state=state))
-
-    return [np.mean(map_estimate[labels == label])
-            for label in range(1, n_labels + 1)]

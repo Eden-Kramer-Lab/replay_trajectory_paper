@@ -133,37 +133,17 @@ def sorted_spikes_analysis_1D(epoch_key, plot_ripple_figures=False,
                     group=f'/{data_type}/{dim}/classifier/ripples/')
 
     logging.info('Saving replay_info...')
-    replay_info, replay_linear_position_hover = get_replay_info(
-        results, ripple_spikes, data['ripple_times'], data['position_info'],
+    replay_info = get_replay_info(
+        results, data['spikes'], data['ripple_times'], data['position_info'],
         track_graph, SAMPLING_FREQUENCY, PROBABILITY_THRESHOLD, epoch_key,
-        classifier)
-    epoch_identifier = f'{animal}_{day:02d}_{epoch:02d}_{data_type}_{dim}'
+        classifier, data["ripple_consensus_trace_zscore"])
     prob = int(PROBABILITY_THRESHOLD * 100)
+    epoch_identifier = f'{animal}_{day:02d}_{epoch:02d}_{data_type}_{dim}'
     replay_info_filename = os.path.join(
         PROCESSED_DATA_DIR, f'{epoch_identifier}_replay_info_{prob:02d}.csv')
     replay_info.to_csv(replay_info_filename)
 
-    replay_linear_position_hover_filename = os.path.join(
-        PROCESSED_DATA_DIR,
-        f'{epoch_identifier}_replay_linear_position_hover_{prob:02d}.npy')
-    np.save(replay_linear_position_hover_filename,
-            replay_linear_position_hover)
-
     logging.info('Plotting ripple figures...')
-
-    plot_category_counts(replay_info)
-    plt.suptitle(f'Category counts - {animal}_{day:02d}_{epoch:02d}')
-    fig_name = (f'{epoch_identifier}_category_counts.png')
-    fig_name = os.path.join(FIGURE_DIR, fig_name)
-    plt.savefig(fig_name, bbox_inches='tight')
-    plt.close(plt.gcf())
-
-    plot_category_duration(replay_info)
-    plt.suptitle(f'Category duration - {animal}_{day:02d}_{epoch:02d}')
-    fig_name = (f'{epoch_identifier}_category_duration.png')
-    fig_name = os.path.join(FIGURE_DIR, fig_name)
-    plt.savefig(fig_name, bbox_inches='tight')
-    plt.close(plt.gcf())
 
     if plot_ripple_figures:
         place_field_max = get_place_field_max(classifier)
@@ -434,8 +414,8 @@ def clusterless_analysis_1D(epoch_key, plot_ripple_figures=False,
                     group=group)
 
     logging.info('Saving replay_info...')
-    replay_info, replay_linear_position_hover = get_replay_info(
-        results, ripple_spikes, data['ripple_times'], data['position_info'],
+    replay_info = get_replay_info(
+        results, spikes, data['ripple_times'], data['position_info'],
         track_graph, SAMPLING_FREQUENCY, PROBABILITY_THRESHOLD, epoch_key,
         classifier, data["ripple_consensus_trace_zscore"])
     prob = int(PROBABILITY_THRESHOLD * 100)
@@ -443,27 +423,7 @@ def clusterless_analysis_1D(epoch_key, plot_ripple_figures=False,
         PROCESSED_DATA_DIR, f'{epoch_identifier}_replay_info_{prob:02d}.csv')
     replay_info.to_csv(replay_info_filename)
 
-    replay_linear_position_hover_filename = os.path.join(
-        PROCESSED_DATA_DIR,
-        f'{epoch_identifier}_replay_linear_position_hover_{prob:02d}.npy')
-    np.save(replay_linear_position_hover_filename,
-            replay_linear_position_hover)
-
     logging.info('Plotting ripple figures...')
-
-    plot_category_counts(replay_info)
-    plt.suptitle(f'Category counts - {animal}_{day:02d}_{epoch:02d}')
-    fig_name = (f'{epoch_identifier}_category_counts.png')
-    fig_name = os.path.join(FIGURE_DIR, fig_name)
-    plt.savefig(fig_name, bbox_inches='tight')
-    plt.close(plt.gcf())
-
-    plot_category_duration(replay_info)
-    plt.suptitle(f'Category duration - {animal}_{day:02d}_{epoch:02d}')
-    fig_name = (f'{epoch_identifier}_category_duration.png')
-    fig_name = os.path.join(FIGURE_DIR, fig_name)
-    plt.savefig(fig_name, bbox_inches='tight')
-    plt.close(plt.gcf())
 
     if plot_ripple_figures:
         place_field_max = get_place_field_max(classifier)
