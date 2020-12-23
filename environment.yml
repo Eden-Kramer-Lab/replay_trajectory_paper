@@ -13,7 +13,7 @@ dependencies:
 - tqdm
 - xarray
 - dask
-- "trajectory_analysis_tools == 0.2.4.dev0"
+- "trajectory_analysis_tools == 0.3.0.dev0"
 - "loren_frank_data_processing == 0.9.13.dev0"
 - "ripple_detection == 0.1.8.dev0"
 - "replay_trajectory_classification == 0.7.7.dev0"

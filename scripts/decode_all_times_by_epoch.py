@@ -22,7 +22,8 @@ from src.parameters import (_MARKS, ANIMALS, FIGURE_DIR, PROBABILITY_THRESHOLD,
                             model_kwargs, movement_var, place_bin_size,
                             replay_speed)
 from src.visualization import plot_classifier_time_slice
-from trajectory_analysis_tools import get_distance_metrics, get_trajectory_data
+from trajectory_analysis_tools import (get_ahead_behind_distance,
+                                       get_trajectory_data)
 
 
 def clusterless_analysis_1D(epoch_key, plot_ripple_figures=False):
@@ -74,14 +75,15 @@ def clusterless_analysis_1D(epoch_key, plot_ripple_figures=False):
             posterior, track_graph, classifier,
             data['position_info'].iloc[test])
 
-        distance_metrics = get_distance_metrics(track_graph, *trajectory_data)
+        ahead_behind_distance = get_ahead_behind_distance(
+            track_graph, *trajectory_data)
 
         is_running = np.asarray(data["position_info"].iloc[test].speed > 4)
 
         error_info[f"median_error_fold_{fold_ind + 1}"] = np.median(
-            distance_metrics.mental_position_distance_from_animal)
+            np.abs(ahead_behind_distance))
         error_info[f"run_median_error_fold_{fold_ind + 1}"] = np.median(
-            distance_metrics.mental_position_distance_from_animal[is_running])
+            np.abs(ahead_behind_distance[is_running]))
 
     results = (xr.concat(results, dim="time")
                .assign_coords(state=lambda ds:

@@ -1,11 +1,12 @@
-import networkx as nx
 import numpy as np
 import pandas as pd
 import scipy
 import xarray as xr
-from loren_frank_data_processing.track_segment_classification import (
-    get_track_segments_from_graph, project_points_to_segment)
+from loren_frank_data_processing.track_segment_classification import \
+    project_points_to_segment
 from scipy.ndimage.filters import gaussian_filter1d
+from trajectory_analysis_tools import (get_ahead_behind_distance,
+                                       get_trajectory_data)
 
 
 def get_replay_info(results, spikes, ripple_times, position_info,
@@ -45,7 +46,8 @@ def get_replay_info(results, spikes, ripple_times, position_info,
         [get_ripple_replay_info(ripple, results, spikes,
                                 ripple_consensus_trace_zscore,
                                 position_info, sampling_frequency,
-                                probability_threshold, track_graph)
+                                probability_threshold, track_graph,
+                                classifier)
          for ripple in ripple_times.itertuples()], index=ripple_times.index)
 
     animal, day, epoch = epoch_key
@@ -154,7 +156,7 @@ def get_is_classified(probability, probablity_threshold):
 def get_ripple_replay_info(ripple, results, spikes,
                            ripple_consensus_trace_zscore, position_info,
                            sampling_frequency, probability_threshold,
-                           track_graph):
+                           track_graph, classifier):
 
     start_time = ripple.start_time
     end_time = ripple.end_time
@@ -186,17 +188,14 @@ def get_ripple_replay_info(ripple, results, spikes,
 
     ripple_position_info = position_info.loc[ripple_time_slice]
 
-    actual_positions = np.asarray(
-        ripple_position_info.loc[
-            ripple_time_slice, ['x_position', 'y_position']])
-    actual_track_segment_ids = np.asarray(
-        ripple_position_info.loc[ripple_time_slice, 'track_segment_id']
-    ).squeeze().astype(int)
+    trajectory_data = get_trajectory_data(
+        posterior.sum("state"), track_graph, classifier, ripple_position_info)
 
-    (replay_distance_from_actual_position,
-     replay_distance_from_center_well) = calculate_replay_distance(
-        track_graph, map_estimate, actual_positions,
-        actual_track_segment_ids, position_info)
+    replay_distance_from_actual_position = np.abs(get_ahead_behind_distance(
+        track_graph, *trajectory_data))
+    center_well_id = 0
+    replay_distance_from_center_well = np.abs(get_ahead_behind_distance(
+        track_graph, *trajectory_data, source=center_well_id))
 
     try:
         replay_total_displacement = np.abs(
@@ -481,119 +480,6 @@ def get_state_order(is_classified):
         in enumerate(zip(order.values[:-1], order.values[1:]))
         if current_state != previous_state or ind == 0
     ]
-
-
-def calculate_replay_distance(track_graph, map_estimate, actual_positions,
-                              actual_track_segment_ids, position_info,
-                              center_well_id=0):
-    '''Calculate the linearized distance between the replay position and the
-    animal's physical position for each time point.
-
-    Parameters
-    ----------
-    track_graph : networkx.Graph
-        Nodes and edges describing the track
-    map_estimate : ndarray, shape (n_time, n_position_dims)
-        Maximum aposterior estimate of the replay
-    actual_positions : ndarray, shape (n_time, 2)
-        Animal's physical position during the replay
-    actual_track_segment_ids : ndarray, shape (n_time,)
-        Animal's track segment ID during the replay
-    position_info : pandas.DataFrame
-    center_well_id : hasable, optional
-
-    Returns
-    -------
-    replay_distance_from_actual_position : ndarray, shape (n_time,)
-    replay_distance_from_center_well : ndarray, shape (n_time,)
-
-    '''
-
-    actual_track_segment_ids = (
-        np.asarray(actual_track_segment_ids).squeeze().astype(int))
-
-    # Find 2D position closest to replay position
-    n_position_dims = map_estimate.shape[1]
-    if n_position_dims == 1:
-        closest_ind = _get_closest_ind(
-            map_estimate, position_info.linear_position)
-    else:
-        closest_ind = _get_closest_ind(
-            map_estimate, position_info.loc[:, ['x_position', 'y_position']])
-
-    df = position_info.iloc[closest_ind]
-    replay_positions = df.loc[:, ['x_position', 'y_position']].values
-    replay_track_segment_ids = (
-        df.loc[:, ['track_segment_id']].values.squeeze().astype(int))
-
-    track_segments = get_track_segments_from_graph(track_graph)
-
-    # Project positions to closest edge on graph
-    replay_positions = _get_projected_track_positions(
-        replay_positions, track_segments, replay_track_segment_ids)
-    actual_positions = _get_projected_track_positions(
-        actual_positions, track_segments, actual_track_segment_ids)
-
-    edges = np.asarray(track_graph.edges)
-    replay_edge_ids = edges[replay_track_segment_ids]
-    actual_edge_ids = edges[actual_track_segment_ids]
-    replay_distance_from_actual_position = []
-    replay_distance_from_center_well = []
-
-    zipped = zip(
-        actual_edge_ids, replay_edge_ids, actual_positions, replay_positions,
-        actual_track_segment_ids, replay_track_segment_ids)
-
-    for (actual_edge_id, replay_edge_id, actual_pos, replay_pos,
-         actual_id, replay_id) in zipped:
-        track_graph1 = track_graph.copy()
-        if actual_id != replay_id:
-            # Add actual position node
-            node_name = 'actual_position'
-            node1, node2 = actual_edge_id
-            nx.add_path(track_graph1, [node1, node_name, node2])
-            track_graph1.remove_edge(node1, node2)
-            track_graph1.nodes[node_name]['pos'] = tuple(actual_pos)
-
-            # Add replay position node
-            node_name = 'replay_position'
-            node1, node2 = replay_edge_id
-            nx.add_path(track_graph1, [node1, node_name, node2])
-            track_graph1.remove_edge(node1, node2)
-            track_graph1.nodes[node_name]['pos'] = tuple(replay_pos)
-        else:
-            node1, node2 = actual_edge_id
-
-            nx.add_path(track_graph1,
-                        [node1, 'actual_position', 'replay_position', node2])
-            nx.add_path(track_graph1,
-                        [node1, 'replay_position', 'actual_position', node2])
-
-            track_graph1.nodes['actual_position']['pos'] = tuple(actual_pos)
-            track_graph1.nodes['replay_position']['pos'] = tuple(replay_pos)
-            track_graph1.remove_edge(node1, node2)
-
-        # Calculate distance between all nodes
-        for edge in track_graph1.edges(data=True):
-            track_graph1.edges[edge[:2]]['distance'] = np.linalg.norm(
-                track_graph1.nodes[edge[0]]['pos'] -
-                np.array(track_graph1.nodes[edge[1]]['pos']))
-
-        replay_distance_from_actual_position.append(
-            nx.shortest_path_length(
-                track_graph1, source='actual_position',
-                target='replay_position', weight='distance'))
-        replay_distance_from_center_well.append(
-            nx.shortest_path_length(
-                track_graph1, source=center_well_id,
-                target='replay_position', weight='distance'))
-    replay_distance_from_actual_position = np.asarray(
-        replay_distance_from_actual_position)
-    replay_distance_from_center_well = np.asarray(
-        replay_distance_from_center_well)
-
-    return (replay_distance_from_actual_position,
-            replay_distance_from_center_well)
 
 
 def highest_posterior_density(posterior_density, coverage=0.95):
