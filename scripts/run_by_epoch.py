@@ -199,6 +199,7 @@ def clusterless_analysis_1D(epoch_key, plot_ripple_figures=False,
         group = f'/{data_type}/{dim}/classifier/ripples/'
         epoch_identifier = f'{animal}_{day:02d}_{epoch:02d}_{data_type}_{dim}'
     else:
+        logging.info('Excluding interneuron spikes...')
         model_name = os.path.join(
             PROCESSED_DATA_DIR,
             f'{animal}_{day:02}_{epoch:02}_{data_type}_{dim}'
