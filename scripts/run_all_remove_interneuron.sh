@@ -10,46 +10,45 @@ python queue_cluster_jobs.py --data_type 'clusterless' \
                              --n_workers $NWORKERS \
                              --wall_time $CLUSTERLESS_WALLTIME \
                              --exclude_interneuron_spikes \
-/
+
 python queue_cluster_jobs.py --Animal 'remy' --Day 35 --Epoch 2 \
                              --data_type 'clusterless' \
                              --n_cores $NCORES \
                              --n_workers $NWORKERS \
                              --wall_time $REMY_WALLTIME \
                              --exclude_interneuron_spikes \
-/
+
 python queue_cluster_jobs.py --Animal 'remy' --Day 35 --Epoch 4 \
                              --data_type 'clusterless' \
                              --n_cores $NCORES \
                              --n_workers $NWORKERS \
                              --wall_time $REMY_WALLTIME \
                              --exclude_interneuron_spikes \
-/
+
 python queue_cluster_jobs.py --Animal 'remy' --Day 36 --Epoch 2 \
                              --data_type 'clusterless' \
                              --n_cores $NCORES \
                              --n_workers $NWORKERS \
                              --wall_time $REMY_WALLTIME \
                              --exclude_interneuron_spikes \
-/
+
 python queue_cluster_jobs.py --Animal 'remy' --Day 36 --Epoch 4 \
                              --data_type 'clusterless' \
                              --n_cores $NCORES \
                              --n_workers $NWORKERS \
                              --wall_time $REMY_WALLTIME \
                              --exclude_interneuron_spikes \
-/
+
 python queue_cluster_jobs.py --Animal 'remy' --Day 37 --Epoch 2 \
                              --data_type 'clusterless' \
                              --n_cores $NCORES \
                              --n_workers $NWORKERS \
                              --wall_time $REMY_WALLTIME \
                              --exclude_interneuron_spikes \
-/
+
 python queue_cluster_jobs.py --Animal 'remy' --Day 37 --Epoch 4 \
                              --data_type 'clusterless' \
                              --n_cores $NCORES \
                              --n_workers $NWORKERS \
                              --wall_time $REMY_WALLTIME \
                              --exclude_interneuron_spikes \
-/
