@@ -91,6 +91,8 @@ def main():
                       f' --threads_per_worker {args.threads_per_worker}')
         if args.plot_ripple_figures:
             python_cmd += ' --plot_ripple_figures'
+        if args.exclude_interneuron_spikes:
+            python_cmd += ' --exclude_interneuron_spikes'
         queue_job(python_cmd,
                   directives=directives,
                   log_file=join(LOG_DIRECTORY, log_file),
