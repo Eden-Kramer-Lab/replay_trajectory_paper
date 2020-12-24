@@ -1330,18 +1330,27 @@ def plot_classifier_time_slice(
     axes[2].set_yticks((0, 50, 100, 150))
 
     # ax 2
-
+    new_index = pd.Index(np.unique(np.concatenate(
+        (data["ripple_consensus_trace_zscore"].index,
+         data['position_info'].index))),
+        name='time')
+    ripple_consensus_trace_zscore = (
+        data["ripple_consensus_trace_zscore"]
+        .reindex(index=new_index)
+        .interpolate(method='linear')
+        .reindex(index=data['position_info'].index)
+    )
     axes[3].fill_between(
-        data["ripple_consensus_trace_zscore"].loc[time_slice].index /
+        ripple_consensus_trace_zscore.loc[time_slice].index /
         np.timedelta64(1, 's'),
-        data["ripple_consensus_trace_zscore"].loc[time_slice].squeeze(),
+        ripple_consensus_trace_zscore.loc[time_slice].squeeze(),
         color="black",
     )
     axes[3].set_ylabel("Ripple\nConsensus\nZ-score")
     is_ripple = ((data['ripple_times'].start_time > time_slice[0].values) &
                  (data['ripple_times'].end_time < time_slice[-1].values))
     for ripple in data['ripple_times'].loc[is_ripple].itertuples():
-        zscore = data["ripple_consensus_trace_zscore"].loc[
+        zscore = ripple_consensus_trace_zscore.loc[
             ripple.start_time:ripple.end_time]
         axes[3].scatter(zscore.ripple_consensus_trace_zscore.idxmax() /
                         np.timedelta64(1, 's'),
