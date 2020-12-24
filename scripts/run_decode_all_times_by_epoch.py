@@ -25,6 +25,10 @@ from src.visualization import plot_classifier_time_slice
 from trajectory_analysis_tools import (get_ahead_behind_distance,
                                        get_trajectory_data)
 
+FORMAT = '%(asctime)s %(message)s'
+
+logging.basicConfig(level='INFO', format=FORMAT, datefmt='%d-%b-%y %H:%M:%S')
+
 
 def clusterless_analysis_1D(epoch_key, plot_figures=False):
     animal, day, epoch = epoch_key
