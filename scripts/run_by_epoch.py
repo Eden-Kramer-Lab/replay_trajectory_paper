@@ -141,9 +141,8 @@ def sorted_spikes_analysis_1D(epoch_key, plot_ripple_figures=False,
         PROCESSED_DATA_DIR, f'{epoch_identifier}_replay_info_{prob:02d}.csv')
     replay_info.to_csv(replay_info_filename)
 
-    logging.info('Plotting ripple figures...')
-
     if plot_ripple_figures:
+        logging.info('Plotting ripple figures...')
         place_field_max = get_place_field_max(classifier)
         linear_position_order = place_field_max.argsort(axis=0).squeeze()
         ripple_position = reshape_to_segments(position, ripple_times)
@@ -281,9 +280,8 @@ def clusterless_analysis_1D(epoch_key, plot_ripple_figures=False,
         PROCESSED_DATA_DIR, f'{epoch_identifier}_replay_info_{prob:02d}.csv')
     replay_info.to_csv(replay_info_filename)
 
-    logging.info('Plotting ripple figures...')
-
     if plot_ripple_figures:
+        logging.info('Plotting ripple figures...')
         place_field_max = get_place_field_max(classifier)
         linear_position_order = place_field_max.argsort(axis=0).squeeze()
         ripple_position = reshape_to_segments(position, ripple_times)
@@ -316,7 +314,7 @@ def clusterless_analysis_1D(epoch_key, plot_ripple_figures=False,
                 logging.warn(f'No figure for ripple number {ripple_number}...')
                 continue
 
-    logging.info('Done...')
+    logging.info('Done...\n')
 
 
 run_analysis = {
