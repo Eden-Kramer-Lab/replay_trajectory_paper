@@ -26,7 +26,7 @@ from trajectory_analysis_tools import (get_ahead_behind_distance,
                                        get_trajectory_data)
 
 
-def clusterless_analysis_1D(epoch_key, plot_ripple_figures=False):
+def clusterless_analysis_1D(epoch_key, plot_figures=False):
     animal, day, epoch = epoch_key
     data_type, dim = 'clusterless', '1D'
 
@@ -38,6 +38,7 @@ def clusterless_analysis_1D(epoch_key, plot_ripple_figures=False):
 
     cv = KFold()
     results = []
+    error = []
     index = pd.Index([f"{animal}_{day:02d}_{epoch:02d}"])
     error_info = pd.DataFrame([], index=index)
 
@@ -75,19 +76,22 @@ def clusterless_analysis_1D(epoch_key, plot_ripple_figures=False):
             posterior, track_graph, classifier,
             data['position_info'].iloc[test])
 
-        ahead_behind_distance = get_ahead_behind_distance(
-            track_graph, *trajectory_data)
+        error.append(
+            np.abs(get_ahead_behind_distance(track_graph, *trajectory_data)))
 
         is_running = np.asarray(data["position_info"].iloc[test].speed > 4)
 
-        error_info[f"median_error_fold_{fold_ind + 1}"] = np.median(
-            np.abs(ahead_behind_distance))
-        error_info[f"run_median_error_fold_{fold_ind + 1}"] = np.median(
-            np.abs(ahead_behind_distance[is_running]))
+        error_info[f"median_error_fold_{fold_ind + 1}"] = np.nanmedian(
+            error[fold_ind])
+        error_info[f"run_median_error_fold_{fold_ind + 1}"] = np.nanmedian(
+            error[fold_ind][is_running])
 
     results = (xr.concat(results, dim="time")
                .assign_coords(state=lambda ds:
                               ds.state.to_index().map(TRANSITION_TO_CATEGORY)))
+    results["error"] = pd.Series(np.concatenate(error),
+                                 index=data['position_info'].index)
+    results['is_running'] = data['position_info'].speed > 4
 
     error_info['animal'] = animal
     error_info['day'] = int(day)
@@ -105,7 +109,7 @@ def clusterless_analysis_1D(epoch_key, plot_ripple_figures=False):
                 .sum('position'),
                 group=f'/{data_type}/{dim}/classifier/run/')
 
-    if plot_ripple_figures:
+    if plot_figures:
         os.makedirs(os.path.join(FIGURE_DIR, 'run_decode'),  exist_ok=True)
 
         time_ind = list(range(0, len(results.time), 20_000))
@@ -131,6 +135,8 @@ def clusterless_analysis_1D(epoch_key, plot_ripple_figures=False):
             fig_name = os.path.join(FIGURE_DIR, 'run_decode', fig_name)
             plt.savefig(fig_name, bbox_inches='tight')
             plt.close(plt.gcf())
+
+    logging.info('Done...\n')
 
 
 def get_command_line_arguments():
@@ -184,7 +190,7 @@ def main():
 
     # Analysis Code
     run_analysis[(args.data_type, args.dim)](
-        epoch_key, plot_ripple_figures=args.plot_ripple_figures)
+        epoch_key, plot_figures=args.plot_figures)
 
 
 if __name__ == '__main__':
