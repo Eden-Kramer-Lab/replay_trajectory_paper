@@ -149,7 +149,7 @@ def get_command_line_arguments():
     parser.add_argument('--dim', type=str, default='1D')
     parser.add_argument('--n_workers', type=int, default=16)
     parser.add_argument('--threads_per_worker', type=int, default=1)
-    parser.add_argument('--plot_ripple_figures', action='store_true')
+    parser.add_argument('--plot_figures', action='store_true')
     parser.add_argument(
         '-d', '--debug',
         help='More verbose output for debugging',
