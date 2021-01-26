@@ -179,14 +179,19 @@ def get_ripple_replay_info(ripple, results, spikes,
     classified = (~is_classified.sel(
         state='Unclassified')).sum('time').values > 0
 
+    ripple_position_info = position_info.loc[ripple_time_slice]
+    is_immobility = ripple_position_info.speed <= 4
+    ripple_position_info = ripple_position_info.loc[is_immobility]
+
     ripple_spikes = spikes.loc[ripple_time_slice]
+    ripple_spikes = ripple_spikes.loc[is_immobility]
+
     ripple_consensus = np.asarray(
         ripple_consensus_trace_zscore.loc[ripple_time_slice])
+    ripple_consensus = ripple_consensus[is_immobility]
 
     posterior = result.acausal_posterior
     map_estimate = maximum_a_posteriori_estimate(posterior.sum('state'))
-
-    ripple_position_info = position_info.loc[ripple_time_slice]
 
     trajectory_data = get_trajectory_data(
         posterior.sum("state"), track_graph, classifier, ripple_position_info)
