@@ -150,17 +150,29 @@ def load_data(epoch_key, brain_areas=None,
     multiunit = (get_all_multiunit_indicators(
         tetrode_info.index, ANIMALS, _time_function)
         .reindex({'time': time}))
+
+    TO_MILLISECONDS = 1000
+
     if epoch_key[0] == "remy":
         # Remy features aren't extracted using matclust so in different format.
         features = multiunit.features.values
         features[-1] = "max_width"  # last feature is max_width
         multiunit["features"] = features
+        # Convert to milliseconds
+        multiunit.loc[dict(features='max_width')] *= TO_MILLISECONDS
+    else:
+        SPIKE_SAMPLING_RATE = 30_000
+        # Convert to milliseconds
+        multiunit.loc[dict(features='max_width')] = (
+            TO_MILLISECONDS * (multiunit.sel(features='max_width')) /
+            SPIKE_SAMPLING_RATE)
 
     if exclude_interneuron_spikes:
         INTERNEURON_SPIKE_WIDTH_MAX = 0.4  # ms
         is_interneuron_spike = (
             multiunit.sel(features='max_width') < INTERNEURON_SPIKE_WIDTH_MAX)
         multiunit = multiunit.where(~is_interneuron_spike)
+
     multiunit = multiunit.sel(features=_MARKS)
     multiunit_spikes = (np.any(~np.isnan(multiunit.values), axis=1)
                         ).astype(np.float)
