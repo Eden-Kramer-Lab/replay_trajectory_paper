@@ -4,6 +4,7 @@ import xarray as xr
 
 
 def shuffle_run_position(position_info):
+    """Circularly shuffle position within each run (from well to well)"""
     n_time = position_info.shape[0]
     shuffled_position = pd.Series(
         np.full((n_time,), np.nan), index=position_info.index)
@@ -43,3 +44,12 @@ def shuffle_spike_time(multiunit):
     return xr.concat(shuffled_multiunit, dim=multiunit.tetrodes).transpose(
         *multiunit.dims
     )
+
+
+def tetrode_identity_shuffle(multiunit):
+    """Shuffle the correspondence between tetrodes and spike time
+    """
+    n_tetrodes = len(multiunit.tetrodes)
+    rand_tetrode_index = np.random.randint(
+        low=0, high=n_tetrodes, size=n_tetrodes)
+    return multiunit.isel(tetrodes=rand_tetrode_index)
