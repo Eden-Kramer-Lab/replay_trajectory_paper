@@ -212,6 +212,8 @@ def clusterless_analysis_1D(epoch_key, plot_ripple_figures=False,
                             '_no_interneuron')
 
     try:
+        if overwrite:
+            raise FileNotFoundError
         results = xr.open_dataset(
             os.path.join(
                 PROCESSED_DATA_DIR, f'{animal}_{day:02}_{epoch:02}.nc'),
