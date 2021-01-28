@@ -34,7 +34,8 @@ plt.switch_backend('agg')
 
 
 def sorted_spikes_analysis_1D(epoch_key, plot_ripple_figures=False,
-                              exclude_interneuron_spikes=False):
+                              exclude_interneuron_spikes=False,
+                              overwrite=False):
     animal, day, epoch = epoch_key
     data_type, dim = 'sorted_spikes', '1D'
 
@@ -49,6 +50,8 @@ def sorted_spikes_analysis_1D(epoch_key, plot_ripple_figures=False,
         PROCESSED_DATA_DIR,
         f'{animal}_{day:02}_{epoch:02}_{data_type}_{dim}_model.pkl')
     try:
+        if overwrite:
+            raise FileNotFoundError
         results = xr.open_dataset(
             os.path.join(
                 PROCESSED_DATA_DIR, f'{animal}_{day:02}_{epoch:02}.nc'),
@@ -179,7 +182,8 @@ def sorted_spikes_analysis_1D(epoch_key, plot_ripple_figures=False,
 
 
 def clusterless_analysis_1D(epoch_key, plot_ripple_figures=False,
-                            exclude_interneuron_spikes=False):
+                            exclude_interneuron_spikes=False,
+                            overwrite=False):
     animal, day, epoch = epoch_key
     data_type, dim = 'clusterless', '1D'
 
@@ -335,6 +339,7 @@ def get_command_line_arguments():
     parser.add_argument('--threads_per_worker', type=int, default=1)
     parser.add_argument('--plot_ripple_figures', action='store_true')
     parser.add_argument('--exclude_interneuron_spikes', action='store_true')
+    parser.add_argument('--overwrite', action='store_true')
     parser.add_argument(
         '-d', '--debug',
         help='More verbose output for debugging',
@@ -372,7 +377,8 @@ def main():
     run_analysis[(args.data_type, args.dim)](
         epoch_key,
         plot_ripple_figures=args.plot_ripple_figures,
-        exclude_interneuron_spikes=args.exclude_interneuron_spikes)
+        exclude_interneuron_spikes=args.exclude_interneuron_spikes,
+        overwrite=args.overwrite)
 
 
 if __name__ == '__main__':

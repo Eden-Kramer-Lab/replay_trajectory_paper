@@ -25,6 +25,7 @@ def get_command_line_arguments():
     parser.add_argument('--threads_per_worker', type=int, default=16)
     parser.add_argument('--plot_ripple_figures', action='store_true')
     parser.add_argument('--exclude_interneuron_spikes', action='store_true')
+    parser.add_argument('--overwrite', action='store_true')
 
     return parser.parse_args()
 
@@ -93,6 +94,8 @@ def main():
             python_cmd += ' --plot_ripple_figures'
         if args.exclude_interneuron_spikes:
             python_cmd += ' --exclude_interneuron_spikes'
+        if args.overwrite:
+            python_cmd += ' --overwrite'
         queue_job(python_cmd,
                   directives=directives,
                   log_file=join(LOG_DIRECTORY, log_file),
