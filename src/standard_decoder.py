@@ -272,3 +272,34 @@ def detect_line_with_radon(likelihood, time, place_bin_edges):
     score = np.nanmax(sinogram) / n_position_bins
 
     return estimated_velocity, estimated_position, score
+
+
+def map_estimate(likelihood, place_bin_centers):
+    likelihood[np.isnan(likelihood)] = 0.0
+    likelihood = likelihood / likelihood.sum(axis=1, keepdims=True)
+
+    return place_bin_centers[likelihood.argmax(axis=1)].squeeze()
+
+
+def m(x, w):
+    """Weighted Mean"""
+    return np.sum(x * w) / np.sum(w)
+
+
+def cov(x, y, w):
+    """Weighted Covariance"""
+    return np.sum(w * (x - m(x, w)) * (y - m(y, w))) / np.sum(w)
+
+
+def corr(x, y, w):
+    """Weighted Correlation"""
+    return cov(x, y, w) / np.sqrt(cov(x, x, w) * cov(y, y, w))
+
+
+def get_weighted_correlation(likelihood, time, place_bin_centers):
+    place_bin_centers = place_bin_centers.squeeze()
+    likelihood[np.isnan(likelihood)] = 0.0
+    likelihood = likelihood / likelihood.sum(axis=1, keepdims=True)
+
+    return corr(time[:, np.newaxis],
+                place_bin_centers[np.newaxis, :], likelihood)
