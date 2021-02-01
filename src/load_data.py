@@ -168,7 +168,7 @@ def load_data(epoch_key, brain_areas=None,
             SPIKE_SAMPLING_RATE)
 
     if exclude_interneuron_spikes:
-        INTERNEURON_SPIKE_WIDTH_MAX = 0.4  # ms
+        INTERNEURON_SPIKE_WIDTH_MAX = 0.3  # ms
         is_interneuron_spike = (
             multiunit.sel(features='max_width') < INTERNEURON_SPIKE_WIDTH_MAX)
         multiunit = multiunit.where(~is_interneuron_spike)
