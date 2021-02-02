@@ -305,7 +305,7 @@ def _corr(x, y, w):
     return _cov(x, y, w) / np.sqrt(_cov(x, x, w) * _cov(y, y, w))
 
 
-def get_weighted_correlation(posterior, time, place_bin_centers):
+def weighted_correlation(posterior, time, place_bin_centers):
     place_bin_centers = place_bin_centers.squeeze()
     posterior[np.isnan(posterior)] = 0.0
 
