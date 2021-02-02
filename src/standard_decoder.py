@@ -347,7 +347,7 @@ def _sample_posterior(posterior, place_bin_edges, n_samples=1000):
 
     Returns
     -------
-    posterior_samples : numpy.ndarray, shape (n_time, n_samplese)
+    posterior_samples : numpy.ndarray, shape (n_time, n_samples)
 
     """
 
