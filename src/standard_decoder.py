@@ -303,3 +303,29 @@ def get_weighted_correlation(likelihood, time, place_bin_centers):
 
     return corr(time[:, np.newaxis],
                 place_bin_centers[np.newaxis, :], likelihood)
+
+
+def isotonic_regression(likelihood, time, place_bin_centers):
+    place_bin_centers = place_bin_centers.squeeze()
+    likelihood[np.isnan(likelihood)] = 0.0
+    likelihood = likelihood / likelihood.sum(axis=1, keepdims=True)
+
+    map = map_estimate(likelihood, place_bin_centers)
+    map_probabilities = np.max(likelihood, axis=1)
+
+    regression = IsotonicRegression(increasing='auto').fit(
+        X=time,
+        y=map,
+        sample_weight=map_probabilities,
+    )
+
+    score = regression.score(
+        X=time,
+        y=map,
+        sample_weight=map_probabilities,
+    )
+    score *= np.mean(map)
+
+    prediction = regression.predict(time)
+
+    return prediction, score
