@@ -9,7 +9,10 @@ from replay_trajectory_classification.core import (atleast_2d, get_track_grid,
                                                    scaled_likelihood)
 from replay_trajectory_classification.multiunit_likelihood import (
     estimate_intensity, fit_occupancy, poisson_mark_log_likelihood)
+from scipy.stats import rv_histogram
 from skimage.transform import radon
+from sklearn.isotonic import IsotonicRegression
+from sklearn.linear_model import LinearRegression
 from src.load_data import get_ripple_times
 from src.parameters import (_BRAIN_AREAS, _MARKS, ANIMALS, model, model_kwargs,
                             place_bin_size)
@@ -233,14 +236,24 @@ def predict_mark_likelihood(
     return scaled_likelihood(log_likelihood), time
 
 
-def detect_line_with_radon(likelihood, time, place_bin_edges):
-    projection_angles = np.arange(-90, 90, 0.5)  # degrees
+def normalize_to_posterior(likelihood, prior=None):
+    if prior is None:
+        n_position_bins = likelihood.shape[1]
+        prior = np.ones_like(likelihood) / n_position_bins
+    posterior = likelihood * prior
+    return posterior / np.nansum(posterior, axis=1, keepdims=True)
+
+
+def detect_line_with_radon(posterior, dt, dp,
+                           projection_angles=np.arange(-90, 90, 0.5)):
+    posterior[np.isnan(posterior)] = 0.0
+
     sinogram = radon(
-        likelihood, theta=projection_angles, circle=False, preserve_range=True
+        posterior, theta=projection_angles, circle=False, preserve_range=True
     )
 
     center_pixel = np.asarray(
-        (likelihood.shape[0] // 2, likelihood.shape[1] // 2))
+        (posterior.shape[0] // 2, posterior.shape[1] // 2))
 
     pixels_from_center = np.arange(
         -sinogram.shape[0] // 2, sinogram.shape[0] // 2)
@@ -251,8 +264,6 @@ def detect_line_with_radon(likelihood, time, place_bin_edges):
 
     projection_angle = projection_angles[projection_angle_ind]
     n_pixels_from_center = pixels_from_center[n_pixels_from_center_ind]
-    dp = np.mean(np.diff(place_bin_edges.squeeze()))
-    dt = np.mean(np.diff(time))
 
     projection_angle_radians = np.deg2rad(projection_angle)
     estimated_velocity = np.tan(projection_angle_radians) * dp / dt
@@ -268,50 +279,46 @@ def detect_line_with_radon(likelihood, time, place_bin_edges):
     )
     estimated_position *= dp
 
-    n_position_bins = likelihood.shape[1]
-    score = np.nanmax(sinogram) / n_position_bins
+    n_time = posterior.shape[0]
+    score = np.nanmax(sinogram) / n_time
 
     return estimated_velocity, estimated_position, score
 
 
-def map_estimate(likelihood, place_bin_centers):
-    likelihood[np.isnan(likelihood)] = 0.0
-    likelihood = likelihood / likelihood.sum(axis=1, keepdims=True)
-
-    return place_bin_centers[likelihood.argmax(axis=1)].squeeze()
+def map_estimate(posterior, place_bin_centers):
+    posterior[np.isnan(posterior)] = 0.0
+    return place_bin_centers[posterior.argmax(axis=1)].squeeze()
 
 
-def m(x, w):
+def _m(x, w):
     """Weighted Mean"""
     return np.sum(x * w) / np.sum(w)
 
 
-def cov(x, y, w):
+def _cov(x, y, w):
     """Weighted Covariance"""
-    return np.sum(w * (x - m(x, w)) * (y - m(y, w))) / np.sum(w)
+    return np.sum(w * (x - _m(x, w)) * (y - _m(y, w))) / np.sum(w)
 
 
-def corr(x, y, w):
+def _corr(x, y, w):
     """Weighted Correlation"""
-    return cov(x, y, w) / np.sqrt(cov(x, x, w) * cov(y, y, w))
+    return _cov(x, y, w) / np.sqrt(_cov(x, x, w) * _cov(y, y, w))
 
 
-def get_weighted_correlation(likelihood, time, place_bin_centers):
+def get_weighted_correlation(posterior, time, place_bin_centers):
     place_bin_centers = place_bin_centers.squeeze()
-    likelihood[np.isnan(likelihood)] = 0.0
-    likelihood = likelihood / likelihood.sum(axis=1, keepdims=True)
+    posterior[np.isnan(posterior)] = 0.0
 
-    return corr(time[:, np.newaxis],
-                place_bin_centers[np.newaxis, :], likelihood)
+    return _corr(time[:, np.newaxis],
+                 place_bin_centers[np.newaxis, :], posterior)
 
 
-def isotonic_regression(likelihood, time, place_bin_centers):
+def isotonic_regression(posterior, time, place_bin_centers):
     place_bin_centers = place_bin_centers.squeeze()
-    likelihood[np.isnan(likelihood)] = 0.0
-    likelihood = likelihood / likelihood.sum(axis=1, keepdims=True)
+    posterior[np.isnan(posterior)] = 0.0
 
-    map = map_estimate(likelihood, place_bin_centers)
-    map_probabilities = np.max(likelihood, axis=1)
+    map = map_estimate(posterior, place_bin_centers)
+    map_probabilities = np.max(posterior, axis=1)
 
     regression = IsotonicRegression(increasing='auto').fit(
         X=time,
@@ -329,3 +336,45 @@ def isotonic_regression(likelihood, time, place_bin_centers):
     prediction = regression.predict(time)
 
     return prediction, score
+
+
+def _sample_posterior(posterior, place_bin_edges, n_samples=1000):
+    """Samples the posterior positions.
+
+    Parameters
+    ----------
+    posterior : np.array, shape (n_time, n_position_bins)
+
+    Returns
+    -------
+    posterior_samples : numpy.ndarray, shape (n_time, n_samplese)
+
+    """
+
+    place_bin_edges = place_bin_edges.squeeze()
+    n_time = posterior.shape[0]
+
+    posterior_samples = [
+        rv_histogram((posterior[time_ind], place_bin_edges)).rvs(
+            size=n_samples)
+        for time_ind in range(n_time)
+    ]
+
+    return np.asarray(posterior_samples)
+
+
+def linear_regression(posterior, place_bin_edges, time, n_samples=1000):
+    posterior[np.isnan(posterior)] = 0.0
+    samples = _sample_posterior(
+        posterior, place_bin_edges, n_samples=n_samples
+    )
+    design_matrix = np.tile(time, n_samples)[:, np.newaxis]
+    response = samples.ravel(order="F")
+    regression = LinearRegression().fit(X=design_matrix, y=response)
+
+    r2 = regression.score(X=design_matrix, y=response)
+    slope = regression.coef_[0]
+    intercept = regression.intercept_
+    prediction = regression.predict(time[:, np.newaxis])
+
+    return intercept, slope, r2, prediction
