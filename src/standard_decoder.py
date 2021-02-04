@@ -335,7 +335,6 @@ def isotonic_regression(posterior, time, place_bin_centers):
         y=map,
         sample_weight=map_probabilities,
     )
-    score *= np.mean(map)
 
     prediction = regression.predict(time)
 
