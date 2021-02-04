@@ -181,8 +181,8 @@ def predict_mark_likelihood(
     is_track_interior,
     dt=0.020,
 ):
-    time_bin_edges = np.arange(start_time, end_time + dt, dt)
-    n_time_bins = len(time_bin_edges) - 1
+    n_time_bins = np.ceil((end_time - start_time) / dt).astype(int)
+    time_bin_edges = start_time + np.arange(n_time_bins + 1) * dt
     n_place_bins = len(place_bin_centers)
 
     log_likelihood = np.zeros((n_time_bins, n_place_bins))
