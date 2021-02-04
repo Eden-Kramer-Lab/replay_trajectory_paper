@@ -1,3 +1,4 @@
+import matplotlib.pyplot as plt
 import numpy as np
 from loren_frank_data_processing import (get_position_dataframe,
                                          make_tetrode_dataframe)
@@ -10,6 +11,7 @@ from replay_trajectory_classification.core import (atleast_2d, get_track_grid,
 from replay_trajectory_classification.multiunit_likelihood import (
     estimate_intensity, fit_occupancy, poisson_mark_log_likelihood)
 from scipy.stats import rv_histogram
+from scipy.stats import multivariate_normal, rv_histogram
 from skimage.transform import radon
 from sklearn.isotonic import IsotonicRegression
 from sklearn.linear_model import LinearRegression
@@ -380,3 +382,69 @@ def linear_regression(posterior, place_bin_edges, time, n_samples=1000):
     prediction = regression.predict(time[:, np.newaxis])
 
     return intercept, slope, r2, prediction
+
+
+def test_standard_decoding(
+        n_time=21,
+        max_position=301,
+        starting_position=250.0,
+        velocity=-100,
+        dt=0.020,
+        dp=2.0,
+        use_gaussian=False):
+
+    time = np.arange(n_time) * dt
+    true_replay_position = starting_position + velocity * time
+
+    place_bin_edges = np.arange(0, max_position + dp, dp)
+    place_bin_centers = place_bin_edges[:-1] + np.diff(place_bin_edges) / 2
+
+    likelihood = np.zeros((time.shape[0], place_bin_centers.shape[0]))
+    p_ind = np.digitize(true_replay_position,
+                        place_bin_edges.squeeze()[1:-1])
+    if use_gaussian:
+        for t_ind, peak in enumerate(place_bin_centers[p_ind]):
+            likelihood[t_ind, :] = multivariate_normal(mean=peak, cov=144).pdf(
+                place_bin_centers.squeeze()
+            )
+    else:
+        t_ind = np.arange(len(time))
+        likelihood[(t_ind, p_ind)] = 1.0
+
+    posterior = normalize_to_posterior(likelihood)
+
+    isotonic_prediction, isotonic_score = isotonic_regression(
+        posterior, time, place_bin_centers
+    )
+    (
+        start_position,
+        estimated_velocity,
+        radon_prediction,
+        radon_score,
+    ) = detect_line_with_radon(posterior, dt, dp)
+    correlation = weighted_correlation(posterior, time, place_bin_centers)
+    intercept, slope, linear_score, linear_prediction = linear_regression(
+        posterior, place_bin_edges, time
+    )
+
+    time_bin_edges = np.append(time, time[-1] + dt)
+    t, p = np.meshgrid(time_bin_edges, place_bin_edges)
+    fig, axes = plt.subplots(
+        2, 2, figsize=(10, 5), constrained_layout=True, sharex=True,
+        sharey=True
+    )
+    for ax in axes.flat:
+        ax.pcolormesh(t, p, likelihood.T)
+        ax.scatter(time + dt / 2, true_replay_position, color="red")
+
+    axes[0, 0].plot(time + dt / 2, map_estimate(likelihood, place_bin_centers))
+    axes[0, 0].set_title(f"MAP Estimate, abs_corr={np.abs(correlation):.02f}")
+
+    axes[0, 1].plot(time + dt / 2, isotonic_prediction)
+    axes[0, 1].set_title(f"Isotonic Regression, score = {isotonic_score:.02f}")
+
+    axes[1, 1].plot(time[:-1] + dt / 2, radon_prediction[:-1])
+    axes[1, 1].set_title(f"Radon, score = {radon_score:.02f}")
+
+    axes[1, 0].plot(time + dt / 2, linear_prediction)
+    axes[1, 0].set_title(f"Linear Regression, score = {linear_score:.02f}")
