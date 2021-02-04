@@ -244,45 +244,47 @@ def normalize_to_posterior(likelihood, prior=None):
     return posterior / np.nansum(posterior, axis=1, keepdims=True)
 
 
-def detect_line_with_radon(posterior, dt, dp,
-                           projection_angles=np.arange(-90, 90, 0.5)):
-    posterior[np.isnan(posterior)] = 0.0
-
+def detect_line_with_radon(
+    posterior, dt, dp, projection_angles=np.arange(-90, 90, 0.5)
+):
+    # Sinogram is shape (pixels_from_center, projection_angles)
     sinogram = radon(
-        posterior, theta=projection_angles, circle=False, preserve_range=True
+        posterior.T, theta=projection_angles, circle=False,
+        preserve_range=False
     )
-
-    center_pixel = np.asarray(
-        (posterior.shape[0] // 2, posterior.shape[1] // 2))
-
+    n_time, n_position_bins = posterior.shape
+    center_pixel = np.asarray((n_time // 2, n_position_bins // 2))
     pixels_from_center = np.arange(
         -sinogram.shape[0] // 2, sinogram.shape[0] // 2)
 
+    # Find the maximum of the sinogram
     n_pixels_from_center_ind, projection_angle_ind = np.unravel_index(
-        indices=np.nanargmax(sinogram), shape=sinogram.shape
+        indices=np.argmax(sinogram), shape=sinogram.shape
     )
-
-    projection_angle = projection_angles[projection_angle_ind]
+    projection_angle_radians = np.deg2rad(
+        projection_angles[projection_angle_ind])
     n_pixels_from_center = pixels_from_center[n_pixels_from_center_ind]
 
-    projection_angle_radians = np.deg2rad(projection_angle)
-    estimated_velocity = np.tan(projection_angle_radians) * dp / dt
+    # Normalized score based on the integrated projection
+    score = np.max(sinogram) / n_time
 
-    time_ind = np.arange(len(time))
-    estimated_position = center_pixel[1] + (
-        (
-            n_pixels_from_center
-            - (time_ind - center_pixel[0])
-            * np.cos(np.pi / 2 + projection_angle_radians)
-        )
-        / np.sin(np.pi / 2 + projection_angle_radians)
+    # Convert from polar form to slope-intercept form
+    velocity = -1.0 / np.tan(-projection_angle_radians)
+    start_position = (
+        n_pixels_from_center / np.sin(-projection_angle_radians)
+        - velocity * center_pixel[0]
+        + center_pixel[1]
     )
-    estimated_position *= dp
 
-    n_time = posterior.shape[0]
-    score = np.nanmax(sinogram) / n_time
+    # Convert from pixels to position units
+    start_position *= dp
+    velocity *= dp / dt
 
-    return estimated_velocity, estimated_position, score
+    # Estimate position for the posterior
+    time = np.arange(n_time) * dt
+    radon_position = start_position + velocity * time
+
+    return start_position, velocity, radon_position, score
 
 
 def map_estimate(posterior, place_bin_centers):
