@@ -10,7 +10,6 @@ from replay_trajectory_classification.core import (atleast_2d, get_track_grid,
                                                    scaled_likelihood)
 from replay_trajectory_classification.multiunit_likelihood import (
     estimate_intensity, fit_occupancy, poisson_mark_log_likelihood)
-from scipy.stats import rv_histogram
 from scipy.stats import multivariate_normal, rv_histogram
 from skimage.transform import radon
 from sklearn.isotonic import IsotonicRegression
