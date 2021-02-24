@@ -237,6 +237,37 @@ def predict_mark_likelihood(
     return scaled_likelihood(log_likelihood), time
 
 
+def predict_poisson_likelihood(
+    time,
+    spikes,
+    place_fields,
+    is_track_interior,
+    dt=0.020
+):
+    start_time, end_time = time[[0, -1]]
+    n_time_bins = np.ceil((end_time - start_time) / dt).astype(int)
+    time_bin_edges = start_time + np.arange(n_time_bins + 1) * dt
+
+    spike_time_ind, neuron_ind = np.nonzero(spikes)
+    time_bin_ind = np.digitize(
+        time[spike_time_ind], time_bin_edges[1:-1]
+    )
+    time_bin_centers = time_bin_edges[:-1] + np.diff(time_bin_edges) / 2
+    likelihood = np.stack(
+        [
+            np.prod(
+                place_fields[:, neuron_ind[time_bin_ind == time_bin]], axis=1)
+            for time_bin in np.arange(len(time_bin_centers))
+        ]
+    )
+    likelihood *= np.prod(np.exp(-dt * place_fields), axis=1)
+
+    mask = np.ones_like(is_track_interior, dtype=np.float)
+    mask[~is_track_interior] = np.nan
+
+    return likelihood * mask, time_bin_centers
+
+
 def normalize_to_posterior(likelihood, prior=None):
     if prior is None:
         n_position_bins = likelihood.shape[1]
