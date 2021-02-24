@@ -313,7 +313,7 @@ def detect_line_with_radon(
     n_time, n_position_bins = posterior.shape
     center_pixel = np.asarray((n_time // 2, n_position_bins // 2))
     pixels_from_center = np.arange(
-        -sinogram.shape[0] // 2, sinogram.shape[0] // 2)
+        -sinogram.shape[0] // 2 + 1, sinogram.shape[0] // 2 + 1)
 
     if filter_invalid_positions:
         start_positions, velocities = convert_polar_to_slope_intercept(
