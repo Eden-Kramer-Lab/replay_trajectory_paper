@@ -10,6 +10,7 @@ from replay_trajectory_classification.core import (atleast_2d, get_track_grid,
                                                    scaled_likelihood)
 from replay_trajectory_classification.multiunit_likelihood import (
     estimate_intensity, fit_occupancy, poisson_mark_log_likelihood)
+from scipy.ndimage import label
 from scipy.special import cotdg
 from scipy.stats import multivariate_normal, rv_histogram
 from skimage.transform import radon
@@ -512,3 +513,66 @@ def test_standard_decoding(
 
     axes[1, 0].plot(time + dt / 2, linear_prediction)
     axes[1, 0].set_title(f"Linear Regression, score = {linear_score:.02f}")
+
+
+def predict_clusterless_radon_wtrack(
+    ripple_times,
+    ripple_number,
+    place_bin_centers,
+    occupancy,
+    joint_pdf_models,
+    multiunit_dfs,
+    ground_process_intensities,
+    mean_rates,
+    is_track_interior,
+    place_bin_edges,
+    dt=0.020,
+):
+    arm_labels = label(is_track_interior)[0]
+    RIGHT_ARM = [1, 2]
+    LEFT_ARM = [1, 3]
+    arms = [LEFT_ARM, RIGHT_ARM]
+    max_center_edge = place_bin_edges[1:][arm_labels == 1][-1][0]
+    min_right_edge = place_bin_edges[:-1][arm_labels == 2][0][0]
+    min_left_edge = place_bin_edges[:-1][arm_labels == 3][0][0]
+
+    start_time, end_time = (
+        ripple_times.loc[ripple_number].start_time / np.timedelta64(1, "s"),
+        ripple_times.loc[ripple_number].end_time / np.timedelta64(1, "s"),
+    )
+
+    likelihood, time = predict_mark_likelihood(
+        start_time,
+        end_time,
+        place_bin_centers,
+        occupancy,
+        joint_pdf_models,
+        multiunit_dfs,
+        ground_process_intensities,
+        mean_rates,
+        is_track_interior,
+        dt=dt,
+    )
+    posterior = normalize_to_posterior(likelihood)
+
+    dp = np.mean(np.diff(place_bin_edges.squeeze())[is_track_interior])
+
+    radon = [
+        detect_line_with_radon(posterior[:, np.isin(arm_labels, arm)], dt, dp)
+        for arm in arms
+    ]
+
+    if radon[0][-1] > radon[1][-1]:
+        # Left Arm
+        (_, estimated_velocity, radon_prediction, radon_score) = radon[0]
+        radon_prediction[radon_prediction > max_center_edge] += (
+            min_left_edge - max_center_edge
+        )
+    else:
+        # Right Arm
+        (_, estimated_velocity, radon_prediction, radon_score) = radon[1]
+        radon_prediction[radon_prediction > max_center_edge] += (
+            min_right_edge - max_center_edge
+        )
+
+    return time, estimated_velocity, radon_prediction, radon_score, likelihood
