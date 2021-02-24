@@ -10,6 +10,7 @@ from replay_trajectory_classification.core import (atleast_2d, get_track_grid,
                                                    scaled_likelihood)
 from replay_trajectory_classification.multiunit_likelihood import (
     estimate_intensity, fit_occupancy, poisson_mark_log_likelihood)
+from scipy.special import cotdg
 from scipy.stats import multivariate_normal, rv_histogram
 from skimage.transform import radon
 from sklearn.isotonic import IsotonicRegression
@@ -276,8 +277,26 @@ def normalize_to_posterior(likelihood, prior=None):
     return posterior / np.nansum(posterior, axis=1, keepdims=True)
 
 
+def convert_polar_to_slope_intercept(
+    n_pixels_from_center, projection_angle, center_pixel
+):
+    velocity = -cotdg(-projection_angle)
+    start_position = (
+        n_pixels_from_center / np.sin(-np.deg2rad(projection_angle))
+        - velocity * center_pixel[0]
+        + center_pixel[1]
+    )
+    return start_position, velocity
+
+
 def detect_line_with_radon(
-    posterior, dt, dp, projection_angles=np.arange(-90, 90, 0.5)
+    posterior,
+    dt,  # s
+    dp,  # cm
+    projection_angles=np.arange(-90, 90, 0.5),  # degrees
+    filter_invalid_positions=True,
+    incorporate_nearby_positions=True,
+    nearby_positions_max=15,  # cm
 ):
     # Sinogram is shape (pixels_from_center, projection_angles)
     sinogram = radon(
@@ -289,23 +308,32 @@ def detect_line_with_radon(
     pixels_from_center = np.arange(
         -sinogram.shape[0] // 2, sinogram.shape[0] // 2)
 
+    if filter_invalid_positions:
+        start_positions, velocities = convert_polar_to_slope_intercept(
+            pixels_from_center[:, np.newaxis],
+            projection_angles[np.newaxis, :],
+            center_pixel,
+        )
+        end_positions = start_positions + velocities * (n_time - 1)
+        sinogram[(start_positions < 0) |
+                 (start_positions > n_position_bins - 1)] = 0.0
+        sinogram[(end_positions < 0) |
+                 (end_positions > n_position_bins - 1)] = 0.0
+        sinogram[:, np.isinf(velocities.squeeze())] = 0.0
+
     # Find the maximum of the sinogram
     n_pixels_from_center_ind, projection_angle_ind = np.unravel_index(
         indices=np.argmax(sinogram), shape=sinogram.shape
     )
-    projection_angle_radians = np.deg2rad(
-        projection_angles[projection_angle_ind])
+    projection_angle = projection_angles[projection_angle_ind]
     n_pixels_from_center = pixels_from_center[n_pixels_from_center_ind]
 
     # Normalized score based on the integrated projection
     score = np.max(sinogram) / n_time
 
     # Convert from polar form to slope-intercept form
-    velocity = -1.0 / np.tan(-projection_angle_radians)
-    start_position = (
-        n_pixels_from_center / np.sin(-projection_angle_radians)
-        - velocity * center_pixel[0]
-        + center_pixel[1]
+    start_position, velocity = convert_polar_to_slope_intercept(
+        n_pixels_from_center, projection_angle, center_pixel
     )
 
     # Convert from pixels to position units
