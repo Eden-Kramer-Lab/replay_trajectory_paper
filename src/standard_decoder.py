@@ -251,23 +251,19 @@ def predict_poisson_likelihood(
     time_bin_edges = start_time + np.arange(n_time_bins + 1) * dt
 
     spike_time_ind, neuron_ind = np.nonzero(spikes)
-    time_bin_ind = np.digitize(
-        time[spike_time_ind], time_bin_edges[1:-1]
-    )
+    time_bin_ind = np.digitize(time[spike_time_ind], time_bin_edges[1:-1])
     time_bin_centers = time_bin_edges[:-1] + np.diff(time_bin_edges) / 2
-    likelihood = np.stack(
-        [
-            np.prod(
-                place_fields[:, neuron_ind[time_bin_ind == time_bin]], axis=1)
-            for time_bin in np.arange(len(time_bin_centers))
-        ]
-    )
-    likelihood *= np.prod(np.exp(-dt * place_fields), axis=1)
+
+    log_likelihood = np.stack(
+        [np.sum(np.log(place_fields[:, neuron_ind[time_bin_ind == time_bin]] +
+                       np.spacing(1)), axis=1)
+         for time_bin in np.arange(n_time_bins)])
+    log_likelihood -= dt * np.sum(place_fields, axis=1)
 
     mask = np.ones_like(is_track_interior, dtype=np.float)
     mask[~is_track_interior] = np.nan
 
-    return likelihood * mask, time_bin_centers
+    return scaled_likelihood(log_likelihood) * mask, time_bin_centers
 
 
 def normalize_to_posterior(likelihood, prior=None):
