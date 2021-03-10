@@ -297,11 +297,13 @@ def detect_line_with_radon(
 ):
 
     if incorporate_nearby_positions:
-        n_bins = int(nearby_positions_max // dp)
-        filt = np.ones(2 * n_bins + 1)
+        n_nearby_bins = int(nearby_positions_max // dp)
+        filt = np.ones(2 * n_nearby_bins + 1)
         posterior = np.apply_along_axis(
             lambda m: np.convolve(m, filt, mode="same"), axis=1, arr=posterior
         )
+    else:
+        n_nearby_bins = 1
     # Sinogram is shape (pixels_from_center, projection_angles)
     sinogram = radon(
         posterior.T, theta=projection_angles, circle=False,
