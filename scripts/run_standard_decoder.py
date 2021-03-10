@@ -16,6 +16,7 @@ logging.basicConfig(level='INFO', format=FORMAT, datefmt='%d-%b-%y %H:%M:%S')
 
 
 def clusterless_analysis_1D(epoch_key, dt=0.020):
+    logging.info('Loading data...')
     (
         linear_position,
         multiunit_dfs,
@@ -24,6 +25,7 @@ def clusterless_analysis_1D(epoch_key, dt=0.020):
         track_graph,
         center_well_id,
     ) = load_data(epoch_key)
+    logging.info('Fitting model...')
     (
         occupancy,
         joint_pdf_models,
@@ -37,6 +39,7 @@ def clusterless_analysis_1D(epoch_key, dt=0.020):
     ) = fit_mark_likelihood(
         linear_position, multiunit_dfs, track_graph, center_well_id)
 
+    logging.info('Predicting with radon...')
     results = []
     for ripple_number in ripple_times.index:
         (
@@ -68,6 +71,7 @@ def clusterless_analysis_1D(epoch_key, dt=0.020):
                 coords={"time": time + dt / 2},
             ))
 
+    logging.info('Saving results...')
     results = xr.concat(results, dim=ripple_times.index)
     save_xarray(PROCESSED_DATA_DIR,
                 epoch_key,
