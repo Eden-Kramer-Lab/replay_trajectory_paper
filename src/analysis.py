@@ -1,10 +1,16 @@
+import os
+from glob import glob
+
 import numpy as np
 import pandas as pd
 import scipy
 import xarray as xr
+from loren_frank_data_processing import make_tetrode_dataframe
 from loren_frank_data_processing.track_segment_classification import \
     project_points_to_segment
 from scipy.ndimage.filters import gaussian_filter1d
+from src.parameters import (_BRAIN_AREAS, ANIMALS, PROBABILITY_THRESHOLD,
+                            PROCESSED_DATA_DIR)
 from trajectory_analysis_tools import (get_ahead_behind_distance,
                                        get_trajectory_data)
 
@@ -547,3 +553,52 @@ def gaussian_smooth(data, sigma, sampling_frequency, axis=0):
     '''
     return gaussian_filter1d(
         data, sigma * sampling_frequency, axis=axis)
+
+
+def load_all_replay_info(
+    n_unique_spiking=2,
+    data_type="clusterless",
+    dim="1D",
+    probability_threshold=PROBABILITY_THRESHOLD,
+    speed_threshold=4,
+    exclude_interneuron_spikes=False,
+):
+    tetrode_info = make_tetrode_dataframe(ANIMALS)
+    prob = int(probability_threshold * 100)
+    if exclude_interneuron_spikes:
+        interneuron = 'no_interneuron_'
+    else:
+        interneuron = ''
+    file_regex = f"*_{data_type}_{dim}_{interneuron}replay_info_{prob:02d}.csv"
+    file_paths = glob(os.path.join(PROCESSED_DATA_DIR, file_regex))
+    replay_info = pd.concat(
+        [pd.read_csv(file_path) for file_path in file_paths], axis=0,
+    ).set_index(["animal", "day", "epoch", "ripple_number"])
+    replay_info["fraction_unclassified"] = (
+        replay_info.Unclassified_duration
+        / replay_info.duration
+    )
+    replay_info["duration_classified"] = (
+        replay_info.duration - replay_info.Unclassified_duration)
+    replay_info = replay_info.loc[
+        (replay_info.n_unique_spiking >= n_unique_spiking) &
+        (replay_info.actual_speed <= speed_threshold)
+    ].sort_index()
+
+    is_brain_areas = tetrode_info.area.astype(
+        str).str.upper().isin(_BRAIN_AREAS)
+    n_tetrodes = (
+        tetrode_info.loc[is_brain_areas]
+        .groupby(["animal", "day", "epoch"])
+        .tetrode_id.count()
+        .rename("n_tetrodes")
+    )
+    replay_info = pd.merge(
+        replay_info.reset_index(), pd.DataFrame(n_tetrodes).reset_index()
+    ).set_index(["animal", "day", "epoch", "ripple_number"])
+
+    replay_info = replay_info.rename(index={"Cor": "cor"}).rename_axis(
+        index={"animal": "Animal ID"}
+    )
+
+    return replay_info
