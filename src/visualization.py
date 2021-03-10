@@ -31,11 +31,12 @@ MILLISECONDS_TO_SECONDS = 1000
 
 
 SHORT_STATE_NAMES = {
-    "Hover": "Hover",
-    "Hover-Continuous-Mix": "Hover-Cont.-Mix",
+    "Hover": "Stat.",
+    "Hover-Continuous-Mix": "Stat.-Cont.-Mix",
     "Continuous": "Cont.",
     "Fragmented-Continuous-Mix": "Frag.-Cont.-Mix",
-    "Fragmented": "Frag."
+    "Fragmented": "Frag.",
+    "Unclassified": "Unclass."
 }
 
 

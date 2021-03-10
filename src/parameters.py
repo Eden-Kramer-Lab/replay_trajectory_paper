@@ -78,22 +78,26 @@ TRANSITION_TO_CATEGORY = {
 PROBABILITY_THRESHOLD = 0.8
 
 STATE_ORDER = ['Hover', 'Hover-Continuous-Mix', 'Continuous',
-               'Fragmented-Continuous-Mix', 'Fragmented']
+               'Fragmented-Continuous-Mix', 'Fragmented', 'Unclassified']
 
-SHORT_STATE_ORDER = ['Hover', 'Hover-Cont.-Mix', 'Cont.',
-                     'Frag.-Cont.-Mix', 'Frag.']
+SHORT_STATE_ORDER = ['Stat.', 'Stat.-Cont.-Mix', 'Cont.',
+                     'Frag.-Cont.-Mix', 'Frag.', 'Unclass.']
 
 # Plotting Colors
 STATE_COLORS = {
     'Hover': '#9f043a',
+    'Stat.': '#9f043a',
+    'Stationary': '#9f043a',
     'Fragmented': '#ff6944',
     'Frag.': '#ff6944',
     'Continuous': '#521b65',
     'Cont.': '#521b65',
     'Hover-Continuous-Mix': '#61c5e6',
-    'Hover-Cont.-Mix': '#61c5e6',
+    'Stationary-Continuous-Mix': '#61c5e6',
+    'Stat.-Cont.-Mix': '#61c5e6',
     'Fragmented-Continuous-Mix': '#2a586a',
     'Frag.-Cont.-Mix': '#2a586a',
     '': '#c7c7c7',
     'Unclassified': '#c7c7c7',
+    'Unclass.': '#c7c7c7',
 }
