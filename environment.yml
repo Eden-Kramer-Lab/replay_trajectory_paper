@@ -12,6 +12,8 @@ dependencies:
 - seaborn
 - tqdm
 - xarray
+- scikit-image
+- scikit-learn
 - dask
 - "trajectory_analysis_tools == 0.3.0.dev0"
 - "loren_frank_data_processing == 0.9.13.dev0"
