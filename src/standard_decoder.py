@@ -335,7 +335,7 @@ def detect_line_with_radon(
     n_pixels_from_center = pixels_from_center[n_pixels_from_center_ind]
 
     # Normalized score based on the integrated projection
-    score = np.max(sinogram) / n_time * n_nearby_bins
+    score = np.max(sinogram) / (n_time * n_nearby_bins)
 
     # Convert from polar form to slope-intercept form
     start_position, velocity = convert_polar_to_slope_intercept(
