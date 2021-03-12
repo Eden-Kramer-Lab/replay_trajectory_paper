@@ -1,12 +1,11 @@
 import logging
+import os
 import sys
 from argparse import ArgumentParser
 from signal import SIGUSR1, SIGUSR2, signal
 from subprocess import PIPE, run
 
 import pandas as pd
-import xarray as xr
-from loren_frank_data_processing import save_xarray
 from src.parameters import PROCESSED_DATA_DIR
 from src.standard_decoder import (fit_mark_likelihood, load_data,
                                   predict_clusterless_radon_wtrack)
@@ -41,11 +40,11 @@ def clusterless_analysis_1D(epoch_key, dt=0.020):
         linear_position, multiunit_dfs, track_graph, center_well_id)
 
     logging.info('Predicting with radon...')
-    results = []
+    radon_info = []
     for ripple_number in ripple_times.index:
         (
             time,
-            radon_estimated_velocity,
+            radon_velocity,
             radon_prediction,
             radon_score,
             likelihood,
@@ -62,26 +61,23 @@ def clusterless_analysis_1D(epoch_key, dt=0.020):
             place_bin_edges,
             dt=dt,
         )
-        results.append(
-            xr.Dataset(
-                data_vars={
-                    "radon_prediction": (["time"], radon_prediction),
-                    "radon_score": radon_score,
-                    "radon_estimated_velocity": radon_estimated_velocity,
-                },
-                coords={"time": time + dt / 2},
-            ))
+        radon_info.append((radon_prediction[0], radon_velocity, radon_score))
 
     logging.info('Saving results...')
-    index = pd.MultiIndex.from_product(
-        [[epoch_key[0]], [epoch_key[1]], [epoch_key[2]], ripple_times.index],
-        names=["animal", "day", "epoch", "ripple_number"],
+    radon_info = pd.DataFrame(
+        radon_info,
+        index=ripple_times.index,
+        columns=["radon_start_position", "radon_velocity", "radon_score"],
     )
-    results = xr.concat(results, dim=index).rename({"concat_dim": "ripple"})
-    save_xarray(PROCESSED_DATA_DIR,
-                epoch_key,
-                results,
-                group='/clusterless/1D/standard_decoder/ripples/')
+
+    animal, day, epoch = epoch_key
+    radon_info["animal"] = animal
+    radon_info["day"] = int(day)
+    radon_info["epoch"] = int(epoch)
+
+    radon_info_filename = os.path.join(
+        PROCESSED_DATA_DIR, f'{animal}_{day:02d}_{epoch:02d}_radon_info.csv')
+    radon_info.to_csv(radon_info_filename)
 
 
 def get_command_line_arguments():
