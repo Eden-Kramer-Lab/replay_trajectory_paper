@@ -4,6 +4,7 @@ from argparse import ArgumentParser
 from signal import SIGUSR1, SIGUSR2, signal
 from subprocess import PIPE, run
 
+import pandas as pd
 import xarray as xr
 from loren_frank_data_processing import save_xarray
 from src.parameters import PROCESSED_DATA_DIR
@@ -72,7 +73,11 @@ def clusterless_analysis_1D(epoch_key, dt=0.020):
             ))
 
     logging.info('Saving results...')
-    results = xr.concat(results, dim=ripple_times.index)
+    index = pd.MultiIndex.from_product(
+        [[epoch_key[0]], [epoch_key[1]], [epoch_key[2]], ripple_times.index],
+        names=["animal", "day", "epoch", "ripple_number"],
+    )
+    results = xr.concat(results, dim=index).rename({"concat_dim": "ripple"})
     save_xarray(PROCESSED_DATA_DIR,
                 epoch_key,
                 results,
