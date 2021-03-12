@@ -513,7 +513,26 @@ def test_standard_decoding(
     axes[1, 0].set_title(f"Linear Regression, score = {linear_score:.02f}")
 
 
-def predict_clusterless_radon_wtrack(
+def _get_max_score_metrics(metric, max_center_edge, min_left_edge,
+                           min_right_edge):
+    velocity1, prediction1, score1 = metric[0]
+    velocity2, prediction2, score2 = metric[1]
+
+    if score1 > score2:
+        # Left Arm
+        prediction1[prediction1 > max_center_edge] += (
+            min_left_edge - max_center_edge
+        )
+        return velocity1, prediction1, score1
+    else:
+        # Right Arm
+        prediction2[prediction2 > max_center_edge] += (
+            min_right_edge - max_center_edge
+        )
+        return velocity2, prediction2, score2
+
+
+def predict_clusterless_wtrack(
     ripple_times,
     ripple_number,
     place_bin_centers,
@@ -552,25 +571,69 @@ def predict_clusterless_radon_wtrack(
         dt=dt,
     )
     posterior = normalize_to_posterior(likelihood)
-
+    place_bin_edges = place_bin_edges.squeeze()
+    time_bin_centers = time + dt / 2
     dp = np.mean(np.diff(place_bin_edges.squeeze())[is_track_interior])
 
-    radon = [
-        detect_line_with_radon(posterior[:, np.isin(arm_labels, arm)], dt, dp)
-        for arm in arms
-    ]
+    radon = []
+    isotonic = []
+    linear = []
+    map = []
 
-    if radon[0][-1] > radon[1][-1]:
-        # Left Arm
-        (_, estimated_velocity, radon_prediction, radon_score) = radon[0]
-        radon_prediction[radon_prediction > max_center_edge] += (
-            min_left_edge - max_center_edge
-        )
-    else:
-        # Right Arm
-        (_, estimated_velocity, radon_prediction, radon_score) = radon[1]
-        radon_prediction[radon_prediction > max_center_edge] += (
-            min_right_edge - max_center_edge
-        )
+    for arm in arms:
+        arm_posterior = posterior[:, np.isin(arm_labels, arm)]
 
-    return time, estimated_velocity, radon_prediction, radon_score, likelihood
+        n_position_bins = arm_posterior.shape[1]
+        arm_place_bin_edges = np.arange(n_position_bins + 1) * dp
+        arm_place_bin_centers = arm_place_bin_edges[:-1] + dp / 2
+
+        (_, radon_velocity,
+         radon_prediction, radon_score) = detect_line_with_radon(
+            arm_posterior, dt=dt, dp=dp)
+        radon.append((radon_velocity, radon_prediction, radon_score))
+
+        isotonic_prediction, isotonic_score = isotonic_regression(
+            arm_posterior, time_bin_centers, arm_place_bin_centers)
+        isotonic_velocity = np.mean(np.diff(isotonic_prediction) / dt)
+        isotonic.append(
+            (isotonic_velocity, isotonic_prediction, isotonic_score))
+
+        _, linear_velocity, linear_score, linear_prediction = linear_regression(
+            arm_posterior, arm_place_bin_edges, time_bin_centers)
+        linear.append((linear_velocity, linear_prediction, linear_score))
+
+        # Should maybe do this like the classifier
+        map_prediction = map_estimate(arm_posterior, arm_place_bin_centers)
+        map_velocity = np.mean(np.diff(map_prediction) / dt)
+        weighted_correlation_score = weighted_correlation(
+            arm_posterior, time_bin_centers, arm_place_bin_centers
+        )
+        map.append((map_velocity, map_prediction,
+                    np.abs(weighted_correlation_score)))
+
+    radon_velocity, radon_prediction, radon_score = _get_max_score_metrics(
+        radon, max_center_edge, min_left_edge, min_right_edge)
+    isotonic_velocity, isotonic_prediction, isotonic_score = _get_max_score_metrics(
+        isotonic, max_center_edge, min_left_edge, min_right_edge)
+    linear_velocity, linear_prediction, linear_score = _get_max_score_metrics(
+        linear, max_center_edge, min_left_edge, min_right_edge)
+    map_velocity, _, map_score = _get_max_score_metrics(
+        map, max_center_edge, min_left_edge, min_right_edge)
+    map_prediction = map_estimate(posterior, place_bin_centers)
+
+    return (
+        time,
+        likelihood,
+        radon_velocity,
+        radon_prediction,
+        radon_score,
+        isotonic_velocity,
+        isotonic_prediction,
+        isotonic_score,
+        linear_velocity,
+        linear_prediction,
+        linear_score,
+        map_velocity,
+        map_prediction,
+        map_score,
+    )

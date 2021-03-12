@@ -8,7 +8,7 @@ from subprocess import PIPE, run
 import pandas as pd
 from src.parameters import PROCESSED_DATA_DIR
 from src.standard_decoder import (fit_mark_likelihood, load_data,
-                                  predict_clusterless_radon_wtrack)
+                                  predict_clusterless_wtrack)
 
 FORMAT = '%(asctime)s %(message)s'
 
@@ -43,12 +43,21 @@ def clusterless_analysis_1D(epoch_key, dt=0.020):
     radon_info = []
     for ripple_number in ripple_times.index:
         (
-            time,
+            _,
+            _,
             radon_velocity,
-            radon_prediction,
+            _,
             radon_score,
-            likelihood,
-        ) = predict_clusterless_radon_wtrack(
+            isotonic_velocity,
+            _,
+            isotonic_score,
+            linear_velocity,
+            _,
+            linear_score,
+            map_velocity,
+            _,
+            map_score,
+        ) = predict_clusterless_wtrack(
             ripple_times,
             ripple_number,
             place_bin_centers,
@@ -61,13 +70,20 @@ def clusterless_analysis_1D(epoch_key, dt=0.020):
             place_bin_edges,
             dt=dt,
         )
-        radon_info.append((radon_prediction[0], radon_velocity, radon_score))
+        radon_info.append(
+            (radon_velocity, radon_score,
+             isotonic_velocity, isotonic_score,
+             linear_velocity, linear_score,
+             map_velocity, map_score))
 
     logging.info('Saving results...')
     radon_info = pd.DataFrame(
         radon_info,
         index=ripple_times.index,
-        columns=["radon_start_position", "radon_velocity", "radon_score"],
+        columns=["radon_velocity", "radon_score",
+                 "isotonic_velocity", "isotonic_score",
+                 "linear_velocity", "linear_score",
+                 "map_velocity", "map_score"],
     )
 
     animal, day, epoch = epoch_key
