@@ -300,7 +300,8 @@ def detect_line_with_radon(
         n_nearby_bins = int(nearby_positions_max / 2 // dp)
         filt = np.ones(2 * n_nearby_bins + 1)
         posterior = np.apply_along_axis(
-            lambda m: np.convolve(m, filt, mode="same"), axis=1, arr=posterior
+            lambda time_bin: np.convolve(time_bin, filt, mode="same"),
+            axis=1, arr=posterior
         )
     else:
         n_nearby_bins = 1
