@@ -53,16 +53,16 @@ def clusterless_analysis_1D(epoch_key, dt=0.020):
         (
             _,
             _,
-            radon_velocity,
+            radon_speed,
             _,
             radon_score,
-            isotonic_velocity,
+            isotonic_speed,
             _,
             isotonic_score,
-            linear_velocity,
+            linear_speed,
             _,
             linear_score,
-            map_velocity,
+            map_speed,
             _,
             map_score,
         ) = predict_clusterless_wtrack(
@@ -76,26 +76,24 @@ def clusterless_analysis_1D(epoch_key, dt=0.020):
             mean_rates,
             is_track_interior,
             place_bin_edges,
-            place_bin_center_2D_position,
-            place_bin_center_ind_to_edge_id,
-            track_graph,
-            center_well_id,
+            track_graph1,
+            nodes_df,
             dt=dt,
         )
         radon_info.append(
-            (radon_velocity, radon_score,
-             isotonic_velocity, isotonic_score,
-             linear_velocity, linear_score,
-             map_velocity, map_score))
+            (radon_speed, radon_score,
+             isotonic_speed, isotonic_score,
+             linear_speed, linear_score,
+             map_speed, map_score))
 
     logging.info('Saving results...')
     radon_info = pd.DataFrame(
         radon_info,
         index=ripple_times.index,
-        columns=["radon_velocity", "radon_score",
-                 "isotonic_velocity", "isotonic_score",
-                 "linear_velocity", "linear_score",
-                 "map_velocity", "map_score"],
+        columns=["radon_speed", "radon_score",
+                 "isotonic_speed", "isotonic_score",
+                 "linear_speed", "linear_score",
+                 "map_speed", "map_score"],
     )
 
     animal, day, epoch = epoch_key

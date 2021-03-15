@@ -20,7 +20,6 @@ from sklearn.linear_model import LinearRegression
 from src.load_data import get_ripple_times
 from src.parameters import (_BRAIN_AREAS, _MARKS, ANIMALS, model, model_kwargs,
                             place_bin_size)
-from trajectory_analysis_tools.distance import _get_distance_between_nodes
 
 
 def load_data(epoch_key):
@@ -535,55 +534,53 @@ def _get_max_score_metrics(metric, max_center_edge, min_left_edge,
         prediction1[prediction1 > max_center_edge] += (
             min_left_edge - max_center_edge
         )
-        return velocity1, prediction1, score1
+        return np.abs(velocity1), prediction1, score1
     else:
         # Right Arm
         prediction2[prediction2 > max_center_edge] += (
             min_right_edge - max_center_edge
         )
-        return velocity2, prediction2, score2
+        return np.abs(velocity2), prediction2, score2
 
 
-def get_map_velocity(
+def get_map_speed(
     posterior,
-    place_bin_center_2D_position,
-    place_bin_center_ind_to_edge_id,
+    track_graph1,
+    nodes_df,
     dt,
-    track_graph,
-    center_well_id,
 ):
     map_position_ind = np.argmax(posterior, axis=1)
-    map_position_2D = place_bin_center_2D_position[map_position_ind]
-    track_segment_id = place_bin_center_ind_to_edge_id[map_position_ind]
-    mental_position_edges = np.asarray(list(track_graph.edges))[
-        track_segment_id]
-    copy_graph = track_graph.copy()
-
-    replay_distance_from_center_well = []
-    for mental_edge, position_2d in zip(mental_position_edges, map_position_2D):
-        copy_graph.add_node("mental_position", pos=position_2d)
-
-        distance = _get_distance_between_nodes(
-            copy_graph, mental_edge[0], "mental_position"
-        )
-        copy_graph.add_edge(
-            mental_edge[0], "mental_position", distance=distance)
-
-        distance = _get_distance_between_nodes(
-            copy_graph, "mental_position", mental_edge[1]
-        )
-        copy_graph.add_edge("mental_position",
-                            mental_edge[1], distance=distance)
-        replay_distance_from_center_well.append(
+    node_ids = np.asarray(
+        nodes_df.loc[~nodes_df.is_bin_edge].iloc[map_position_ind].node_ids
+    )
+    speed = []
+    for node1, node2 in zip(node_ids[:-2], node_ids[2:]):
+        speed.append(
             nx.shortest_path_length(
-                copy_graph,
-                source="mental_position",
-                target=center_well_id,
-                weight="distance",
+                track_graph1, source=node1, target=node2, weight="distance",
             )
+            / (2.0 * dt)
         )
-        copy_graph.remove_node("mental_position")
-    return np.mean(np.diff(replay_distance_from_center_well) / dt)
+    speed = np.asarray(speed)
+    speed = np.insert(
+        speed,
+        0,
+        nx.shortest_path_length(
+            track_graph1, source=node_ids[0], target=node_ids[1],
+            weight="distance",
+        )
+        / dt,
+    )
+    speed = np.insert(
+        speed,
+        -1,
+        nx.shortest_path_length(
+            track_graph1, source=node_ids[-2], target=node_ids[-1],
+            weight="distance",
+        )
+        / dt,
+    )
+    return np.abs(speed)
 
 
 def predict_clusterless_wtrack(
@@ -597,10 +594,8 @@ def predict_clusterless_wtrack(
     mean_rates,
     is_track_interior,
     place_bin_edges,
-    place_bin_center_2D_position,
-    place_bin_center_ind_to_edge_id,
-    track_graph,
-    center_well_id,
+    track_graph1,
+    nodes_df,
     dt=0.020,
 ):
     arm_labels = label(is_track_interior)[0]
@@ -656,7 +651,8 @@ def predict_clusterless_wtrack(
         isotonic.append(
             (isotonic_velocity, isotonic_prediction, isotonic_score))
 
-        _, linear_velocity, linear_score, linear_prediction = linear_regression(
+        (_, linear_velocity, linear_score,
+         linear_prediction) = linear_regression(
             arm_posterior, arm_place_bin_edges, time_bin_centers)
         linear.append((linear_velocity, linear_prediction, linear_score))
 
@@ -665,37 +661,35 @@ def predict_clusterless_wtrack(
         )
         map.append((0, 0, np.abs(weighted_correlation_score)))
 
-    radon_velocity, radon_prediction, radon_score = _get_max_score_metrics(
+    radon_speed, radon_prediction, radon_score = _get_max_score_metrics(
         radon, max_center_edge, min_left_edge, min_right_edge)
-    isotonic_velocity, isotonic_prediction, isotonic_score = _get_max_score_metrics(
+    (isotonic_speed, isotonic_prediction,
+     isotonic_score) = _get_max_score_metrics(
         isotonic, max_center_edge, min_left_edge, min_right_edge)
-    linear_velocity, linear_prediction, linear_score = _get_max_score_metrics(
+    linear_speed, linear_prediction, linear_score = _get_max_score_metrics(
         linear, max_center_edge, min_left_edge, min_right_edge)
-    _, _, map_score = _get_max_score_metrics(
-        map, max_center_edge, min_left_edge, min_right_edge)
+    map_score = max(map[0][-1], map[1][-1])
     map_prediction = map_estimate(posterior, place_bin_centers)
-    map_velocity = get_map_velocity(
+    map_speed = get_map_speed(
         posterior,
-        place_bin_center_2D_position,
-        place_bin_center_ind_to_edge_id,
+        track_graph1,
+        nodes_df,
         dt,
-        track_graph,
-        center_well_id,
     )
 
     return (
         time,
         likelihood,
-        radon_velocity,
+        radon_speed,
         radon_prediction,
         radon_score,
-        isotonic_velocity,
+        isotonic_speed,
         isotonic_prediction,
         isotonic_score,
-        linear_velocity,
+        linear_speed,
         linear_prediction,
         linear_score,
-        map_velocity,
+        map_speed,
         map_prediction,
         map_score,
     )
