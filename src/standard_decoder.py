@@ -1,5 +1,4 @@
 import matplotlib.pyplot as plt
-import networkx as nx
 import numpy as np
 from loren_frank_data_processing import (get_position_dataframe,
                                          make_tetrode_dataframe)
@@ -17,6 +16,7 @@ from scipy.stats import multivariate_normal, rv_histogram
 from skimage.transform import radon
 from sklearn.isotonic import IsotonicRegression
 from sklearn.linear_model import LinearRegression
+from src.analysis import get_map_speed
 from src.load_data import get_ripple_times
 from src.parameters import (_BRAIN_AREAS, _MARKS, ANIMALS, model, model_kwargs,
                             place_bin_size)
@@ -541,69 +541,6 @@ def _get_max_score_metrics(metric, max_center_edge, min_left_edge,
             min_right_edge - max_center_edge
         )
         return np.abs(velocity2), prediction2, score2
-
-
-def get_map_speed(
-    posterior,
-    track_graph1,
-    place_bin_center_ind_to_node,
-    dt,
-):
-    map_position_ind = np.argmax(posterior, axis=1)
-    node_ids = place_bin_center_ind_to_node[map_position_ind]
-    n_time = len(node_ids)
-    if n_time == 1:
-        return np.asarray([np.nan])
-    elif n_time == 2:
-        speed = np.asarray([])
-        speed = np.insert(
-            speed,
-            0,
-            nx.shortest_path_length(
-                track_graph1, source=node_ids[0], target=node_ids[1],
-                weight="distance",
-            )
-            / dt,
-        )
-        speed = np.insert(
-            speed,
-            -1,
-            nx.shortest_path_length(
-                track_graph1, source=node_ids[-2], target=node_ids[-1],
-                weight="distance",
-            )
-            / dt,
-        )
-    else:
-        speed = []
-        for node1, node2 in zip(node_ids[:-2], node_ids[2:]):
-            speed.append(
-                nx.shortest_path_length(
-                    track_graph1, source=node1, target=node2,
-                    weight="distance",
-                )
-                / (2.0 * dt)
-            )
-        speed = np.asarray(speed)
-        speed = np.insert(
-            speed,
-            0,
-            nx.shortest_path_length(
-                track_graph1, source=node_ids[0], target=node_ids[1],
-                weight="distance",
-            )
-            / dt,
-        )
-        speed = np.insert(
-            speed,
-            -1,
-            nx.shortest_path_length(
-                track_graph1, source=node_ids[-2], target=node_ids[-1],
-                weight="distance",
-            )
-            / dt,
-        )
-    return np.abs(speed)
 
 
 def predict_clusterless_wtrack(
