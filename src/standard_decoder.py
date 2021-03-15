@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import networkx as nx
 import numpy as np
 from loren_frank_data_processing import (get_position_dataframe,
                                          make_tetrode_dataframe)
@@ -19,6 +20,7 @@ from sklearn.linear_model import LinearRegression
 from src.load_data import get_ripple_times
 from src.parameters import (_BRAIN_AREAS, _MARKS, ANIMALS, model, model_kwargs,
                             place_bin_size)
+from trajectory_analysis_tools.distance import _get_distance_between_nodes
 
 
 def load_data(epoch_key):
@@ -85,6 +87,7 @@ def fit_mark_likelihood(
     model_kwargs=model_kwargs,
     place_bin_size=place_bin_size,
 ):
+
     (
         place_bin_centers,
         place_bin_edges,
@@ -164,10 +167,18 @@ def fit_mark_likelihood(
         multiunit_dfs,
         ground_process_intensities,
         mean_rates,
-        is_track_interior,
         place_bin_centers,
         place_bin_edges,
+        is_track_interior,
+        distance_between_nodes,
+        place_bin_center_ind_to_node,
+        place_bin_center_2D_position,
+        place_bin_edges_2D_position,
+        centers_shape,
         edges,
+        track_graph1,
+        place_bin_center_ind_to_edge_id,
+        nodes_df,
     )
 
 
@@ -277,13 +288,13 @@ def normalize_to_posterior(likelihood, prior=None):
 def convert_polar_to_slope_intercept(
     n_pixels_from_center, projection_angle, center_pixel
 ):
-    velocity = -cotdg(-projection_angle)
-    start_position = (
+    slope = -cotdg(-projection_angle)
+    intercept = (
         n_pixels_from_center / np.sin(-np.deg2rad(projection_angle))
-        - velocity * center_pixel[0]
+        - slope * center_pixel[0]
         + center_pixel[1]
     )
-    return start_position, velocity
+    return intercept, slope
 
 
 def detect_line_with_radon(
@@ -533,6 +544,48 @@ def _get_max_score_metrics(metric, max_center_edge, min_left_edge,
         return velocity2, prediction2, score2
 
 
+def get_map_velocity(
+    posterior,
+    place_bin_center_2D_position,
+    place_bin_center_ind_to_edge_id,
+    dt,
+    track_graph,
+    center_well_id,
+):
+    map_position_ind = np.argmax(posterior, axis=1)
+    map_position_2D = place_bin_center_2D_position[map_position_ind]
+    track_segment_id = place_bin_center_ind_to_edge_id[map_position_ind]
+    mental_position_edges = np.asarray(list(track_graph.edges))[
+        track_segment_id]
+    copy_graph = track_graph.copy()
+
+    replay_distance_from_center_well = []
+    for mental_edge, position_2d in zip(mental_position_edges, map_position_2D):
+        copy_graph.add_node("mental_position", pos=position_2d)
+
+        distance = _get_distance_between_nodes(
+            copy_graph, mental_edge[0], "mental_position"
+        )
+        copy_graph.add_edge(
+            mental_edge[0], "mental_position", distance=distance)
+
+        distance = _get_distance_between_nodes(
+            copy_graph, "mental_position", mental_edge[1]
+        )
+        copy_graph.add_edge("mental_position",
+                            mental_edge[1], distance=distance)
+        replay_distance_from_center_well.append(
+            nx.shortest_path_length(
+                copy_graph,
+                source="mental_position",
+                target=center_well_id,
+                weight="distance",
+            )
+        )
+        copy_graph.remove_node("mental_position")
+    return np.mean(np.diff(replay_distance_from_center_well) / dt)
+
+
 def predict_clusterless_wtrack(
     ripple_times,
     ripple_number,
@@ -544,6 +597,10 @@ def predict_clusterless_wtrack(
     mean_rates,
     is_track_interior,
     place_bin_edges,
+    place_bin_center_2D_position,
+    place_bin_center_ind_to_edge_id,
+    track_graph,
+    center_well_id,
     dt=0.020,
 ):
     arm_labels = label(is_track_interior)[0]
@@ -603,14 +660,10 @@ def predict_clusterless_wtrack(
             arm_posterior, arm_place_bin_edges, time_bin_centers)
         linear.append((linear_velocity, linear_prediction, linear_score))
 
-        # Should maybe do this like the classifier
-        map_prediction = map_estimate(arm_posterior, arm_place_bin_centers)
-        map_velocity = np.mean(np.diff(map_prediction) / dt)
         weighted_correlation_score = weighted_correlation(
             arm_posterior, time_bin_centers, arm_place_bin_centers
         )
-        map.append((map_velocity, map_prediction,
-                    np.abs(weighted_correlation_score)))
+        map.append((None, None, np.abs(weighted_correlation_score)))
 
     radon_velocity, radon_prediction, radon_score = _get_max_score_metrics(
         radon, max_center_edge, min_left_edge, min_right_edge)
@@ -621,6 +674,14 @@ def predict_clusterless_wtrack(
     map_velocity, _, map_score = _get_max_score_metrics(
         map, max_center_edge, min_left_edge, min_right_edge)
     map_prediction = map_estimate(posterior, place_bin_centers)
+    map_velocity = get_map_velocity(
+        posterior,
+        place_bin_center_2D_position,
+        place_bin_center_ind_to_edge_id,
+        dt,
+        track_graph,
+        center_well_id,
+    )
 
     return (
         time,

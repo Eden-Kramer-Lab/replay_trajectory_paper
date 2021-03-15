@@ -32,10 +32,18 @@ def clusterless_analysis_1D(epoch_key, dt=0.020):
         multiunit_dfs,
         ground_process_intensities,
         mean_rates,
-        is_track_interior,
         place_bin_centers,
         place_bin_edges,
+        is_track_interior,
+        distance_between_nodes,
+        place_bin_center_ind_to_node,
+        place_bin_center_2D_position,
+        place_bin_edges_2D_position,
+        centers_shape,
         edges,
+        track_graph1,
+        place_bin_center_ind_to_edge_id,
+        nodes_df,
     ) = fit_mark_likelihood(
         linear_position, multiunit_dfs, track_graph, center_well_id)
 
@@ -68,6 +76,10 @@ def clusterless_analysis_1D(epoch_key, dt=0.020):
             mean_rates,
             is_track_interior,
             place_bin_edges,
+            place_bin_center_2D_position,
+            place_bin_center_ind_to_edge_id,
+            track_graph,
+            center_well_id,
             dt=dt,
         )
         radon_info.append(
