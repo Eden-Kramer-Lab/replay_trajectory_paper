@@ -77,7 +77,7 @@ def clusterless_analysis_1D(epoch_key, dt=0.020):
             is_track_interior,
             place_bin_edges,
             track_graph1,
-            nodes_df,
+            place_bin_center_ind_to_node,
             dt=dt,
         )
         radon_info.append(

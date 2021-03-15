@@ -546,13 +546,11 @@ def _get_max_score_metrics(metric, max_center_edge, min_left_edge,
 def get_map_speed(
     posterior,
     track_graph1,
-    nodes_df,
+    place_bin_center_ind_to_node,
     dt,
 ):
     map_position_ind = np.argmax(posterior, axis=1)
-    node_ids = np.asarray(
-        nodes_df.loc[~nodes_df.is_bin_edge].iloc[map_position_ind].node_ids
-    )
+    node_ids = place_bin_center_ind_to_node[map_position_ind]
     n_time = len(node_ids)
     if n_time == 1:
         return np.asarray([np.nan])
@@ -581,7 +579,8 @@ def get_map_speed(
         for node1, node2 in zip(node_ids[:-2], node_ids[2:]):
             speed.append(
                 nx.shortest_path_length(
-                    track_graph1, source=node1, target=node2, weight="distance",
+                    track_graph1, source=node1, target=node2,
+                    weight="distance",
                 )
                 / (2.0 * dt)
             )
@@ -619,7 +618,7 @@ def predict_clusterless_wtrack(
     is_track_interior,
     place_bin_edges,
     track_graph1,
-    nodes_df,
+    place_bin_center_ind_to_node,
     dt=0.020,
 ):
     arm_labels = label(is_track_interior)[0]
@@ -697,7 +696,7 @@ def predict_clusterless_wtrack(
     map_speed = np.mean(get_map_speed(
         posterior,
         track_graph1,
-        nodes_df,
+        place_bin_center_ind_to_node,
         dt,
     ))
 
