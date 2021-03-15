@@ -663,7 +663,7 @@ def predict_clusterless_wtrack(
         weighted_correlation_score = weighted_correlation(
             arm_posterior, time_bin_centers, arm_place_bin_centers
         )
-        map.append((None, None, np.abs(weighted_correlation_score)))
+        map.append((0, 0, np.abs(weighted_correlation_score)))
 
     radon_velocity, radon_prediction, radon_score = _get_max_score_metrics(
         radon, max_center_edge, min_left_edge, min_right_edge)
@@ -671,7 +671,7 @@ def predict_clusterless_wtrack(
         isotonic, max_center_edge, min_left_edge, min_right_edge)
     linear_velocity, linear_prediction, linear_score = _get_max_score_metrics(
         linear, max_center_edge, min_left_edge, min_right_edge)
-    map_velocity, _, map_score = _get_max_score_metrics(
+    _, _, map_score = _get_max_score_metrics(
         map, max_center_edge, min_left_edge, min_right_edge)
     map_prediction = map_estimate(posterior, place_bin_centers)
     map_velocity = get_map_velocity(
