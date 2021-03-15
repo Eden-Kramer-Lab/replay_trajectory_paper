@@ -553,33 +553,57 @@ def get_map_speed(
     node_ids = np.asarray(
         nodes_df.loc[~nodes_df.is_bin_edge].iloc[map_position_ind].node_ids
     )
-    speed = []
-    for node1, node2 in zip(node_ids[:-2], node_ids[2:]):
-        speed.append(
+    n_time = len(node_ids)
+    if n_time == 1:
+        return np.asarray([np.nan])
+    elif n_time == 2:
+        speed = np.asarray([])
+        speed = np.insert(
+            speed,
+            0,
             nx.shortest_path_length(
-                track_graph1, source=node1, target=node2, weight="distance",
+                track_graph1, source=node_ids[0], target=node_ids[1],
+                weight="distance",
             )
-            / (2.0 * dt)
+            / dt,
         )
-    speed = np.asarray(speed)
-    speed = np.insert(
-        speed,
-        0,
-        nx.shortest_path_length(
-            track_graph1, source=node_ids[0], target=node_ids[1],
-            weight="distance",
+        speed = np.insert(
+            speed,
+            -1,
+            nx.shortest_path_length(
+                track_graph1, source=node_ids[-2], target=node_ids[-1],
+                weight="distance",
+            )
+            / dt,
         )
-        / dt,
-    )
-    speed = np.insert(
-        speed,
-        -1,
-        nx.shortest_path_length(
-            track_graph1, source=node_ids[-2], target=node_ids[-1],
-            weight="distance",
+    else:
+        speed = []
+        for node1, node2 in zip(node_ids[:-2], node_ids[2:]):
+            speed.append(
+                nx.shortest_path_length(
+                    track_graph1, source=node1, target=node2, weight="distance",
+                )
+                / (2.0 * dt)
+            )
+        speed = np.asarray(speed)
+        speed = np.insert(
+            speed,
+            0,
+            nx.shortest_path_length(
+                track_graph1, source=node_ids[0], target=node_ids[1],
+                weight="distance",
+            )
+            / dt,
         )
-        / dt,
-    )
+        speed = np.insert(
+            speed,
+            -1,
+            nx.shortest_path_length(
+                track_graph1, source=node_ids[-2], target=node_ids[-1],
+                weight="distance",
+            )
+            / dt,
+        )
     return np.abs(speed)
 
 
@@ -670,12 +694,12 @@ def predict_clusterless_wtrack(
         linear, max_center_edge, min_left_edge, min_right_edge)
     map_score = max(map[0][-1], map[1][-1])
     map_prediction = map_estimate(posterior, place_bin_centers)
-    map_speed = get_map_speed(
+    map_speed = np.mean(get_map_speed(
         posterior,
         track_graph1,
         nodes_df,
         dt,
-    )
+    ))
 
     return (
         time,
