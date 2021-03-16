@@ -9,6 +9,7 @@ import xarray as xr
 from loren_frank_data_processing import make_tetrode_dataframe
 from loren_frank_data_processing.track_segment_classification import \
     project_points_to_segment
+from scipy.ndimage import label
 from scipy.ndimage.filters import gaussian_filter1d
 from src.parameters import (_BRAIN_AREAS, ANIMALS, PROBABILITY_THRESHOLD,
                             PROCESSED_DATA_DIR)
@@ -289,6 +290,7 @@ def get_ripple_replay_info(ripple, results, spikes,
             ripple_consensus),
         'max_ripple_consensus_trace_zscore': np.max(
             ripple_consensus),
+        'n_ripples': label(ripple_consensus > 2.5)[1]
     }
 
     for state, above_threshold in is_classified.groupby('state'):
