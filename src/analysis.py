@@ -569,14 +569,20 @@ def load_all_replay_info(
     probability_threshold=PROBABILITY_THRESHOLD,
     speed_threshold=4,
     exclude_interneuron_spikes=False,
+    brain_areas=None,
 ):
     tetrode_info = make_tetrode_dataframe(ANIMALS)
     prob = int(probability_threshold * 100)
+    epoch_identifier = f'*_{data_type}_{dim}'
+
     if exclude_interneuron_spikes:
-        interneuron = 'no_interneuron_'
-    else:
-        interneuron = ''
-    file_regex = f"*_{data_type}_{dim}_{interneuron}replay_info_{prob:02d}.csv"
+        epoch_identifier += '_no_interneuron'
+
+    if brain_areas is not None:
+        area_str = '-'.join(brain_areas)
+        epoch_identifier += f'_{area_str}'
+
+    file_regex = f"{epoch_identifier}_replay_info_{prob:02d}.csv"
     file_paths = glob(os.path.join(PROCESSED_DATA_DIR, file_regex))
     replay_info = pd.concat(
         [pd.read_csv(file_path) for file_path in file_paths], axis=0,
