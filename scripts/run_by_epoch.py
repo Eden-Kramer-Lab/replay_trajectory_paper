@@ -33,8 +33,10 @@ logging.basicConfig(level='INFO', format=FORMAT, datefmt='%d-%b-%y %H:%M:%S')
 plt.switch_backend('agg')
 
 
-def sorted_spikes_analysis_1D(epoch_key, plot_ripple_figures=False,
+def sorted_spikes_analysis_1D(epoch_key,
+                              plot_ripple_figures=False,
                               exclude_interneuron_spikes=False,
+                              brain_areas=None,
                               overwrite=False):
     animal, day, epoch = epoch_key
     data_type, dim = 'sorted_spikes', '1D'
@@ -46,9 +48,24 @@ def sorted_spikes_analysis_1D(epoch_key, plot_ripple_figures=False,
     position = data['position_info'].loc[:, 'linear_position']
     track_graph, center_well_id = make_track_graph(epoch_key, ANIMALS)
 
+    # Set up naming
+    group = f'/{data_type}/{dim}/'
+    epoch_identifier = f'{animal}_{day:02d}_{epoch:02d}_{data_type}_{dim}'
+
+    if exclude_interneuron_spikes:
+        logging.info('Excluding interneuron spikes...')
+        epoch_identifier += '_no_interneuron'
+        group += 'no_interneuron/'
+
+    if brain_areas is not None:
+        area_str = '-'.join(brain_areas)
+        epoch_identifier += f'_{area_str}'
+        group += f'{area_str}/'
+
     model_name = os.path.join(
-        PROCESSED_DATA_DIR,
-        f'{animal}_{day:02}_{epoch:02}_{data_type}_{dim}_model.pkl')
+        PROCESSED_DATA_DIR, epoch_identifier + '_model.pkl')
+    group += 'classifier/ripples/'
+
     try:
         if overwrite:
             raise FileNotFoundError
@@ -181,35 +198,40 @@ def sorted_spikes_analysis_1D(epoch_key, plot_ripple_figures=False,
     logging.info('Done...')
 
 
-def clusterless_analysis_1D(epoch_key, plot_ripple_figures=False,
+def clusterless_analysis_1D(epoch_key,
+                            plot_ripple_figures=False,
                             exclude_interneuron_spikes=False,
+                            brain_areas=None,
                             overwrite=False):
     animal, day, epoch = epoch_key
     data_type, dim = 'clusterless', '1D'
 
     logging.info('Loading data...')
     data = load_data(epoch_key,
+                     brain_areas=brain_areas,
                      exclude_interneuron_spikes=exclude_interneuron_spikes)
 
     is_training = data['position_info'].speed > 4
     position = data['position_info'].loc[:, 'linear_position']
     track_graph, center_well_id = make_track_graph(epoch_key, ANIMALS)
 
-    if not exclude_interneuron_spikes:
-        model_name = os.path.join(
-            PROCESSED_DATA_DIR,
-            f'{animal}_{day:02}_{epoch:02}_{data_type}_{dim}_model.pkl')
-        group = f'/{data_type}/{dim}/classifier/ripples/'
-        epoch_identifier = f'{animal}_{day:02d}_{epoch:02d}_{data_type}_{dim}'
-    else:
+    # Set up naming
+    group = f'/{data_type}/{dim}/'
+    epoch_identifier = f'{animal}_{day:02d}_{epoch:02d}_{data_type}_{dim}'
+
+    if exclude_interneuron_spikes:
         logging.info('Excluding interneuron spikes...')
-        model_name = os.path.join(
-            PROCESSED_DATA_DIR,
-            f'{animal}_{day:02}_{epoch:02}_{data_type}_{dim}'
-            '_no_interneuron_model.pkl')
-        group = f'/{data_type}/{dim}/no_interneuron/classifier/ripples/'
-        epoch_identifier = (f'{animal}_{day:02d}_{epoch:02d}_{data_type}_{dim}'
-                            '_no_interneuron')
+        epoch_identifier += '_no_interneuron'
+        group += 'no_interneuron/'
+
+    if brain_areas is not None:
+        area_str = '-'.join(brain_areas)
+        epoch_identifier += f'_{area_str}'
+        group += f'{area_str}/'
+
+    model_name = os.path.join(
+        PROCESSED_DATA_DIR, epoch_identifier + '_model.pkl')
+    group += 'classifier/ripples/'
 
     try:
         if overwrite:
@@ -341,6 +363,7 @@ def get_command_line_arguments():
     parser.add_argument('--threads_per_worker', type=int, default=1)
     parser.add_argument('--plot_ripple_figures', action='store_true')
     parser.add_argument('--exclude_interneuron_spikes', action='store_true')
+    parser.add_argument('--CA1', action='store_true')
     parser.add_argument('--overwrite', action='store_true')
     parser.add_argument(
         '-d', '--debug',
@@ -375,11 +398,17 @@ def main():
                    stdout=PIPE, universal_newlines=True).stdout
     logging.info('Git Hash: {git_hash}'.format(git_hash=git_hash.rstrip()))
 
+    if args.CA1:
+        brain_areas = ['CA1']
+    else:
+        brain_areas = None
+
     # Analysis Code
     run_analysis[(args.data_type, args.dim)](
         epoch_key,
         plot_ripple_figures=args.plot_ripple_figures,
         exclude_interneuron_spikes=args.exclude_interneuron_spikes,
+        brain_areas=brain_areas,
         overwrite=args.overwrite)
 
 

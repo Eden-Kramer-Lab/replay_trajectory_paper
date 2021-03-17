@@ -96,6 +96,9 @@ def main():
             python_cmd += ' --exclude_interneuron_spikes'
         if args.overwrite:
             python_cmd += ' --overwrite'
+        if args.CA1:
+            python_cmd += ' --CA1'
+
         queue_job(python_cmd,
                   directives=directives,
                   log_file=join(LOG_DIRECTORY, log_file),
