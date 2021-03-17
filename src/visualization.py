@@ -1375,3 +1375,57 @@ def plot_classifier_time_slice(
     axes[4].set_ylabel("Speed\n[cm / s]")
     axes[4].set_xlabel("Time [s]")
     sns.despine(offset=5)
+
+
+def plot_upset_classification(replay_info, intersection_frac_threshold=0.01):
+    df = (replay_info
+          .rename(columns=SHORT_STATE_NAMES)
+          .set_index(SHORT_STATE_ORDER[::-1]))
+    upset = UpSet(
+        df,
+        sort_sets_by=None,
+        show_counts=False,
+        subset_size="count",
+        sort_by="cardinality",
+        intersection_plot_elements=5,
+    )
+    upset.intersections = upset.intersections.loc[(
+        upset.intersections / len(replay_info)) >= intersection_frac_threshold]
+    ax_dict = upset.plot()
+    n_ripples = len(replay_info)
+    ax_dict["intersections"].set_yticks(n_ripples * np.arange(0, 0.6, 0.1))
+    ax_dict["intersections"].set_yticklabels(range(0, 60, 10))
+    ax_dict["intersections"].set_ylabel(
+        "Percentage\nof Ripples",
+        ha="center",
+        va="center",
+        rotation="horizontal",
+        labelpad=30,
+    )
+    ax_dict["intersections"].text(
+        9, n_ripples * 0.45, f"N = {n_ripples}", zorder=1000, fontsize=9
+    )
+    xmin, xmax = ax_dict["intersections"].get_xlim()
+
+    ax_dict["intersections"].set_xlim((-0.6, xmax))
+
+    ax_dict["totals"].set_xticks([0, 0.5 * n_ripples])
+    ax_dict["totals"].set_xticklabels([0, 50])
+    ax_dict["totals"].set_xlabel("Marginal Percentage\nof Ripples")
+    ax_dict["totals"].set_ylim([-0.4, len(SHORT_STATE_ORDER) - 1 + 0.4])
+
+    plt.suptitle("Most Common Combinations of Classifications per Ripple",
+                 fontsize=14, x=0.55, y=0.925)
+    for i, color in enumerate(STATE_ORDER):
+        rect = plt.Rectangle(
+            xy=(0, len(STATE_ORDER) - i - 1.4),
+            width=1,
+            height=0.8,
+            facecolor=STATE_COLORS[color],
+            lw=0,
+            zorder=0,
+            alpha=0.25,
+        )
+        ax_dict["shading"].add_patch(rect)
+
+    return ax_dict, upset
