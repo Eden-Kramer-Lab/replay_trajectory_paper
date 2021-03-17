@@ -581,6 +581,8 @@ def load_all_replay_info(
     if brain_areas is not None:
         area_str = '-'.join(brain_areas)
         epoch_identifier += f'_{area_str}'
+    else:
+        brain_areas = _BRAIN_AREAS
 
     file_regex = f"{epoch_identifier}_replay_info_{prob:02d}.csv"
     file_paths = glob(os.path.join(PROCESSED_DATA_DIR, file_regex))
@@ -599,7 +601,7 @@ def load_all_replay_info(
     ].sort_index()
 
     is_brain_areas = tetrode_info.area.astype(
-        str).str.upper().isin(_BRAIN_AREAS)
+        str).str.upper().isin(brain_areas)
     n_tetrodes = (
         tetrode_info.loc[is_brain_areas]
         .groupby(["animal", "day", "epoch"])
