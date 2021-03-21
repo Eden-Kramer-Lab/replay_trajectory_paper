@@ -5,8 +5,10 @@ from argparse import ArgumentParser
 from signal import SIGUSR1, SIGUSR2, signal
 from subprocess import PIPE, run
 
+import dask
 import numpy as np
 import pandas as pd
+from dask.distributed import Client
 from src.parameters import PROCESSED_DATA_DIR
 from src.shuffle import get_shuffled_pvalue, shuffle_likelihood_position_bins
 from src.standard_decoder import (fit_mark_likelihood, load_data,
@@ -16,6 +18,54 @@ from src.standard_decoder import (fit_mark_likelihood, load_data,
 FORMAT = '%(asctime)s %(message)s'
 
 logging.basicConfig(level='INFO', format=FORMAT, datefmt='%d-%b-%y %H:%M:%S')
+
+
+@dask.delayed
+def get_shuffled_scores(
+    time,
+    likelihood,
+    is_track_interior,
+    place_bin_centers,
+    place_bin_edges,
+    track_graph1,
+    place_bin_center_ind_to_node,
+    dt,
+):
+    shuffled_likelihood = shuffle_likelihood_position_bins(
+        likelihood, is_track_interior
+    )
+    (
+        _,
+        _,
+        _,
+        _,
+        shuffled_radon_score,
+        _,
+        _,
+        shuffled_isotonic_score,
+        _,
+        _,
+        shuffled_linear_score,
+        _,
+        _,
+        shuffled_map_score,
+    ) = predict_clusterless_wtrack(
+        time,
+        shuffled_likelihood,
+        place_bin_centers,
+        is_track_interior,
+        place_bin_edges,
+        track_graph1,
+        place_bin_center_ind_to_node,
+        dt=dt,
+    )
+
+    return (
+        shuffled_radon_score,
+        shuffled_isotonic_score,
+        shuffled_linear_score,
+        shuffled_map_score,
+    )
 
 
 def clusterless_analysis_1D(epoch_key, dt=0.020, n_shuffles=1000):
@@ -87,29 +137,25 @@ def clusterless_analysis_1D(epoch_key, dt=0.020, n_shuffles=1000):
             dt=dt,
         )
 
-        shuffled_radon_score = np.zeros((n_shuffles,))
-        shuffled_isotonic_score = np.zeros((n_shuffles,))
-        shuffled_linear_score = np.zeros((n_shuffles,))
-        shuffled_map_score = np.zeros((n_shuffles,))
+        scores = []
 
         for shuffle_ind in range(n_shuffles):
-            shuffled_likelihood = shuffle_likelihood_position_bins(
-                likelihood, is_track_interior)
-            (_, _,
-             _, _, shuffled_radon_score[shuffle_ind],
-             _, _, shuffled_isotonic_score[shuffle_ind],
-             _, _, shuffled_linear_score[shuffle_ind],
-             _, _, shuffled_map_score[shuffle_ind]
-             ) = predict_clusterless_wtrack(
-                time,
-                shuffled_likelihood,
-                place_bin_centers,
-                is_track_interior,
-                place_bin_edges,
-                track_graph1,
-                place_bin_center_ind_to_node,
-                dt=dt,
+            scores.append(
+                get_shuffled_scores(
+                    time,
+                    likelihood,
+                    is_track_interior,
+                    place_bin_centers,
+                    place_bin_edges,
+                    track_graph1,
+                    place_bin_center_ind_to_node,
+                    dt,
+                )
             )
+
+        (shuffled_radon_score, shuffled_isotonic_score, shuffled_linear_score,
+         shuffled_map_score) = np.asarray(dask.compute(*scores)).T
+
         radon_pvalue = get_shuffled_pvalue(radon_score, shuffled_radon_score)
         isotonic_pvalue = get_shuffled_pvalue(
             isotonic_score, shuffled_isotonic_score)
@@ -149,6 +195,8 @@ def get_command_line_arguments():
     parser.add_argument('Day', type=int, help='Day of recording session')
     parser.add_argument('Epoch', type=int,
                         help='Epoch number of recording session')
+    parser.add_argument('--n_workers', type=int, default=16)
+    parser.add_argument('--threads_per_worker', type=int, default=1)
     parser.add_argument(
         '-d', '--debug',
         help='More verbose output for debugging',
@@ -182,7 +230,10 @@ def main():
     logging.info('Git Hash: {git_hash}'.format(git_hash=git_hash.rstrip()))
 
     # Analysis Code
-    clusterless_analysis_1D(epoch_key)
+    client = Client(processes=True, threads_per_worker=args.threads_per_worker,
+                    n_workers=args.n_workers, memory_limit="32GB")
+    with client:
+        clusterless_analysis_1D(epoch_key)
     logging.info('Done...\n')
 
 

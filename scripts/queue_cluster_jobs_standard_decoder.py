@@ -18,9 +18,9 @@ def get_command_line_arguments():
     parser.add_argument('--Epoch', type=int,
                         help='Epoch number of recording session')
     parser.add_argument('--n_cores', type=int, default=16)
-    parser.add_argument('--wall_time', type=str, default='6:00:00')
+    parser.add_argument('--wall_time', type=str, default='12:00:00')
     parser.add_argument('--n_workers', type=int, default=16)
-    parser.add_argument('--threads_per_worker', type=int, default=16)
+    parser.add_argument('--threads_per_worker', type=int, default=1)
 
     return parser.parse_args()
 
@@ -79,7 +79,9 @@ def main():
         log_file = f'{animal}_{day:02d}_{epoch:02d}_clusterless_1D.log'
         function_name = python_function.replace('.py', '')
         job_name = f'{function_name}_{animal}_{day:02d}_{epoch:02d}'
-        python_cmd = f'{python_function} {animal} {day} {epoch}'
+        python_cmd = (f'{python_function} {animal} {day} {epoch}'
+                      f' --n_workers {args.n_workers}'
+                      f' --threads_per_worker {args.threads_per_worker}')
         queue_job(python_cmd,
                   directives=directives,
                   log_file=join(LOG_DIRECTORY, log_file),
