@@ -5,17 +5,20 @@ from argparse import ArgumentParser
 from signal import SIGUSR1, SIGUSR2, signal
 from subprocess import PIPE, run
 
+import numpy as np
 import pandas as pd
 from src.parameters import PROCESSED_DATA_DIR
+from src.shuffle import get_shuffled_pvalue, shuffle_likelihood_position_bins
 from src.standard_decoder import (fit_mark_likelihood, load_data,
-                                  predict_clusterless_wtrack)
+                                  predict_clusterless_wtrack,
+                                  predict_mark_likelihood)
 
 FORMAT = '%(asctime)s %(message)s'
 
 logging.basicConfig(level='INFO', format=FORMAT, datefmt='%d-%b-%y %H:%M:%S')
 
 
-def clusterless_analysis_1D(epoch_key, dt=0.020):
+def clusterless_analysis_1D(epoch_key, dt=0.020, n_shuffles=1000):
     logging.info('Loading data...')
     (
         linear_position,
@@ -50,24 +53,15 @@ def clusterless_analysis_1D(epoch_key, dt=0.020):
     logging.info('Predicting with radon...')
     radon_info = []
     for ripple_number in ripple_times.index:
-        (
-            _,
-            _,
-            radon_speed,
-            _,
-            radon_score,
-            isotonic_speed,
-            _,
-            isotonic_score,
-            linear_speed,
-            _,
-            linear_score,
-            map_speed,
-            _,
-            map_score,
-        ) = predict_clusterless_wtrack(
-            ripple_times,
-            ripple_number,
+        start_time, end_time = (
+            ripple_times.loc[ripple_number].start_time /
+            np.timedelta64(1, "s"),
+            ripple_times.loc[ripple_number].end_time / np.timedelta64(1, "s"),
+        )
+
+        likelihood, time = predict_mark_likelihood(
+            start_time,
+            end_time,
             place_bin_centers,
             occupancy,
             joint_pdf_models,
@@ -75,25 +69,68 @@ def clusterless_analysis_1D(epoch_key, dt=0.020):
             ground_process_intensities,
             mean_rates,
             is_track_interior,
+            dt=dt,
+        )
+        (_, _,
+            radon_speed, _, radon_score,
+            isotonic_speed, _, isotonic_score,
+            linear_speed, _, linear_score,
+            map_speed, _, map_score,
+         ) = predict_clusterless_wtrack(
+            time,
+            likelihood,
+            place_bin_centers,
+            is_track_interior,
             place_bin_edges,
             track_graph1,
             place_bin_center_ind_to_node,
             dt=dt,
         )
+
+        shuffled_radon_score = np.zeros((n_shuffles,))
+        shuffled_isotonic_score = np.zeros((n_shuffles,))
+        shuffled_linear_score = np.zeros((n_shuffles,))
+        shuffled_map_score = np.zeros((n_shuffles,))
+
+        for shuffle_ind in range(n_shuffles):
+            shuffled_likelihood = shuffle_likelihood_position_bins(
+                likelihood, is_track_interior)
+            (_, _,
+             _, _, shuffled_radon_score[shuffle_ind],
+             _, _, shuffled_isotonic_score[shuffle_ind],
+             _, _, shuffled_linear_score[shuffle_ind],
+             _, _, shuffled_map_score[shuffle_ind]
+             ) = predict_clusterless_wtrack(
+                time,
+                shuffled_likelihood,
+                place_bin_centers,
+                is_track_interior,
+                place_bin_edges,
+                track_graph1,
+                place_bin_center_ind_to_node,
+                dt=dt,
+            )
+        radon_pvalue = get_shuffled_pvalue(radon_score, shuffled_radon_score)
+        isotonic_pvalue = get_shuffled_pvalue(
+            isotonic_score, shuffled_isotonic_score)
+        linear_pvalue = get_shuffled_pvalue(
+            linear_score, shuffled_linear_score)
+        map_pvalue = get_shuffled_pvalue(map_score, shuffled_map_score)
+
         radon_info.append(
-            (radon_speed, radon_score,
-             isotonic_speed, isotonic_score,
-             linear_speed, linear_score,
-             map_speed, map_score))
+            (radon_speed, radon_score, radon_pvalue,
+             isotonic_speed, isotonic_score, isotonic_pvalue,
+             linear_speed, linear_score, linear_pvalue,
+             map_speed, map_score, map_pvalue))
 
     logging.info('Saving results...')
     radon_info = pd.DataFrame(
         radon_info,
         index=ripple_times.index,
-        columns=["radon_speed", "radon_score",
-                 "isotonic_speed", "isotonic_score",
-                 "linear_speed", "linear_score",
-                 "map_speed", "map_score"],
+        columns=["radon_speed", "radon_score", "radon_pvalue",
+                 "isotonic_speed", "isotonic_score", "isotonic_pvalue",
+                 "linear_speed", "linear_score", "linear_pvalue",
+                 "map_speed", "map_score", "map_pvalue"],
     )
 
     animal, day, epoch = epoch_key

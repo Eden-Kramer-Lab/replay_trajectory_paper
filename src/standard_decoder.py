@@ -544,14 +544,9 @@ def _get_max_score_metrics(metric, max_center_edge, min_left_edge,
 
 
 def predict_clusterless_wtrack(
-    ripple_times,
-    ripple_number,
+    time,
+    likelihood,
     place_bin_centers,
-    occupancy,
-    joint_pdf_models,
-    multiunit_dfs,
-    ground_process_intensities,
-    mean_rates,
     is_track_interior,
     place_bin_edges,
     track_graph1,
@@ -566,23 +561,6 @@ def predict_clusterless_wtrack(
     min_right_edge = place_bin_edges[:-1][arm_labels == 2][0][0]
     min_left_edge = place_bin_edges[:-1][arm_labels == 3][0][0]
 
-    start_time, end_time = (
-        ripple_times.loc[ripple_number].start_time / np.timedelta64(1, "s"),
-        ripple_times.loc[ripple_number].end_time / np.timedelta64(1, "s"),
-    )
-
-    likelihood, time = predict_mark_likelihood(
-        start_time,
-        end_time,
-        place_bin_centers,
-        occupancy,
-        joint_pdf_models,
-        multiunit_dfs,
-        ground_process_intensities,
-        mean_rates,
-        is_track_interior,
-        dt=dt,
-    )
     posterior = normalize_to_posterior(likelihood)
     place_bin_edges = place_bin_edges.squeeze()
     time_bin_centers = time + dt / 2
