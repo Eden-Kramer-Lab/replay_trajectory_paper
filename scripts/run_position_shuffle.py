@@ -12,11 +12,8 @@ from scipy.ndimage import label
 from src.analysis import get_replay_info
 from src.load_data import load_data
 from src.parameters import (ANIMALS, PROBABILITY_THRESHOLD, PROCESSED_DATA_DIR,
-                            SAMPLING_FREQUENCY, TRANSITION_TO_CATEGORY,
-                            continuous_transition_types, discrete_diag, model,
-                            model_kwargs, movement_var, place_bin_size,
-                            replay_speed)
-from src.shuffle import shuffle_run_position
+                            SAMPLING_FREQUENCY, TRANSITION_TO_CATEGORY)
+from src.shuffle import shuffle_segments_run_position
 from tqdm.auto import tqdm
 
 FORMAT = "%(asctime)s %(message)s"
@@ -25,24 +22,37 @@ logging.basicConfig(level="INFO", format=FORMAT, datefmt="%d-%b-%y %H:%M:%S")
 
 
 def classify(
-    classifier, data, edge_order, edge_spacing, epoch_key, name="actual",
+    data, edge_order, edge_spacing, epoch_key, name="actual",
 ):
-    is_training = data["position_info"].speed > 4
-    position = shuffle_run_position(data["position_info"])
+    is_training = ((data["position_info"].speed > 4) &
+                   (data["position_info"].labeled_segments != 0))
     track_graph, center_well_id = make_track_graph(epoch_key, ANIMALS)
 
     animal, day, epoch = epoch_key
     data_type, dim = "clusterless", "1D"
 
-    classifier.fit(
-        position,
-        data["multiunit"],
-        is_training=is_training,
-        track_graph=track_graph,
-        center_well_id=center_well_id,
-        edge_order=edge_order,
-        edge_spacing=edge_spacing,
-    )
+    exclude_interneuron_spikes = False
+    brain_areas = None
+
+    # Set up naming
+    group = f'/{data_type}/{dim}/'
+    epoch_identifier = f'{animal}_{day:02d}_{epoch:02d}_{data_type}_{dim}'
+
+    if exclude_interneuron_spikes:
+        logging.info('Excluding interneuron spikes...')
+        epoch_identifier += '_no_interneuron'
+        group += 'no_interneuron/'
+
+    if brain_areas is not None:
+        area_str = '-'.join(brain_areas)
+        epoch_identifier += f'_{area_str}'
+        group += f'{area_str}/'
+
+    model_name = os.path.join(
+        PROCESSED_DATA_DIR, epoch_identifier + '_model.pkl')
+    classifier = ClusterlessClassifier.load_model(model_name)
+    classifier = shuffle_segments_run_position(
+        data['position_info'], data['multiunit'], classifier)
 
     # Decode
     is_test = ~is_training
@@ -128,21 +138,9 @@ def main():
         f'Animal {args.Animal}, Day {args.Day}, Epoch #{args.Epoch}...')
     data = load_data(epoch_key)
 
-    classifier = ClusterlessClassifier(
-        place_bin_size=place_bin_size,
-        movement_var=movement_var,
-        replay_speed=replay_speed,
-        discrete_transition_diag=discrete_diag,
-        continuous_transition_types=continuous_transition_types,
-        model=model,
-        model_kwargs=model_kwargs,
-    )
-    logging.info(classifier)
-
     for shuffle_ind in tqdm(range(args.start_ind, args.end_ind),
                             desc='shuffle'):
         classify(
-            classifier,
             data,
             EDGE_ORDER,
             EDGE_SPACING,

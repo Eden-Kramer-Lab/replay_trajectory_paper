@@ -1,6 +1,8 @@
 import numpy as np
 import pandas as pd
 import xarray as xr
+from replay_trajectory_classification.multiunit_likelihood import (
+    estimate_ground_process_intensity, train_joint_model)
 
 
 def shuffle_likelihood_position_bins(likelihood, is_track_interior):
@@ -69,6 +71,39 @@ def tetrode_identity_shuffle(multiunit):
     rand_tetrode_index = np.random.randint(
         low=0, high=n_tetrodes, size=n_tetrodes)
     return multiunit.isel(tetrodes=rand_tetrode_index)
+
+
+def shuffle_segments_run_position(position_info, multiunits, classifier):
+    is_training = (position_info.speed > 4) & (
+        position_info.labeled_segments != 0)
+    position_info = position_info.loc[is_training]
+    segments = position_info.labeled_segments.unique()
+    multiunits = multiunits.values[is_training]
+    joint_pdf_models = []
+    ground_process_intensities = []
+
+    for tetrode_ind, multiunit in enumerate(np.moveaxis(multiunits, -1, 0)):
+        shuffled_position = shuffle_run_position(position_info)
+        shuffled_position = np.concatenate(
+            [np.asarray(
+                shuffled_position[position_info.labeled_segments == segment])
+             for segment in np.random.choice(segments, size=segments.size,
+                                             replace=False)])
+        ground_process_intensities.append(
+            estimate_ground_process_intensity(
+                multiunit, shuffled_position[:, np.newaxis],
+                classifier.place_bin_centers_, classifier.occupancy_,
+                classifier.mean_rates_[tetrode_ind], classifier.model,
+                classifier.model_kwargs, classifier.is_track_interior_))
+        joint_pdf_models.append(
+            train_joint_model(multiunit, shuffled_position[:, np.newaxis],
+                              classifier.model, classifier.model_kwargs))
+
+    shuffle_classifier = classifier.copy()
+    shuffle_classifier.ground_process_intensities_ = ground_process_intensities
+    shuffle_classifier.joint_pdf_models_ = joint_pdf_models
+
+    return shuffle_classifier
 
 
 def get_shuffled_pvalue(observed_stat, shuffled_stat, type='two-sided'):
