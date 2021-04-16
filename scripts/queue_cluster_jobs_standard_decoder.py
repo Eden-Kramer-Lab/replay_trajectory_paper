@@ -18,7 +18,7 @@ def get_command_line_arguments():
     parser.add_argument('--Epoch', type=int,
                         help='Epoch number of recording session')
     parser.add_argument('--n_cores', type=int, default=16)
-    parser.add_argument('--wall_time', type=str, default='12:00:00')
+    parser.add_argument('--wall_time', type=str, default='24:00:00')
     parser.add_argument('--n_workers', type=int, default=16)
     parser.add_argument('--threads_per_worker', type=int, default=1)
 
