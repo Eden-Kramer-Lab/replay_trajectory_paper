@@ -65,8 +65,5 @@ coverage.xml
 *.docx
 *.pdf
 *.npy
-!Figure1_v*.pdf
-!Figure2_v*.pdf
-!Figure3_v*.pdf
-!Figure4_v*.pdf
-!Figure5_v*.pdf
+
+!Figure*_v*.pdf
