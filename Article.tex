@@ -165,6 +165,10 @@ We find that spatially coherent events indeed have smaller HPD regions than even
 
 % Figure 4-Supplemental 1
 \figsupp[Comparison of average spatial coverage of the 95\% highest posterior density on real vs. position shuffled data]{Comparison of average spatial coverage of the 95\% highest posterior density on real vs. position shuffled data for two epochs from different animals. Red line represents the average spatial position spanned by the highest posterior density on real data for all ripples. The histogram represents the distribution after 50 shuffles of the position data. Position data was shuffled by resampling with replacement from the set of all observed positions in that epoch, destroying position information but preserving spiking timing and position occupancy.}{\includegraphics[width=0.8\linewidth]{figures/Figure4-supplemental1/Figure4_v1-supplemental1}}\label{figsupp:fig4sup1}
+
+% Figure 4-Supplemental 2
+\figsupp[Comparison of average spatial coverage of the 95\% highest posterior density on real vs. position shuffled data]{Comparison of average spatial coverage of the 95\% highest posterior density on real vs. position shuffled data for two epochs from different animals. Red line represents the average spatial position spanned by the highest posterior density on real data for all ripples. The histogram represents the distribution after 50 shuffles of the position data. Position data was shuffled by resampling with replacement from the set of all observed positions in that epoch, destroying position information but preserving spiking timing and position occupancy.}{\includegraphics[width=0.8\linewidth]{figures/Figure4-supplemental2/Figure4_v1-supplemental2}}\label{figsupp:fig4sup2}
+
 \end{figure}
 
 \subsection*{Many replay events are slow or stationary}
@@ -201,7 +205,7 @@ We examined the overall levels of neuronal spiking across dynamics. We found tha
 \begin{figure}
 \includegraphics[width=0.80\linewidth]{figures/Figure6/Figure6_v2}
 \caption{
-Comparison of the state space decoder to the standard "Bayesian" decoder. \textbf{(A)} Radon transform  \textbf{(B)} MAP estimate  \textbf{(C)} Linear regression  \textbf{(D)} State space decoder
+Comparison of the state space decoder to the standard "Bayesian" decoder. For each panel, the top five rows are the probability density of the estimated speed for SWRs that contain that dynamic or combination of dynamics. Note that these categories are not mutually exclusive since a SWR can have more than one dynamic or combination of dynamics. The sixth row is all SWRs containing unclassified dynamics. The final row is the estimated speed for all SWRs. \textbf{(A)} Radon transform  \textbf{(B)} MAP estimate  \textbf{(C)} Linear regression  \textbf{(D)} State space decoder presented in this manuscript.
 }
 \label{fig:6}
 
@@ -229,7 +233,7 @@ One last concern is that we have combined spiking information from several hippo
   \caption{Number of significant SWRs that contain each dynamic. SWRs were fit using the random transform with 1000 shuffles of the posterior in each time bin.}\label{tab:supp1}
 \end{wraptable}
 
-Finally, an important question is how our method compares to the standard "Bayesian" decoder. This comparison is complicated due to the variety of parameters and inference methods used and referred to as the standard "Bayesian" decoder. For the sake of comparison, we used clusterless decoding in 20 ms time bins and used three common methods of inferring the trajectory: the radon transform \citep{DavidsonHippocampalReplayExtended2009, FarooqEmergencepreconfiguredplastic2019}, linear regression \citep{KarlssonAwakereplayremote2009, CarrHippocampalreplayawake2011, ShinDynamicsAwakeHippocampalPrefrontal2019}, and the MAP estimate (the maximum probability position of each time bin) \citep{PfeifferAutoassociativedynamicsgeneration2015, StellaHippocampalReactivationRandom2019, KaeferReplayBehavioralSequences2020}. We then compared how the estimated trajectory speeds varied by dynamic for each method. This reveals two key insights. First, the choice of method can give very different estimated speeds distributions for the SWRs. In particular, the methods that rely on fitting a line for the entire SWR (the radon transform and the linear regression), tend to estimate that the SWRs proceed at faster speeds. 
+Finally, an important question is how our method compares to the standard "Bayesian" decoder. This comparison is complicated due to the variety of parameters and inference methods used and referred to as the standard "Bayesian" decoder. We chose to use clusterless decoding in 20 ms time bins and three common methods of inferring the trajectory of the replay: the radon transform \citep{DavidsonHippocampalReplayExtended2009, FarooqEmergencepreconfiguredplastic2019}, linear regression \citep{KarlssonAwakereplayremote2009, CarrHippocampalreplayawake2011, ShinDynamicsAwakeHippocampalPrefrontal2019}, and the MAP estimate (the maximum probability position of each time bin) \citep{PfeifferAutoassociativedynamicsgeneration2015, StellaHippocampalReactivationRandom2019, KaeferReplayBehavioralSequences2020}. We then compared the estimated the speed of the replay for each dynamic and for the entire SWR (\FIG{6}). This reveals two key insights. First, the choice of method can give very different estimated speeds distributions for the SWRs. In particular, the methods that rely on fitting a line for the entire SWR (the radon transform and the linear regression), tend to estimate that the replays proceed at faster speeds (\FIG{6}A,C vs. \FIG{6}B,D). Second, the 
 
 
 \section*{Discussion}
