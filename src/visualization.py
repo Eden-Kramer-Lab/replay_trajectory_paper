@@ -1429,3 +1429,139 @@ def plot_upset_classification(replay_info, intersection_frac_threshold=0.01):
         ax_dict["shading"].add_patch(rect)
 
     return ax_dict, upset
+
+
+def plot_run_slice(results, data, classifier, start_time, end_time,
+                   cmap="bone_r",
+                   figsize=(7, 9.72)):
+    time_slice = slice(start_time, end_time)
+
+    fig, axes = plt.subplots(
+        5,
+        1,
+        sharex=False,
+        constrained_layout=True,
+        figsize=figsize,
+        gridspec_kw={"height_ratios": [0.5, 0.5, 0.5, 3, 0.5]},
+    )
+
+    # axis 0
+    lfp_start = start_time - pd.Timedelta(100, unit="ms")
+    lfp_end = end_time + pd.Timedelta(100, unit="ms")
+    lfps = data["lfps"].loc[lfp_start:lfp_end]
+    tetrode_id = data['tetrode_info'].loc[
+        (data['tetrode_info'].area == 'CA1') &
+        (data['tetrode_info'].validripple == 1.0)].iloc[0].tetrode_id
+
+    axes[0].plot(
+        (lfps.index) / np.timedelta64(1, "s"),
+        np.asarray(lfps.loc[:, tetrode_id]),
+        color="black",
+    )
+    axes[0].set_xlim((start_time / np.timedelta64(1, 's'),
+                      end_time / np.timedelta64(1, 's')))
+    axes[0].axis("off")
+
+    # axis 1
+    multiunit_rate = data['multiunit_firing_rate'].loc[time_slice]
+    axes[1].fill_between(multiunit_rate.index / np.timedelta64(1, 's'),
+                         np.asarray(multiunit_rate).squeeze(),
+                         color='black')
+    axes[1].set_ylabel("Mulitunit Rate\n[spikes/s]")
+    axes[1].set_xlim((start_time / np.timedelta64(1, 's'),
+                      end_time / np.timedelta64(1, 's')))
+    axes[1].set_xticks([])
+    axes[1].set_ylim([0, int(np.max(np.asarray(multiunit_rate)))])
+    axes[1].set_yticks([0, int(np.max(np.asarray(multiunit_rate)))])
+    sns.despine(ax=axes[1], offset=5)
+    axes[1].spines["bottom"].set_visible(False)
+
+    # axis 2
+    probability = results.sel(
+        time=time_slice).acausal_posterior.sum(["position"])
+
+    for state, prob in zip(results.state.values, probability.values.T):
+        axes[2].plot(
+            probability.time / np.timedelta64(1, "s"),
+            prob,
+            linewidth=1,
+            color=STATE_COLORS[state],
+            clip_on=False,
+        )
+
+    axes[2].set_ylim((0, 1))
+    axes[2].set_yticks((0, 1))
+    axes[2].set_ylabel("Prob.")
+    axes[2].set_xlim((start_time / np.timedelta64(1, 's'),
+                      end_time / np.timedelta64(1, 's')))
+    axes[2].set_xticks([])
+    sns.despine(ax=axes[2], offset=5)
+    axes[2].spines["bottom"].set_visible(False)
+
+    probability2 = get_probability(results.sel(time=time_slice))
+    is_classified = get_is_classified(probability2, PROBABILITY_THRESHOLD)
+
+    time = probability.time / np.timedelta64(1, "s")
+
+    for state, is_class in zip(is_classified.state.values,
+                               is_classified.values.T):
+        if is_class.sum() > 0:
+            axes[2].fill_between(
+                time,
+                is_class,
+                where=is_class.astype(bool),
+                alpha=0.25,
+                color=STATE_COLORS[state],
+            )
+
+    # axis 3
+    cmap = copy.copy(plt.cm.get_cmap(cmap))
+    cmap.set_bad(color="lightgrey", alpha=1.0)
+    (
+        results.sel(time=time_slice).assign_coords(
+            time=lambda ds: ds.time / np.timedelta64(1, "s")
+        )
+        .acausal_posterior.sum("state")
+        .where(classifier.is_track_interior_)
+        .plot(
+            x="time",
+            y="position",
+            robust=True,
+            add_colorbar=False,
+            zorder=0,
+            rasterized=True,
+            cmap=cmap,
+            ax=axes[3],
+        )
+    )
+    axes[3].set_title("")
+
+    position = data["position_info"].loc[time_slice, "linear_position"]
+    max_position = int(
+        np.ceil(data["position_info"].loc[:, "linear_position"].max()))
+    axes[3].scatter(time, position, s=0.5,
+                    color="magenta", clip_on=False)
+    axes[3].set_xlim((start_time / np.timedelta64(1, 's'),
+                      end_time / np.timedelta64(1, 's')))
+    axes[3].set_ylabel("Position [cm]")
+    axes[3].set_ylim((0, max_position))
+    axes[3].set_yticks((0, max_position))
+    axes[3].set_xlim((start_time / np.timedelta64(1, 's'),
+                      end_time / np.timedelta64(1, 's')))
+    axes[3].set_xticks([])
+    axes[3].set_xlabel("")
+    sns.despine(ax=axes[3], offset=5)
+    axes[3].spines["bottom"].set_visible(False)
+
+    # Axis 4
+    speed = data["position_info"].loc[time_slice, "speed"]
+    axes[4].fill_between(time, speed, color='lightgrey')
+    max_speed = int(
+        np.ceil(data["position_info"].loc[:, "speed"].max()))
+    axes[4].set_xlabel("Time [ms]")
+    axes[4].set_ylabel("Speed\n[cm/ms]")
+    axes[4].set_ylim((0, max_speed))
+    axes[4].set_xlim((start_time / np.timedelta64(1, 's'),
+                      end_time / np.timedelta64(1, 's')))
+    axes[4].set_yticks((0, max_speed))
+    sns.despine(ax=axes[4], offset=5)
