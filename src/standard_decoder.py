@@ -580,7 +580,7 @@ def predict_clusterless_wtrack(
 
         (_, radon_velocity,
          radon_prediction, radon_score) = detect_line_with_radon(
-            arm_posterior, dt=dt, dp=dp)
+            arm_posterior, dt=dt, dp=dp, incorporate_nearby_positions=False)
         radon.append((radon_velocity, radon_prediction, radon_score))
 
         isotonic_prediction, isotonic_score = isotonic_regression(
