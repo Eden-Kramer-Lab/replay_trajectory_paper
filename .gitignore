@@ -66,4 +66,4 @@ coverage.xml
 *.pdf
 *.npy
 
-!Figure*_v*.pdf
+!Figure*_final.pdf
