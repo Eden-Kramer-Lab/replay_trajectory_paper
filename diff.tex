@@ -1,7 +1,7 @@
 \documentclass[9pt,lineno]{elife}
 %DIF LATEXDIFF DIFFERENCE FILE
 %DIF DEL ../elife_orignal_draft.tex   Mon May 10 15:25:00 2021
-%DIF ADD ../Article.tex               Wed Jun  2 17:57:18 2021
+%DIF ADD ../Article.tex               Fri Jun  4 10:00:35 2021
 \usepackage{blindtext}
 \usepackage[utf8]{inputenc}
 \usepackage{graphicx}
@@ -180,7 +180,7 @@ We find that the large majority of SWRs contain spatially coherent content; that
 \begin{figure}
 \DIFdelbeginFL %DIFDELCMD < \includegraphics[width=0.75\linewidth]{figures/Figure1/Figure1_v6}
 %DIFDELCMD < %%%
-\DIFdelendFL \DIFaddbeginFL \includegraphics[width=0.70\linewidth]{figures/Figure1/Figure1_final}
+\DIFdelendFL \DIFaddbeginFL \includegraphics[width=0.65\linewidth]{figures/Figure1/Figure1_final}
 \DIFaddendFL \caption{The model can capture different sequence dynamics on simulated data. \textbf{(A)} We construct a firing sequence of 19 simulated place cells that exhibits three different movement dynamics. For the first 60 ms, one cell fires repeatedly, representing one stationary location. For next 190 ms, the cells fire in sequence, representing a rapid continuous trajectory along the virtual track. \DIFdelbeginFL \DIFdelFL{Finally, for }\DIFdelendFL \DIFaddbeginFL \DIFaddFL{For }\DIFaddendFL the last 30 ms, cells fire randomly, out of spatial order, representing an fragmented spatial sequence. \textbf{(B)} Like the standard decoder, the state space model uses estimates of cells' place fields from when the animal is moving and combines them with the observed spikes in (A) to compute the likelihood of position for each time step. \textbf{(C)} The prediction from the neural data is then combined with an explicit model of each movement dynamic, which determines how latent position can change based on the position in the previous time step. We show the probability of the next position bin for each movement dynamic model (color scale). Zero here represents the previous position. \textbf{(D)} The probability of remaining in a particular movement dynamic versus switching to another dynamic is modeled as having a high probability of remaining in a particular dynamic with a small probability of switching to one of the other dynamics at each time step. \textbf{(E)} The model uses the components in A-D over all time to decode the joint posterior probability of latent position and dynamic. This can be summarized by marginalizing over latent position (left panel) to get the probability of each dynamic over time. The shaded colors indicate the category of the speed of the trajectory at that time \DIFaddbeginFL \DIFaddFL{(Stat. = Stationary}\DIFaddendFL , \DIFaddbeginFL \DIFaddFL{S-C-M = Stationary-Continuous-Mixture, Cont. = Continuous, F-C-M = Fragmented-Continuous-Mixture, Frag. = Fragmented), }\DIFaddendFL which is determined from the probability. Marginalizing the posterior across dynamics also provides an estimate of latent position over time (right panel). \DIFaddbeginFL \DIFaddFL{Red dotted line in the right panel is the best fit line from the standard decoder using the Radon transform. }\DIFaddendFL \textbf{(F)} The probability of each dynamic depends heavily on the speed of the trajectory, as we show using a range of simulated spiking sequences each moving at a constant speed. Each dot corresponds to the average probability of that dynamic for a given constant speed sequence. We use a \DIFdelbeginFL \DIFdelFL{0.8 }\DIFdelendFL \DIFaddbeginFL \DIFaddFL{0.80 }\DIFaddendFL threshold (dotted line) to classify each sequence based on the dynamic or dynamics which contribute maximally to the posterior (shaded colors).
 }
 \label{fig:1}
@@ -309,7 +309,7 @@ Using a \DIFdelbegin \DIFdel{0.8 threshold, we are able to classify }\DIFdelend 
 
 %DIF >  Figure 3
 \DIFaddbegin \begin{figure}
-\includegraphics[width=0.8\linewidth]{figures/Figure3/Figure3_final}
+\includegraphics[width=0.75\linewidth]{figures/Figure3/Figure3_final}
 \caption{\DIFaddFL{A-F. Examples of SWRs with non-constant speed trajectories. Figure conventions are the same as in }\FIG{2}\DIFaddFL{. Filtered SWR ripple (150-250 Hz) trace from the tetrode with the maximum amplitude displayed above each example. }\textbf{\DIFaddFL{(A)}} \DIFaddFL{A SWR where the decoded position starts moving down the center arm away from the animal's position at the center well, slows down, and returns back. }\textbf{\DIFaddFL{(B)}} \DIFaddFL{A SWR where the decoded position persistently stays at the choice point (open circle) while the animal remains at the left well. }\textbf{\DIFaddFL{(C)}} \DIFaddFL{A SWR where the decoded position begins with stationary representation of the left well, then jumps to the middle of the right arm and proceeds up the right arm to the right well. }\textbf{\DIFaddFL{(D)}} \DIFaddFL{A SWR where the decoded position begins with stationary representation of the left well, jumps to the center arm, proceeds away from the center well, jumps to the right arm, proceeds back toward the center well, and then becomes fragmented. }\textbf{\DIFaddFL{(E)}} \DIFaddFL{A SWR where the decoded position begins in the left arm and persists at the end of the center arm. }\textbf{\DIFaddFL{(F)}} \DIFaddFL{A SWR where the decoded position starts in the left arm toward the choice point, jumps to the right arm and proceeds back toward the choice point. }\textbf{\DIFaddFL{(G)}} \DIFaddFL{Classification of SWRs from multiple animals and datasets. Each dot represents the percentage of SWRs for each day for that animal. A SWR is included in the numerator of the percentage if at any time it includes the classifications listed below the column. The denominator is listed in the x-axis label.
 }}
 \label{fig:3}
@@ -752,10 +752,14 @@ Both code bases rely on the following python packages: Numpy \citep{vanderWaltNu
 We thank Margaret Carr Larkin and Mattias P. Karlsson for use of their openly available datasets. We also thank Abhilasha Joshi for feedback on the manuscript. This work was supported by the Simons Foundation for the Global Brain Grants 542971 (U.T.E.) and 542981 (L.M.F.) and the Howard Hughes Medical Institute (L.M.F.).
 
 \section{Interests}
-The authors declare that no competing interests exist.
+The authors declare that no competing interests exist\DIFdelbegin \DIFdel{.
+}%DIFDELCMD < 
 
-\section{Contributions}
-E.L.D. conceived of the model and did the analysis with help from U.T.E, A.K.G., and M.E.C. E.L.D and L.M.F wrote the manuscript with help from A.K.G. and M.E.C. A.K.G, M.S., J.E.C. contributed data to this manuscript.
+%DIFDELCMD < %%%
+\section{\DIFdel{Contributions}}
+%DIFAUXCMD
+\addtocounter{section}{-1}%DIFAUXCMD
+\DIFdel{E.L.D. conceived of the model and did the analysis with help from U.T.E, A.K.G., and M.E.C. E.L.D and L.M.F wrote the manuscript with help from A.K.G. and M.E.C. A.K.G, M.S., J.E.C. contributed data to this manuscript}\DIFdelend .
 
 \bibliography{refs}
 \end{document}
