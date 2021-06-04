@@ -1,7 +1,7 @@
 \documentclass[9pt,lineno]{elife}
 %DIF LATEXDIFF DIFFERENCE FILE
 %DIF DEL ../elife_orignal_draft.tex   Mon May 10 15:25:00 2021
-%DIF ADD ../Article.tex               Fri Jun  4 10:00:35 2021
+%DIF ADD ../Article.tex               Fri Jun  4 14:15:15 2021
 \usepackage{blindtext}
 \usepackage[utf8]{inputenc}
 \usepackage{graphicx}
@@ -309,10 +309,12 @@ Using a \DIFdelbegin \DIFdel{0.8 threshold, we are able to classify }\DIFdelend 
 
 %DIF >  Figure 3
 \DIFaddbegin \begin{figure}
-\includegraphics[width=0.75\linewidth]{figures/Figure3/Figure3_final}
+\includegraphics[width=0.70\linewidth]{figures/Figure3/Figure3_final}
 \caption{\DIFaddFL{A-F. Examples of SWRs with non-constant speed trajectories. Figure conventions are the same as in }\FIG{2}\DIFaddFL{. Filtered SWR ripple (150-250 Hz) trace from the tetrode with the maximum amplitude displayed above each example. }\textbf{\DIFaddFL{(A)}} \DIFaddFL{A SWR where the decoded position starts moving down the center arm away from the animal's position at the center well, slows down, and returns back. }\textbf{\DIFaddFL{(B)}} \DIFaddFL{A SWR where the decoded position persistently stays at the choice point (open circle) while the animal remains at the left well. }\textbf{\DIFaddFL{(C)}} \DIFaddFL{A SWR where the decoded position begins with stationary representation of the left well, then jumps to the middle of the right arm and proceeds up the right arm to the right well. }\textbf{\DIFaddFL{(D)}} \DIFaddFL{A SWR where the decoded position begins with stationary representation of the left well, jumps to the center arm, proceeds away from the center well, jumps to the right arm, proceeds back toward the center well, and then becomes fragmented. }\textbf{\DIFaddFL{(E)}} \DIFaddFL{A SWR where the decoded position begins in the left arm and persists at the end of the center arm. }\textbf{\DIFaddFL{(F)}} \DIFaddFL{A SWR where the decoded position starts in the left arm toward the choice point, jumps to the right arm and proceeds back toward the choice point. }\textbf{\DIFaddFL{(G)}} \DIFaddFL{Classification of SWRs from multiple animals and datasets. Each dot represents the percentage of SWRs for each day for that animal. A SWR is included in the numerator of the percentage if at any time it includes the classifications listed below the column. The denominator is listed in the x-axis label.
 }}
 \label{fig:3}
+
+\figdata{Table of replay statistics for each SWR for Figure 3G.}
 
 %DIF >  Figure 3-Supplemental 1
 \figsupp[More examples of SWRs with non-constant speed trajectories]{A-I. More examples of SWRs with non-constant speed trajectories. Conventions are the same as in \FIG{3}.}{\includegraphics[width=1.0\linewidth]{figures/Figure3-supplemental1/Figure3-supplemental1_final}}\label{figsupp:fig3sup1}
@@ -353,7 +355,9 @@ We find that spatially coherent events indeed have smaller HPD regions than even
 \DIFaddendFL \caption{Validation of classification using the 95\% Highest Posterior Density. \textbf{(A-D)}  Examples of the 95 \% Highest Posterior Density. In each column: top panel: Probability of dynamic over time. Shading and labels indicate dynamic categories. Middle panel: Posterior distribution of estimated linear position over time. Magenta dashed line indicates animal's position. Bottom panel: HPD region size---the integral of the position bins with the top 95\% probable values. \textbf{(E)} Average 95\% HPD region size for each dynamic category. Median 24 cm for spatially coherent vs. median 238 cm for spatially incoherent, p=2.2e-16, one-sided Mann-Whitney-U}
 \label{fig:4}
 
-% Figure 4-Supplemental 1
+\DIFaddbeginFL \figdata{Table of replay statistics for each SWR for Figure 4E.}
+
+\DIFaddendFL % Figure 4-Supplemental 1
 \DIFdelbeginFL %DIFDELCMD < \figsupp[Comparison of average spatial coverage of the 95\% highest posterior density on real vs. position shuffled data]{Comparison of average spatial coverage of the 95\% highest posterior density on real vs. position shuffled data for two epochs from different animals. Red line represents the average spatial position spanned by the highest posterior density on real data for all ripples. The histogram represents the distribution after 50 shuffles of the position data. Position data was shuffled by resampling with replacement from the set of all observed positions in that epoch, destroying position information but preserving spiking timing and position occupancy.}{\includegraphics[width=0.8\linewidth]{figures/Figure4-supplemental1/Figure4_v1-supplemental1}}%%%
 \DIFdelendFL \DIFaddbeginFL \figsupp[Shuffling the position with replacement increases the average 95\% HPD region size]{Average 95\% HPD region size increases on position shuffled data for two recording sessions from different animals. Red line represents the average 95\% HPD region size for all ripples. The histogram represents the distribution after 50 shuffles of the position data. Position data was shuffled by resampling with replacement from the set of all observed positions in that recording session, destroying position information but preserving spiking timing and position occupancy.}{\includegraphics[width=0.8\linewidth]{figures/Figure4-supplemental1/Figure4-supplemental1_final}}\DIFaddendFL \label{figsupp:fig4sup1}
 \DIFaddbeginFL 
@@ -375,7 +379,9 @@ Prevalence of classifications. \textbf{(A)} UpSet plot \citep{LexUpSetVisualizat
 }\DIFaddendFL }
 \label{fig:5}
 
-% Figure 5-Supplemental 1
+\DIFaddbeginFL \figdata{Table of replay statistics for each SWR for Figure 5.}
+
+\DIFaddendFL % Figure 5-Supplemental 1
 \DIFdelbeginFL %DIFDELCMD < \figsupp[More examples of stationary-continuous-mixtures.]{More examples of stationary-continuous-mixtures.}{\includegraphics[width=1.0\linewidth]{figures/Figure5-supplemental1/Figure5_v1_supplemental1}}%%%
 \DIFdelendFL \DIFaddbeginFL \figsupp[More examples of stationary-continuous-mixtures.]{More examples of stationary-continuous-mixtures. Conventions are the same as in \FIG{3}.}{\includegraphics[width=1.0\linewidth]{figures/Figure5-supplemental1/Figure5-supplemental1_final}}\DIFaddendFL \label{figsupp:fig5sup1}
 
@@ -434,6 +440,8 @@ and multiple previous papers have combined recordings across subfields and obtai
 \DIFaddFL{Event speeds calculated using three common "Bayesian" decoder approaches (A-C) compared to using the state space model (D). For each panel, the top five rows show the probability density of the estimated speed for SWRs that contain that dynamic or combination of dynamics. Note that these categories are not mutually exclusive since a SWR can include more than one dynamic or combination of dynamics. The sixth row shows all SWRs containing unclassified dynamics. The final row is the estimated speed for all SWRs. }\textbf{\DIFaddFL{(A)}} \DIFaddFL{Radon transform  }\textbf{\DIFaddFL{(B)}} \DIFaddFL{MAP estimate  }\textbf{\DIFaddFL{(C)}} \DIFaddFL{Linear regression  }\textbf{\DIFaddFL{(D)}} \DIFaddFL{State space decoder presented in this manuscript.
 }}
 \label{fig:6}
+
+\figdata{Table of replay statistics for each SWR for Figure 6.}
 \end{figure}
 
 \DIFadd{Finally, we asked how our method compares to the standard approaches to identifying significant replay events via a non-parametric shuffle test and characterizing their content. This comparison is complicated due to the variety of parameters and inference methods used previously, so here we chose three commonly used approaches and a reasonable parameter set for the comparison. We began with an examination of events based on statistical significance of a line fit to a circularly permuted spatial distribution, which has been the standard in the field.  We applied the clusterless algorithm in 20 ms bins to produce probability densities of represented locations, as this binning is comparable to previous methods. We then used the Radon transform method, which finds the line with the highest summed posterior probability of position along the line \mbox{%DIFAUXCMD
