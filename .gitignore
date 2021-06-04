@@ -67,3 +67,4 @@ coverage.xml
 *.npy
 
 !Figure*_final.pdf
+!replay_info_*.csv
