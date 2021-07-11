@@ -187,7 +187,7 @@ def load_data(epoch_key, brain_areas=None,
         SAMPLING_FREQUENCY,
         minimum_duration=np.timedelta64(15, 'ms'), zscore_threshold=2.0,
         close_event_threshold=np.timedelta64(0, 'ms'))
-    multiunit_high_synchrony_times.assign(
+    multiunit_high_synchrony_times = multiunit_high_synchrony_times.assign(
         duration=lambda df: (df.end_time - df.start_time).dt.total_seconds())
 
     logger.info('Finding ripple times...')
