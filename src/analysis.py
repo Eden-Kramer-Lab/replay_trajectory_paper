@@ -172,11 +172,18 @@ def get_ripple_replay_info(ripple, results, spikes,
 
     ripple_time_slice = slice(start_time, end_time)
 
-    result = (results
-              .sel(ripple_number=ripple.Index)
-              .dropna('time', how='all')
-              .assign_coords(
-                  time=lambda ds: ds.time / np.timedelta64(1, 's')))
+    try:
+        result = (results
+                  .sel(ripple_number=ripple.Index)
+                  .dropna('time', how='all')
+                  .assign_coords(
+                      time=lambda ds: ds.time / np.timedelta64(1, 's')))
+    except ValueError:
+        result = (results
+                  .sel(event_number=ripple.Index)
+                  .dropna('time', how='all')
+                  .assign_coords(
+                      time=lambda ds: ds.time / np.timedelta64(1, 's')))
     probability = get_probability(result)
     is_classified = get_is_classified(
         probability, probability_threshold).astype(bool)
@@ -367,11 +374,17 @@ def get_replay_linear_position(is_classified, map_estimate):
 
 
 def get_n_unique_spiking(ripple_spikes):
-    return (ripple_spikes.groupby('ripple_number').sum() > 0).sum(axis=1)
+    try:
+        return (ripple_spikes.groupby('ripple_number').sum() > 0).sum(axis=1)
+    except KeyError:
+        return (ripple_spikes.groupby('event_number').sum() > 0).sum(axis=1)
 
 
 def get_n_total_spikes(ripple_spikes):
-    return ripple_spikes.groupby('ripple_number').sum().sum(axis=1)
+    try:
+        return ripple_spikes.groupby('ripple_number').sum().sum(axis=1)
+    except KeyError:
+        return ripple_spikes.groupby('event_number').sum().sum(axis=1)
 
 
 def n_tetrodes_active(spikes):
@@ -588,7 +601,13 @@ def load_all_replay_info(
     file_paths = glob(os.path.join(PROCESSED_DATA_DIR, file_regex))
     replay_info = pd.concat(
         [pd.read_csv(file_path) for file_path in file_paths], axis=0,
-    ).set_index(["animal", "day", "epoch", "ripple_number"])
+    )
+    try:
+        replay_info = replay_info.set_index(
+            ["animal", "day", "epoch", "ripple_number"])
+    except KeyError:
+        replay_info = replay_info.set_index(
+            ["animal", "day", "epoch", "event_number"])
     replay_info["fraction_unclassified"] = (
         replay_info.Unclassified_duration
         / replay_info.duration
@@ -610,7 +629,13 @@ def load_all_replay_info(
     )
     replay_info = pd.merge(
         replay_info.reset_index(), pd.DataFrame(n_tetrodes).reset_index()
-    ).set_index(["animal", "day", "epoch", "ripple_number"])
+    )
+    try:
+        replay_info = replay_info.set_index(
+            ["animal", "day", "epoch", "ripple_number"])
+    except KeyError:
+        replay_info = replay_info.set_index(
+            ["animal", "day", "epoch", "event_number"])
 
     replay_info = replay_info.rename(index={"Cor": "cor"}).rename_axis(
         index={"animal": "Animal ID"}
