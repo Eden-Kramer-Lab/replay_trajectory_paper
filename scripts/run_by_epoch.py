@@ -36,7 +36,7 @@ plt.switch_backend('agg')
 def sorted_spikes_analysis_1D(epoch_key,
                               plot_ripple_figures=False,
                               exclude_interneuron_spikes=False,
-                              use_multunit_HSE=False,
+                              use_multiunit_HSE=False,
                               brain_areas=None,
                               overwrite=False):
     animal, day, epoch = epoch_key
@@ -63,7 +63,7 @@ def sorted_spikes_analysis_1D(epoch_key,
         epoch_identifier += f'_{area_str}'
         group += f'{area_str}/'
 
-    if use_multunit_HSE:
+    if use_multiunit_HSE:
         epoch_identifier += '_multiunit_HSE'
         group += 'classifier/multiunit_HSE/'
         replay_times = data['multiunit_HSE_times']
@@ -210,7 +210,7 @@ def sorted_spikes_analysis_1D(epoch_key,
 def clusterless_analysis_1D(epoch_key,
                             plot_ripple_figures=False,
                             exclude_interneuron_spikes=False,
-                            use_multunit_HSE=False,
+                            use_multiunit_HSE=False,
                             brain_areas=None,
                             overwrite=False):
     animal, day, epoch = epoch_key
@@ -239,7 +239,7 @@ def clusterless_analysis_1D(epoch_key,
         epoch_identifier += f'_{area_str}'
         group += f'{area_str}/'
 
-    if use_multunit_HSE:
+    if use_multiunit_HSE:
         epoch_identifier += '_multiunit_HSE'
         group += 'classifier/multiunit_HSE/'
         replay_times = data['multiunit_HSE_times']
@@ -381,7 +381,7 @@ def get_command_line_arguments():
     parser.add_argument('--threads_per_worker', type=int, default=1)
     parser.add_argument('--plot_ripple_figures', action='store_true')
     parser.add_argument('--exclude_interneuron_spikes', action='store_true')
-    parser.add_argument('--use_multunit_HSE', action='store_true')
+    parser.add_argument('--use_multiunit_HSE', action='store_true')
     parser.add_argument('--CA1', action='store_true')
     parser.add_argument('--overwrite', action='store_true')
     parser.add_argument(
@@ -427,7 +427,7 @@ def main():
         epoch_key,
         plot_ripple_figures=args.plot_ripple_figures,
         exclude_interneuron_spikes=args.exclude_interneuron_spikes,
-        use_multunit_HSE=args.use_multunit_HSE,
+        use_multiunit_HSE=args.use_multiunit_HSE,
         brain_areas=brain_areas,
         overwrite=args.overwrite)
 

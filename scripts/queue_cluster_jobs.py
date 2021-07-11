@@ -25,7 +25,7 @@ def get_command_line_arguments():
     parser.add_argument('--threads_per_worker', type=int, default=16)
     parser.add_argument('--plot_ripple_figures', action='store_true')
     parser.add_argument('--exclude_interneuron_spikes', action='store_true')
-    parser.add_argument('--use_multunit_HSE', action='store_true')
+    parser.add_argument('--use_multiunit_HSE', action='store_true')
     parser.add_argument('--CA1', action='store_true')
     parser.add_argument('--overwrite', action='store_true')
 
@@ -100,8 +100,8 @@ def main():
             python_cmd += ' --overwrite'
         if args.CA1:
             python_cmd += ' --CA1'
-        if args.use_multunit_HSE:
-            python_cmd += ' --use_multunit_HSE'
+        if args.use_multiunit_HSE:
+            python_cmd += ' --use_multiunit_HSE'
 
         queue_job(python_cmd,
                   directives=directives,
