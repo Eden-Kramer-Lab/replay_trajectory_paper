@@ -9,7 +9,7 @@ python queue_cluster_jobs.py --data_type 'clusterless' \
                              --n_cores $NCORES \
                              --n_workers $NWORKERS \
                              --wall_time $CLUSTERLESS_WALLTIME \
-                             --use_multiunit_HSE\
+                             --use_multiunit_HSE \
                              --overwrite \
 
 python queue_cluster_jobs.py --Animal 'remy' --Day 35 --Epoch 2 \
@@ -17,7 +17,7 @@ python queue_cluster_jobs.py --Animal 'remy' --Day 35 --Epoch 2 \
                              --n_cores $NCORES \
                              --n_workers $NWORKERS \
                              --wall_time $REMY_WALLTIME \
-                             --use_multiunit_HSE\
+                             --use_multiunit_HSE \
                              --overwrite \
 
 python queue_cluster_jobs.py --Animal 'remy' --Day 35 --Epoch 4 \
@@ -25,7 +25,7 @@ python queue_cluster_jobs.py --Animal 'remy' --Day 35 --Epoch 4 \
                              --n_cores $NCORES \
                              --n_workers $NWORKERS \
                              --wall_time $REMY_WALLTIME \
-                             --use_multiunit_HSE\
+                             --use_multiunit_HSE \
                              --overwrite \
 
 python queue_cluster_jobs.py --Animal 'remy' --Day 36 --Epoch 2 \
@@ -33,7 +33,7 @@ python queue_cluster_jobs.py --Animal 'remy' --Day 36 --Epoch 2 \
                              --n_cores $NCORES \
                              --n_workers $NWORKERS \
                              --wall_time $REMY_WALLTIME \
-                             --use_multiunit_HSE\
+                             --use_multiunit_HSE \
                              --overwrite \
 
 python queue_cluster_jobs.py --Animal 'remy' --Day 36 --Epoch 4 \
@@ -41,7 +41,7 @@ python queue_cluster_jobs.py --Animal 'remy' --Day 36 --Epoch 4 \
                              --n_cores $NCORES \
                              --n_workers $NWORKERS \
                              --wall_time $REMY_WALLTIME \
-                             --use_multiunit_HSE\
+                             --use_multiunit_HSE \
                              --overwrite \
 
 python queue_cluster_jobs.py --Animal 'remy' --Day 37 --Epoch 2 \
@@ -49,7 +49,7 @@ python queue_cluster_jobs.py --Animal 'remy' --Day 37 --Epoch 2 \
                              --n_cores $NCORES \
                              --n_workers $NWORKERS \
                              --wall_time $REMY_WALLTIME \
-                             --use_multiunit_HSE\
+                             --use_multiunit_HSE \
                              --overwrite \
 
 python queue_cluster_jobs.py --Animal 'remy' --Day 37 --Epoch 4 \
@@ -57,5 +57,5 @@ python queue_cluster_jobs.py --Animal 'remy' --Day 37 --Epoch 4 \
                              --n_cores $NCORES \
                              --n_workers $NWORKERS \
                              --wall_time $REMY_WALLTIME \
-                             --use_multiunit_HSE\
+                             --use_multiunit_HSE \
                              --overwrite \
