@@ -36,6 +36,7 @@ plt.switch_backend('agg')
 def sorted_spikes_analysis_1D(epoch_key,
                               plot_ripple_figures=False,
                               exclude_interneuron_spikes=False,
+                              use_multunit_HSE=False,
                               brain_areas=None,
                               overwrite=False):
     animal, day, epoch = epoch_key
@@ -62,9 +63,16 @@ def sorted_spikes_analysis_1D(epoch_key,
         epoch_identifier += f'_{area_str}'
         group += f'{area_str}/'
 
+    if use_multunit_HSE:
+        epoch_identifier += '_multiunit_HSE'
+        group += 'classifier/multiunit_HSE/'
+        replay_times = data['multiunit_HSE_times']
+    else:
+        group += 'classifier/ripples/'
+        replay_times = data['ripple_times']
+
     model_name = os.path.join(
         PROCESSED_DATA_DIR, epoch_identifier + '_model.pkl')
-    group += 'classifier/ripples/'
 
     try:
         if overwrite:
@@ -72,10 +80,10 @@ def sorted_spikes_analysis_1D(epoch_key,
         results = xr.open_dataset(
             os.path.join(
                 PROCESSED_DATA_DIR, f'{animal}_{day:02}_{epoch:02}.nc'),
-            group=f'/{data_type}/{dim}/classifier/ripples/')
+            group=group)
         logging.info('Found existing results. Loading...')
-        ripple_times = data['ripple_times'].loc[:, ['start_time', 'end_time']]
-        ripple_spikes = reshape_to_segments(data['spikes'], ripple_times)
+        ripple_spikes = reshape_to_segments(
+            data['spikes'], replay_times.loc[:, ['start_time', 'end_time']])
         classifier = SortedSpikesClassifier.load_model(model_name)
         logging.info(classifier)
     except (FileNotFoundError, OSError):
@@ -137,22 +145,22 @@ def sorted_spikes_analysis_1D(epoch_key,
         results = [(immobility_results
                     .sel(time=slice(df.start_time, df.end_time))
                     .assign_coords(time=lambda ds: ds.time - ds.time[0]))
-                   for _, df in data['ripple_times'].iterrows()]
+                   for _, df in replay_times.iterrows()]
 
-        results = (xr.concat(results, dim=data['ripple_times'].index)
+        results = (xr.concat(results, dim=replay_times.index)
                    .assign_coords(state=lambda ds: ds.state.to_index()
                                   .map(TRANSITION_TO_CATEGORY)))
 
         logging.info('Saving results...')
-        ripple_times = data['ripple_times'].loc[:, ['start_time', 'end_time']]
-        ripple_spikes = reshape_to_segments(data['spikes'], ripple_times)
+        ripple_spikes = reshape_to_segments(
+            data['spikes'], replay_times.loc[:, ['start_time', 'end_time']])
         save_xarray(PROCESSED_DATA_DIR, epoch_key,
                     results.drop(['likelihood', 'causal_posterior']),
                     group=f'/{data_type}/{dim}/classifier/ripples/')
 
     logging.info('Saving replay_info...')
     replay_info = get_replay_info(
-        results, data['spikes'], data['ripple_times'], data['position_info'],
+        results, data['spikes'], replay_times, data['position_info'],
         track_graph, SAMPLING_FREQUENCY, PROBABILITY_THRESHOLD, epoch_key,
         classifier, data["ripple_consensus_trace_zscore"])
     prob = int(PROBABILITY_THRESHOLD * 100)
@@ -165,9 +173,10 @@ def sorted_spikes_analysis_1D(epoch_key,
         logging.info('Plotting ripple figures...')
         place_field_max = get_place_field_max(classifier)
         linear_position_order = place_field_max.argsort(axis=0).squeeze()
-        ripple_position = reshape_to_segments(position, ripple_times)
+        ripple_position = reshape_to_segments(
+            position, replay_times.loc[:, ['start_time', 'end_time']])
 
-        for ripple_number in tqdm(ripple_times.index, desc='ripple figures'):
+        for ripple_number in tqdm(replay_times.index, desc='ripple figures'):
             try:
                 posterior = (
                     results
@@ -201,6 +210,7 @@ def sorted_spikes_analysis_1D(epoch_key,
 def clusterless_analysis_1D(epoch_key,
                             plot_ripple_figures=False,
                             exclude_interneuron_spikes=False,
+                            use_multunit_HSE=False,
                             brain_areas=None,
                             overwrite=False):
     animal, day, epoch = epoch_key
@@ -229,9 +239,16 @@ def clusterless_analysis_1D(epoch_key,
         epoch_identifier += f'_{area_str}'
         group += f'{area_str}/'
 
+    if use_multunit_HSE:
+        epoch_identifier += '_multiunit_HSE'
+        group += 'classifier/multiunit_HSE/'
+        replay_times = data['multiunit_HSE_times']
+    else:
+        group += 'classifier/ripples/'
+        replay_times = data['ripple_times']
+
     model_name = os.path.join(
         PROCESSED_DATA_DIR, epoch_identifier + '_model.pkl')
-    group += 'classifier/ripples/'
 
     try:
         if overwrite:
@@ -241,11 +258,11 @@ def clusterless_analysis_1D(epoch_key,
                 PROCESSED_DATA_DIR, f'{animal}_{day:02}_{epoch:02}.nc'),
             group=group)
         logging.info('Found existing results. Loading...')
-        ripple_times = data['ripple_times'].loc[:, ['start_time', 'end_time']]
         spikes = (((data['multiunit'].sum('features') > 0) * 1.0)
                   .to_dataframe(name='spikes').unstack())
         spikes.columns = data['tetrode_info'].tetrode_id
-        ripple_spikes = reshape_to_segments(spikes, ripple_times)
+        ripple_spikes = reshape_to_segments(
+            spikes, replay_times.loc[:, ['start_time', 'end_time']])
         classifier = ClusterlessClassifier.load_model(model_name)
         logging.info(classifier)
     except (FileNotFoundError, OSError):
@@ -281,17 +298,17 @@ def clusterless_analysis_1D(epoch_key,
         results = [(immobility_results
                     .sel(time=slice(df.start_time, df.end_time))
                     .assign_coords(time=lambda ds: ds.time - ds.time[0]))
-                   for _, df in data['ripple_times'].iterrows()]
+                   for _, df in replay_times.iterrows()]
 
-        results = (xr.concat(results, dim=data['ripple_times'].index)
+        results = (xr.concat(results, dim=replay_times.index)
                    .assign_coords(state=lambda ds: ds.state.to_index()
                                   .map(TRANSITION_TO_CATEGORY)))
 
-        ripple_times = data['ripple_times'].loc[:, ['start_time', 'end_time']]
         spikes = ((((~np.isnan(data['multiunit'])).sum('features') > 0) * 1.0)
                   .to_dataframe(name='spikes').unstack())
         spikes.columns = data['tetrode_info'].tetrode_id
-        ripple_spikes = reshape_to_segments(spikes, ripple_times)
+        ripple_spikes = reshape_to_segments(
+            spikes, replay_times.loc[:, ['start_time', 'end_time']])
 
         logging.info('Saving results...')
         save_xarray(PROCESSED_DATA_DIR, epoch_key,
@@ -300,7 +317,7 @@ def clusterless_analysis_1D(epoch_key,
 
     logging.info('Saving replay_info...')
     replay_info = get_replay_info(
-        results, spikes, data['ripple_times'], data['position_info'],
+        results, spikes, replay_times, data['position_info'],
         track_graph, SAMPLING_FREQUENCY, PROBABILITY_THRESHOLD, epoch_key,
         classifier, data["ripple_consensus_trace_zscore"])
     prob = int(PROBABILITY_THRESHOLD * 100)
@@ -312,9 +329,10 @@ def clusterless_analysis_1D(epoch_key,
         logging.info('Plotting ripple figures...')
         place_field_max = get_place_field_max(classifier)
         linear_position_order = place_field_max.argsort(axis=0).squeeze()
-        ripple_position = reshape_to_segments(position, ripple_times)
+        ripple_position = reshape_to_segments(
+            position, replay_times.loc[:, ['start_time', 'end_time']])
 
-        for ripple_number in tqdm(ripple_times.index, desc='ripple figures'):
+        for ripple_number in tqdm(replay_times.index, desc='ripple figures'):
             try:
                 posterior = (
                     results
