@@ -381,6 +381,7 @@ def get_command_line_arguments():
     parser.add_argument('--threads_per_worker', type=int, default=1)
     parser.add_argument('--plot_ripple_figures', action='store_true')
     parser.add_argument('--exclude_interneuron_spikes', action='store_true')
+    parser.add_argument('--use_multunit_HSE', action='store_true')
     parser.add_argument('--CA1', action='store_true')
     parser.add_argument('--overwrite', action='store_true')
     parser.add_argument(
@@ -426,6 +427,7 @@ def main():
         epoch_key,
         plot_ripple_figures=args.plot_ripple_figures,
         exclude_interneuron_spikes=args.exclude_interneuron_spikes,
+        use_multunit_HSE=args.use_multunit_HSE,
         brain_areas=brain_areas,
         overwrite=args.overwrite)
 
