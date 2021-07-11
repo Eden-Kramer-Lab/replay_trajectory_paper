@@ -11,7 +11,8 @@ from loren_frank_data_processing import (get_all_multiunit_indicators,
                                          make_neuron_dataframe,
                                          make_tetrode_dataframe)
 from ripple_detection import (Kay_ripple_detector,
-                              get_multiunit_population_firing_rate)
+                              get_multiunit_population_firing_rate,
+                              multiunit_HSE_detector)
 from ripple_detection.core import _get_ripplefilter_kernel, gaussian_smooth
 from scipy.fftpack import next_fast_len
 from scipy.signal import filtfilt, hilbert
@@ -181,6 +182,14 @@ def load_data(epoch_key, brain_areas=None,
             multiunit_spikes, SAMPLING_FREQUENCY), index=time,
         columns=['firing_rate'])
 
+    multiunit_high_synchrony_times = multiunit_HSE_detector(
+        time, multiunit_spikes, position_info['speed'].values,
+        SAMPLING_FREQUENCY,
+        minimum_duration=np.timedelta64(15, 'ms'), zscore_threshold=2.0,
+        close_event_threshold=np.timedelta64(0, 'ms'))
+    multiunit_high_synchrony_times.assign(
+        duration=lambda df: (df.end_time - df.start_time).dt.total_seconds())
+
     logger.info('Finding ripple times...')
     (ripple_times, ripple_filtered_lfps, ripple_lfps,
      ripple_consensus_trace_zscore) = get_ripple_times(epoch_key)
@@ -191,6 +200,7 @@ def load_data(epoch_key, brain_areas=None,
     return {
         'position_info': position_info,
         'ripple_times': ripple_times,
+        'multiunit_HSE_times': multiunit_high_synchrony_times,
         'spikes': spikes,
         'multiunit': multiunit,
         'lfps': lfps,
