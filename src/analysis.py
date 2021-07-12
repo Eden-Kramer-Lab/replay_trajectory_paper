@@ -582,6 +582,7 @@ def load_all_replay_info(
     probability_threshold=PROBABILITY_THRESHOLD,
     speed_threshold=4,
     exclude_interneuron_spikes=False,
+    use_multiunit_HSE=False,
     brain_areas=None,
 ):
     tetrode_info = make_tetrode_dataframe(ANIMALS)
@@ -596,6 +597,9 @@ def load_all_replay_info(
         epoch_identifier += f'_{area_str}'
     else:
         brain_areas = _BRAIN_AREAS
+
+    if use_multiunit_HSE:
+        epoch_identifier += '_multiunit_HSE'
 
     file_regex = f"{epoch_identifier}_replay_info_{prob:02d}.csv"
     file_paths = glob(os.path.join(PROCESSED_DATA_DIR, file_regex))
