@@ -263,23 +263,25 @@ def predict_mark_likelihood(
     return scaled_likelihood(log_likelihood), time
 
 
-def predict_poisson_likelihood(
-    time,
-    spikes,
-    place_fields,
-    is_track_interior,
-    dt=0.020
-):
-    start_time, end_time = time[[0, -1]]
+def predict_poisson_likelihood(start_time, end_time, spike_times, place_fields,
+                               is_track_interior, dt=0.020):
+    place_fields = np.asarray(place_fields)
     n_time_bins = np.ceil((end_time - start_time) / dt).astype(int)
     time_bin_edges = start_time + np.arange(n_time_bins + 1) * dt
-
-    spike_time_ind, neuron_ind = np.nonzero(spikes)
-    time_bin_ind = np.digitize(time[spike_time_ind], time_bin_edges[1:-1])
     time_bin_centers = time_bin_edges[:-1] + np.diff(time_bin_edges) / 2
 
+    spike_time_ind, neuron_ind = [], []
+    for ind, times in enumerate(spike_times):
+        is_valid_time = (times >= start_time) & (times <= end_time)
+        inds = np.digitize(times[is_valid_time], time_bin_edges[1:-1])
+        spike_time_ind.append(inds)
+        neuron_ind.append(np.ones_like(inds) * ind)
+
+    neuron_ind = np.concatenate(neuron_ind)
+    spike_time_ind = np.concatenate(spike_time_ind)
+
     log_likelihood = np.stack(
-        [np.sum(np.log(place_fields[:, neuron_ind[time_bin_ind == time_bin]] +
+        [np.sum(np.log(place_fields[:, neuron_ind[spike_time_ind == time_bin]] +
                        np.spacing(1)), axis=1)
          for time_bin in np.arange(n_time_bins)])
     log_likelihood -= dt * np.sum(place_fields, axis=1)
