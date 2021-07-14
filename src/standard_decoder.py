@@ -1,6 +1,8 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from loren_frank_data_processing import (get_position_dataframe,
+                                         get_spikes_dataframe,
+                                         make_neuron_dataframe,
                                          make_tetrode_dataframe)
 from loren_frank_data_processing.multiunit import (get_multiunit_dataframe,
                                                    get_multiunit_dataframe2)
@@ -67,6 +69,17 @@ def load_data(epoch_key):
         _,
     ) = get_ripple_times(epoch_key)
 
+    neuron_info = make_neuron_dataframe(ANIMALS).xs(
+        epoch_key, drop_level=False)
+    neuron_info = neuron_info.loc[
+        (neuron_info.numspikes > 100) &
+        neuron_info.area.isin(_BRAIN_AREAS) &
+        (neuron_info.type == 'principal')]
+
+    spike_times = [np.asarray(get_spikes_dataframe(neuron_key, ANIMALS).index
+                              / np.timedelta64(1, 's'))
+                   for neuron_key in neuron_info.index]
+
     return (
         linear_position,
         multiunit_dfs,
@@ -74,6 +87,7 @@ def load_data(epoch_key):
         ripple_times,
         track_graph,
         center_well_id,
+        spike_times,
     )
 
 

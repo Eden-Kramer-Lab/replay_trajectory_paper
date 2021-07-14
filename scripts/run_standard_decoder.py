@@ -77,6 +77,7 @@ def clusterless_analysis_1D(epoch_key, dt=0.020, n_shuffles=1000):
         ripple_times,
         track_graph,
         center_well_id,
+        _,
     ) = load_data(epoch_key)
     logging.info('Fitting model...')
     (
