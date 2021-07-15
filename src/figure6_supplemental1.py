@@ -257,7 +257,7 @@ def plot_posteriors(ripple_number, start_time, end_time, position_info,
      .plot(x='time', y='position', ax=axes[1], add_colorbar=False, cmap=cmap))
     axes[1].set_xlabel('')
     axes[1].set_title(
-        'Sorted Spikes Standard Decoder, 20 ms bins', fontsize=10)
+        'Sorted Spikes Standard Decoder, 20 ms bins', fontsize=8)
     axes[1].set_ylabel('Pos. [cm]')
     axes[1].plot(sorted_spikes_posterior.time *
                  MILLISECONDS_TO_SECONDS, sorted_spikes_radon_prediction)
@@ -279,7 +279,7 @@ def plot_posteriors(ripple_number, start_time, end_time, position_info,
      .where(is_track_interior)
      .plot(x='time', y='position', ax=axes[2], add_colorbar=False, cmap=cmap))
     axes[2].set_xlabel('')
-    axes[2].set_title('Clusterless Standard Decoder, 20 ms bins', fontsize=10)
+    axes[2].set_title('Clusterless Standard Decoder, 20 ms bins', fontsize=8)
     axes[2].set_ylabel('Pos. [cm]')
     axes[2].plot(clusterless_posterior.time *
                  MILLISECONDS_TO_SECONDS, clusterless_radon_prediction)
@@ -310,7 +310,7 @@ def plot_posteriors(ripple_number, start_time, end_time, position_info,
                     linestyle='--', zorder=100, linewidth=2)
 
     axes[3].set_xlabel('')
-    axes[3].set_title('Sorted Spikes State Space', fontsize=10)
+    axes[3].set_title('Sorted Spikes State Space', fontsize=8)
     axes[3].set_ylabel('Pos. [cm]')
     axes[3].set_ylim((0, max_position))
     axes[3].set_yticks((0, max_position))
@@ -332,7 +332,7 @@ def plot_posteriors(ripple_number, start_time, end_time, position_info,
            cmap=cmap))
     axes[4].axhline(linear_position, color='magenta',
                     linestyle='--', zorder=100, linewidth=2)
-    axes[4].set_title('Clusterless State Space', fontsize=10)
+    axes[4].set_title('Clusterless State Space', fontsize=8)
     axes[4].set_xlabel('')
     axes[4].set_ylabel('Pos. [cm]')
 
