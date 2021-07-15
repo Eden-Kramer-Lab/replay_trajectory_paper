@@ -360,7 +360,7 @@ def plot_posteriors(ripple_number, start_time, end_time, position_info,
     axes[-1].set_xlabel('Time [ms]')
 
 
-def main(epoch_key, ripple_numbers):
+def plot_figure(epoch_key, ripple_numbers):
 
     (clusterless_state_space_results, sorted_spikes_state_space_results,
      place_bin_centers, occupancy, joint_pdf_models, multiunit_dfs,
@@ -428,4 +428,4 @@ def main(epoch_key, ripple_numbers):
 if __name__ == '__main__':
     epoch_key = sys.argv[0]
     ripple_numbers = sys.argv[1]
-    main(epoch_key, ripple_numbers)
+    plot_figure(epoch_key, ripple_numbers)
