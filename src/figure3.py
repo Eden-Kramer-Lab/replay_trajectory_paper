@@ -23,7 +23,7 @@ def plot_clusterless_1D_results(multiunit_times, data, results,
         data["ripple_times"].loc[ripple_number].end_time,
     )
     time_slice = slice(ripple_start, ripple_end)
-    
+
     fig, axes = plt.subplots(
         4,
         1,
@@ -32,7 +32,7 @@ def plot_clusterless_1D_results(multiunit_times, data, results,
         figsize=(0.6 * ONE_COLUMN, 0.9 * PAGE_HEIGHT / 3),
         gridspec_kw={"height_ratios": [0.5, 1, 1, 3]},
     )
-    
+
     n_tetrodes = len(multiunit_times)
     ripple_duration = (
         MILLISECONDS_TO_SECONDS
@@ -42,16 +42,18 @@ def plot_clusterless_1D_results(multiunit_times, data, results,
     max_time = (
         MILLISECONDS_TO_SECONDS * results.time / np.timedelta64(1, "s")
     ).max()
-    
+
     # axis 0
     lfp_start = ripple_start - pd.Timedelta(100, unit="ms")
     lfp_end = ripple_end + pd.Timedelta(100, unit="ms")
     ripple_filtered_lfps = data["ripple_filtered_lfps"].loc[lfp_start:lfp_end]
     max_ripple_ind = np.unravel_index(
-        np.argmax(np.abs(ripple_filtered_lfps.values)), ripple_filtered_lfps.shape
+        np.argmax(np.abs(ripple_filtered_lfps.values)
+                  ), ripple_filtered_lfps.shape
     )[-1]
     axes[0].plot(
-        MILLISECONDS_TO_SECONDS * (ripple_filtered_lfps.index - ripple_start) / np.timedelta64(1, "s"),
+        MILLISECONDS_TO_SECONDS *
+        (ripple_filtered_lfps.index - ripple_start) / np.timedelta64(1, "s"),
         ripple_filtered_lfps.values[:, max_ripple_ind],
         color="black",
     )
@@ -100,7 +102,7 @@ def plot_clusterless_1D_results(multiunit_times, data, results,
     axes[2].set_xticks([])
     sns.despine(ax=axes[2], offset=5)
     axes[2].spines["bottom"].set_visible(False)
-    
+
     probability2 = get_probability(results)
     is_classified = get_is_classified(probability2, PROBABILITY_THRESHOLD)
 
@@ -141,7 +143,7 @@ def plot_clusterless_1D_results(multiunit_times, data, results,
     axes[3].set_title("")
 
     ripple_position = data["position_info"].loc[time_slice, "linear_position"]
-    max_position = int(np.ceil(data["position_info"].loc[:, "linear_position"].max()))
+    max_position = int(np.ceil(data["position_info"].linear_position.max()))
     axes[3].plot(time, ripple_position, linestyle="--", linewidth=2,
                  color="magenta", clip_on=False)
     axes[3].set_xlim((0, max_time))
