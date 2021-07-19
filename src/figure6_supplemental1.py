@@ -380,6 +380,8 @@ def plot_posteriors(ripple_number, start_time, end_time, position_info,
 
 
 def plot_figure(epoch_key, ripple_numbers):
+    if isinstance(ripple_numbers, int):
+        ripple_numbers = [ripple_numbers]
 
     set_figure_defaults()
     (clusterless_state_space_results, sorted_spikes_state_space_results,
