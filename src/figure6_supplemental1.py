@@ -7,7 +7,9 @@ import numpy as np
 import seaborn as sns
 import xarray as xr
 from replay_trajectory_classification import SortedSpikesClassifier
-from src.analysis import get_is_classified, get_probability
+from src.analysis import (get_is_classified, get_place_field_max,
+                          get_probability)
+from src.figure_utilities import ONE_COLUMN, PAGE_HEIGHT, set_figure_defaults
 from src.parameters import (PROBABILITY_THRESHOLD, PROCESSED_DATA_DIR,
                             STATE_COLORS)
 from src.standard_decoder import (fit_mark_likelihood, load_data,
@@ -75,12 +77,17 @@ def fit_and_load_models(epoch_key):
 
     place_fields = np.asarray(sorted_spikes_classifier.place_fields_)
 
+    place_field_max = get_place_field_max(sorted_spikes_classifier)
+    linear_position_order = place_field_max.argsort(axis=0).squeeze()
+
+    ordered_spike_times = [spike_times[i] for i in linear_position_order]
+
     return (clusterless_state_space_results, sorted_spikes_state_space_results,
             place_bin_centers, occupancy, joint_pdf_models, multiunit_dfs,
             ground_process_intensities, mean_rates, is_track_interior,
             place_bin_edges, track_graph1, place_bin_center_ind_to_node,
             spike_times, is_track_interior, place_fields, position_info,
-            ripple_times)
+            ripple_times, ordered_spike_times)
 
 
 def get_clusterless_posteriors_and_fits(
@@ -217,11 +224,15 @@ def plot_posteriors(ripple_number, start_time, end_time, position_info,
     cmap.set_bad(color="lightgrey", alpha=1.0)
 
     max_position = int(np.ceil(position_info.linear_position.max()))
+    linear_position = np.asarray(
+        position_info
+        .set_index(position_info.index / np.timedelta64(1, 's'))
+        .loc[start_time:end_time, 'linear_position'])[0]
 
     MILLISECONDS_TO_SECONDS = 1000
 
     fig, axes = plt.subplots(
-        6, 1, figsize=(5, 7),
+        6, 1, figsize=(ONE_COLUMN, PAGE_HEIGHT / 2),
         constrained_layout=True,
         sharex=False, sharey=False,
         gridspec_kw={"height_ratios": [0.5, 1, 1, 1, 1, 0.5]},)
@@ -230,7 +241,7 @@ def plot_posteriors(ripple_number, start_time, end_time, position_info,
     axes[0].eventplot(
         [MILLISECONDS_TO_SECONDS * (times[(times >= start_time) &
                                           (times <= end_time)] - start_time)
-            for times in spike_times], color="black", clip_on=False,)
+            for times in spike_times], color="black", clip_on=False)
     axes[0].set_ylim((1, len(spike_times)))
     axes[0].set_yticks((1, len(spike_times)))
     axes[0].set_ylabel('Cells')
@@ -245,13 +256,15 @@ def plot_posteriors(ripple_number, start_time, end_time, position_info,
      .where(is_track_interior)
      .plot(x='time', y='position', ax=axes[1], add_colorbar=False, cmap=cmap))
     axes[1].set_xlabel('')
-    axes[1].set_title('Sorted Spikes Standard Decoder, 20 ms bins')
-    axes[1].set_ylabel('Position [cm]')
+    axes[1].set_title(
+        'Sorted Spikes Standard Decoder, 20 ms bins', fontsize=8)
+    axes[1].set_ylabel('Pos. [cm]')
     axes[1].plot(sorted_spikes_posterior.time *
                  MILLISECONDS_TO_SECONDS, sorted_spikes_radon_prediction)
     axes[1].plot(sorted_spikes_posterior.time *
                  MILLISECONDS_TO_SECONDS, sorted_spikes_map_prediction)
-
+    axes[1].axhline(linear_position, color='magenta',
+                    linestyle='--', zorder=100, linewidth=2)
     axes[1].set_ylim((0, max_position))
     axes[1].set_yticks((0, max_position))
     sns.despine(offset=5, ax=axes[1])
@@ -266,12 +279,14 @@ def plot_posteriors(ripple_number, start_time, end_time, position_info,
      .where(is_track_interior)
      .plot(x='time', y='position', ax=axes[2], add_colorbar=False, cmap=cmap))
     axes[2].set_xlabel('')
-    axes[2].set_title('Clusterless Standard Decoder, 20 ms bins')
-    axes[2].set_ylabel('Position [cm]')
+    axes[2].set_title('Clusterless Standard Decoder, 20 ms bins', fontsize=8)
+    axes[2].set_ylabel('Pos. [cm]')
     axes[2].plot(clusterless_posterior.time *
                  MILLISECONDS_TO_SECONDS, clusterless_radon_prediction)
     axes[2].plot(clusterless_posterior.time *
                  MILLISECONDS_TO_SECONDS, clusterless_map_prediction)
+    axes[2].axhline(linear_position, color='magenta',
+                    linestyle='--', zorder=100, linewidth=2)
 
     axes[2].set_ylim((0, max_position))
     axes[2].set_yticks((0, max_position))
@@ -291,10 +306,12 @@ def plot_posteriors(ripple_number, start_time, end_time, position_info,
      .where(is_track_interior)
      .plot(x='time', y='position', robust=True, ax=axes[3], add_colorbar=False,
            cmap=cmap))
-    axes[3].set_xlabel('')
-    axes[3].set_title('Sorted Spikes State Space')
-    axes[3].set_ylabel('Position [cm]')
+    axes[3].axhline(linear_position, color='magenta',
+                    linestyle='--', zorder=100, linewidth=2)
 
+    axes[3].set_xlabel('')
+    axes[3].set_title('Sorted Spikes State Space', fontsize=8)
+    axes[3].set_ylabel('Pos. [cm]')
     axes[3].set_ylim((0, max_position))
     axes[3].set_yticks((0, max_position))
     axes[3].set_xlim((0.0, MILLISECONDS_TO_SECONDS * (end_time - start_time)))
@@ -307,15 +324,17 @@ def plot_posteriors(ripple_number, start_time, end_time, position_info,
      .sel(ripple_number=ripple_number)
      .acausal_posterior
      .dropna('time', how='all')
-     .where(is_track_interior)
      .assign_coords(time=lambda ds: ds.time * MILLISECONDS_TO_SECONDS
                     / np.timedelta64(1, 's'))
      .sum('state')
+     .where(is_track_interior)
      .plot(x='time', y='position', robust=True, ax=axes[4], add_colorbar=False,
            cmap=cmap))
-    axes[4].set_title('Clusterless State Space')
+    axes[4].axhline(linear_position, color='magenta',
+                    linestyle='--', zorder=100, linewidth=2)
+    axes[4].set_title('Clusterless State Space', fontsize=8)
     axes[4].set_xlabel('')
-    axes[4].set_ylabel('Position [cm]')
+    axes[4].set_ylabel('Pos. [cm]')
 
     axes[4].set_ylim((0, max_position))
     axes[4].set_yticks((0, max_position))
@@ -361,13 +380,16 @@ def plot_posteriors(ripple_number, start_time, end_time, position_info,
 
 
 def plot_figure(epoch_key, ripple_numbers):
+    if isinstance(ripple_numbers, int):
+        ripple_numbers = [ripple_numbers]
 
+    set_figure_defaults()
     (clusterless_state_space_results, sorted_spikes_state_space_results,
      place_bin_centers, occupancy, joint_pdf_models, multiunit_dfs,
      ground_process_intensities, mean_rates, is_track_interior,
      place_bin_edges, track_graph1, place_bin_center_ind_to_node,
      spike_times, is_track_interior, place_fields, position_info,
-     ripple_times) = fit_and_load_models(epoch_key)
+     ripple_times, ordered_spike_times) = fit_and_load_models(epoch_key)
 
     for ripple_number in ripple_numbers:
         start_time, end_time = (
@@ -418,7 +440,7 @@ def plot_figure(epoch_key, ripple_numbers):
 
         plot_posteriors(
             ripple_number, start_time, end_time, position_info,
-            spike_times, is_track_interior, sorted_spikes_posterior,
+            ordered_spike_times, is_track_interior, sorted_spikes_posterior,
             clusterless_posterior, sorted_spikes_radon_prediction,
             sorted_spikes_map_prediction, clusterless_radon_prediction,
             clusterless_map_prediction, sorted_spikes_state_space_results,
