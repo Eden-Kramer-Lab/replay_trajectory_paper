@@ -9,7 +9,7 @@ import xarray as xr
 from replay_trajectory_classification import SortedSpikesClassifier
 from src.analysis import (get_is_classified, get_place_field_max,
                           get_probability)
-from src.figure_utilities import ONE_COLUMN, PAGE_HEIGHT, set_figure_defaults
+from src.figure_utilities import PAGE_HEIGHT, TWO_COLUMN, set_figure_defaults
 from src.parameters import (PROBABILITY_THRESHOLD, PROCESSED_DATA_DIR,
                             STATE_COLORS)
 from src.standard_decoder import (fit_mark_likelihood, load_data,
@@ -231,7 +231,7 @@ def plot_posteriors(ripple_number, start_time, end_time, position_info,
     MILLISECONDS_TO_SECONDS = 1000
 
     fig, axes = plt.subplots(
-        6, 1, figsize=(ONE_COLUMN, PAGE_HEIGHT / 2),
+        6, 1, figsize=(TWO_COLUMN / 3, PAGE_HEIGHT / 2),
         constrained_layout=True,
         sharex=False, sharey=False,
         gridspec_kw={"height_ratios": [2, 3, 2, 3, 3, 1]},)
@@ -258,7 +258,7 @@ def plot_posteriors(ripple_number, start_time, end_time, position_info,
            robust=True))
     axes[1].set_xlabel('')
     axes[1].set_title(
-        'Sorted Spikes Standard Decoder, 20 ms bins', fontsize=8)
+        'Sorted Spikes Standard Decoder, 20 ms bins', fontsize=7)
     axes[1].set_ylabel('Pos. [cm]')
     axes[1].plot(sorted_spikes_posterior.time *
                  MILLISECONDS_TO_SECONDS, sorted_spikes_radon_prediction,
@@ -297,7 +297,7 @@ def plot_posteriors(ripple_number, start_time, end_time, position_info,
      .plot(x='time', y='position', ax=axes[3], add_colorbar=False, cmap=cmap,
            robust=True))
     axes[3].set_xlabel('')
-    axes[3].set_title('Clusterless Standard Decoder, 20 ms bins', fontsize=8)
+    axes[3].set_title('Clusterless Standard Decoder, 20 ms bins', fontsize=7)
     axes[3].set_ylabel('Pos. [cm]')
     axes[3].plot(clusterless_posterior.time *
                  MILLISECONDS_TO_SECONDS, clusterless_radon_prediction,
@@ -328,7 +328,7 @@ def plot_posteriors(ripple_number, start_time, end_time, position_info,
            cmap=cmap))
     axes[4].axhline(linear_position, color='magenta',
                     linestyle='--', zorder=100, linewidth=2)
-    axes[4].set_title('Clusterless State Space, 2 ms bins', fontsize=8)
+    axes[4].set_title('Clusterless State Space, 2 ms bins', fontsize=7)
     axes[4].set_xlabel('')
     axes[4].set_ylabel('Pos. [cm]')
 
