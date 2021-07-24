@@ -9,9 +9,10 @@ import xarray as xr
 from replay_trajectory_classification import SortedSpikesClassifier
 from src.analysis import (get_is_classified, get_place_field_max,
                           get_probability)
-from src.figure_utilities import PAGE_HEIGHT, TWO_COLUMN, set_figure_defaults
-from src.parameters import (PROBABILITY_THRESHOLD, PROCESSED_DATA_DIR,
-                            STATE_COLORS)
+from src.figure_utilities import (PAGE_HEIGHT, TWO_COLUMN, save_figure,
+                                  set_figure_defaults)
+from src.parameters import (FIGURE_DIR, PROBABILITY_THRESHOLD,
+                            PROCESSED_DATA_DIR, STATE_COLORS)
 from src.standard_decoder import (fit_mark_likelihood, load_data,
                                   normalize_to_posterior,
                                   predict_clusterless_wtrack,
@@ -218,7 +219,8 @@ def plot_posteriors(ripple_number, start_time, end_time, position_info,
                     clusterless_posterior, sorted_spikes_radon_prediction,
                     sorted_spikes_map_prediction, clusterless_radon_prediction,
                     clusterless_map_prediction,
-                    clusterless_state_space_results, multiunit_spike_times):
+                    clusterless_state_space_results, multiunit_spike_times,
+                    is_save_figure=False):
     cmap = copy.copy(plt.cm.get_cmap('bone_r'))
     cmap.set_bad(color="lightgrey", alpha=1.0)
 
@@ -374,8 +376,20 @@ def plot_posteriors(ripple_number, start_time, end_time, position_info,
 
     axes[-1].set_xlabel('Time [ms]')
 
+    # Save Plot
+    if is_save_figure:
+        figure_dir = os.path.join(FIGURE_DIR, "Figure6-supplemental1")
+        os.makedirs(figure_dir, exist_ok=True)
+        animal, day, epoch = epoch_key
+        fig_name = (
+            "figure6_supplemental1_"
+            f"{animal}_{day:02d}_{epoch:02d}_{ripple_number:04d}_"
+            f"decoder_comparison"
+        )
+        save_figure(os.path.join(figure_dir, fig_name))
 
-def plot_figure(epoch_key, ripple_numbers):
+
+def plot_figure(epoch_key, ripple_numbers, is_save_figure=False):
     if isinstance(ripple_numbers, int):
         ripple_numbers = [ripple_numbers]
 
@@ -443,10 +457,10 @@ def plot_figure(epoch_key, ripple_numbers):
             clusterless_posterior, sorted_spikes_radon_prediction,
             sorted_spikes_map_prediction, clusterless_radon_prediction,
             clusterless_map_prediction, clusterless_state_space_results,
-            multiunit_spike_times)
+            multiunit_spike_times, is_save_figure)
 
 
 if __name__ == '__main__':
     epoch_key = sys.argv[0]
     ripple_numbers = sys.argv[1]
-    plot_figure(epoch_key, ripple_numbers)
+    plot_figure(epoch_key, ripple_numbers, is_save_figure=True)
