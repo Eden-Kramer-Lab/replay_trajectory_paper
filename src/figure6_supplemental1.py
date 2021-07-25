@@ -219,8 +219,7 @@ def plot_posteriors(ripple_number, start_time, end_time, position_info,
                     clusterless_posterior, sorted_spikes_radon_prediction,
                     sorted_spikes_map_prediction, clusterless_radon_prediction,
                     clusterless_map_prediction,
-                    clusterless_state_space_results, multiunit_spike_times,
-                    is_save_figure=False):
+                    clusterless_state_space_results, multiunit_spike_times):
     cmap = copy.copy(plt.cm.get_cmap('bone_r'))
     cmap.set_bad(color="lightgrey", alpha=1.0)
 
@@ -376,18 +375,6 @@ def plot_posteriors(ripple_number, start_time, end_time, position_info,
 
     axes[-1].set_xlabel('Time [ms]')
 
-    # Save Plot
-    if is_save_figure:
-        figure_dir = os.path.join(FIGURE_DIR, "Figure6-supplemental1")
-        os.makedirs(figure_dir, exist_ok=True)
-        animal, day, epoch = epoch_key
-        fig_name = (
-            "figure6_supplemental1_"
-            f"{animal}_{day:02d}_{epoch:02d}_{ripple_number:04d}_"
-            f"decoder_comparison"
-        )
-        save_figure(os.path.join(figure_dir, fig_name))
-
 
 def plot_figure(epoch_key, ripple_numbers, is_save_figure=False):
     if isinstance(ripple_numbers, int):
@@ -457,7 +444,18 @@ def plot_figure(epoch_key, ripple_numbers, is_save_figure=False):
             clusterless_posterior, sorted_spikes_radon_prediction,
             sorted_spikes_map_prediction, clusterless_radon_prediction,
             clusterless_map_prediction, clusterless_state_space_results,
-            multiunit_spike_times, is_save_figure)
+            multiunit_spike_times)
+
+        if is_save_figure:
+            figure_dir = os.path.join(FIGURE_DIR, "Figure6-supplemental1")
+            os.makedirs(figure_dir, exist_ok=True)
+            animal, day, epoch = epoch_key
+            fig_name = (
+                "figure6_supplemental1_"
+                f"{animal}_{day:02d}_{epoch:02d}_{ripple_number:04d}_"
+                f"decoder_comparison"
+            )
+            save_figure(os.path.join(figure_dir, fig_name))
 
 
 if __name__ == '__main__':
