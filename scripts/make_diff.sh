@@ -1,3 +1,3 @@
 #!/bin/bash
 
-latexdiff ../elife_orignal_draft.tex ../Article.tex > ../diff.tex
+latexdiff ../elife_revision1.tex ../Article.tex > ../diff.tex
