@@ -406,7 +406,7 @@ $$log(\lambda(t_k)) = \beta_{0} + \sum_{i} f_{i}(x_k)\beta_{i}$$
 A small L2 penalization term $-\lambda\|\beta_{i}\|_{2}^{2}$ is used to prevent model fitting instability when spiking activity is very low. We set this to 0.5 for all cells. Fitting is done by maximizing the penalized likelihood using a Newton-Raphson algorithm. The code used to fit the GLMs is available at \url{https://github.com/Eden-Kramer-Lab/regularized_glm}.
 
 \subsection*{Encoding - Clusterless}
-In order to relate each tetrode's unsorted spiking activity and waveform features to position, we used kernel density estimation (KDE) to estimate the following distributions: $\pi(x)$, $p_{i}(x_k)$, and $p_{i}(x_k, \vec{m}_k)$. We used KDEs of the form: 
+In order to relate each tetrode's unsorted spiking activity and waveform features to position during the encoding period, which we define as all movement times (time periods when the running speed is greater than 4 cm/s), we used kernel density estimation (KDE) to estimate the following distributions: $\pi(x)$, $p_{i}(x_k)$, and $p_{i}(x_k, \vec{m}_k)$. We used KDEs of the form: 
 $$
 kde(y) = \frac{1}{N h_1\cdot\cdot\cdot h_D} \sum^{N}_{i=1} \prod^{D}_{d=1} K_{d}\left(\frac{y_d - y_{i,d}}{h_d}\right)
 $$
@@ -480,4 +480,3 @@ The authors declare that no competing interests exist.
 \bibliography{refs}
 \end{document}
 \label{fig:5}
-
