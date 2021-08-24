@@ -99,6 +99,7 @@ def fit_mark_likelihood(
     model=model,
     model_kwargs=model_kwargs,
     place_bin_size=place_bin_size,
+    dt=0.020
 ):
 
     (
@@ -126,7 +127,6 @@ def fit_mark_likelihood(
     ground_process_intensities = []
     joint_pdf_models = []
 
-    dt = 0.020  # seconds
     total_time = np.diff(np.asarray(
         linear_position.index.total_seconds())[[0, -1]])
     n_total_time_bins = total_time // dt
