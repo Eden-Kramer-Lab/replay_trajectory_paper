@@ -1,6 +1,5 @@
 import copy
 import os
-import sys
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -74,7 +73,7 @@ def fit_and_load_models(epoch_key):
         place_bin_center_ind_to_edge_id,
         nodes_df,
     ) = fit_mark_likelihood(
-        linear_position, multiunit_dfs, track_graph, center_well_id)
+        linear_position, multiunit_dfs, track_graph, center_well_id, dt=0.020)
 
     place_fields = np.asarray(sorted_spikes_classifier.place_fields_)
 
@@ -95,7 +94,7 @@ def get_clusterless_posteriors_and_fits(
         start_time, end_time, place_bin_centers, occupancy,
         joint_pdf_models, multiunit_dfs, ground_process_intensities,
         mean_rates, is_track_interior, place_bin_edges,
-        track_graph1, place_bin_center_ind_to_node):
+        track_graph1, place_bin_center_ind_to_node, dt):
     clusterless_likelihood, clusterless_time = predict_mark_likelihood(
         start_time,
         end_time,
@@ -106,6 +105,7 @@ def get_clusterless_posteriors_and_fits(
         ground_process_intensities,
         mean_rates,
         is_track_interior,
+        dt
     )
 
     (
@@ -131,6 +131,7 @@ def get_clusterless_posteriors_and_fits(
         place_bin_edges,
         track_graph1,
         place_bin_center_ind_to_node,
+        dt
     )
 
     clusterless_posterior = xr.DataArray(
@@ -160,9 +161,10 @@ def get_clusterless_posteriors_and_fits(
 def get_sorted_spikes_posteriors_and_fits(
         start_time, end_time, place_fields, spike_times, is_track_interior,
         place_bin_centers, place_bin_edges, track_graph1,
-        place_bin_center_ind_to_node):
+        place_bin_center_ind_to_node, dt):
     sorted_spikes_likelihood, sorted_spikes_time = predict_poisson_likelihood(
-        start_time, end_time, spike_times, place_fields, is_track_interior)
+        start_time, end_time, spike_times, place_fields, is_track_interior,
+        dt)
 
     (
         sorted_spikes_time,
@@ -187,6 +189,7 @@ def get_sorted_spikes_posteriors_and_fits(
         place_bin_edges,
         track_graph1,
         place_bin_center_ind_to_node,
+        dt
     )
 
     sorted_spikes_posterior = xr.DataArray(
@@ -414,7 +417,7 @@ def plot_figure(epoch_key, ripple_numbers, is_save_figure=False):
             start_time, end_time, place_bin_centers, occupancy,
             joint_pdf_models, multiunit_dfs, ground_process_intensities,
             mean_rates, is_track_interior, place_bin_edges, track_graph1,
-            place_bin_center_ind_to_node)
+            place_bin_center_ind_to_node, dt=0.020)
 
         (sorted_spikes_posterior,
          sorted_spikes_time,
@@ -434,7 +437,7 @@ def plot_figure(epoch_key, ripple_numbers, is_save_figure=False):
          ) = get_sorted_spikes_posteriors_and_fits(
             start_time, end_time, place_fields, spike_times,
             is_track_interior, place_bin_centers, place_bin_edges,
-            track_graph1, place_bin_center_ind_to_node)
+            track_graph1, place_bin_center_ind_to_node, dt=0.020)
 
         multiunit_spike_times = [
             df.index / np.timedelta64(1, 's') for df in multiunit_dfs]
@@ -459,6 +462,22 @@ def plot_figure(epoch_key, ripple_numbers, is_save_figure=False):
 
 
 if __name__ == '__main__':
-    epoch_key = sys.argv[0]
-    ripple_numbers = sys.argv[1]
+    epoch_key = 'bon', 3, 4
+    ripple_numbers = [12, 200]
+    plot_figure(epoch_key, ripple_numbers, is_save_figure=True)
+
+    epoch_key = 'bon', 3, 6
+    ripple_numbers = [5, 27, 90, 93]
+    plot_figure(epoch_key, ripple_numbers, is_save_figure=True)
+
+    epoch_key = 'bon', 4, 2
+    ripple_numbers = 158
+    plot_figure(epoch_key, ripple_numbers, is_save_figure=True)
+
+    epoch_key = 'Cor', 1, 4
+    ripple_numbers = 84
+    plot_figure(epoch_key, ripple_numbers, is_save_figure=True)
+
+    epoch_key = 'fra', 6, 6
+    ripple_numbers = 151
     plot_figure(epoch_key, ripple_numbers, is_save_figure=True)
