@@ -462,22 +462,18 @@ def plot_figure(epoch_key, ripple_numbers, is_save_figure=False):
 
 
 if __name__ == '__main__':
-    epoch_key = 'bon', 3, 4
-    ripple_numbers = [12, 200]
-    plot_figure(epoch_key, ripple_numbers, is_save_figure=True)
-
-    epoch_key = 'bon', 3, 6
-    ripple_numbers = [5, 27, 90, 93]
-    plot_figure(epoch_key, ripple_numbers, is_save_figure=True)
-
-    epoch_key = 'bon', 4, 2
-    ripple_numbers = 158
-    plot_figure(epoch_key, ripple_numbers, is_save_figure=True)
-
-    epoch_key = 'Cor', 1, 4
-    ripple_numbers = 84
-    plot_figure(epoch_key, ripple_numbers, is_save_figure=True)
-
-    epoch_key = 'fra', 6, 6
-    ripple_numbers = 151
-    plot_figure(epoch_key, ripple_numbers, is_save_figure=True)
+    plot_figure(epoch_key=('bon', 4, 2),
+                ripple_numbers=158,
+                is_save_figure=True)
+    plot_figure(epoch_key=('fra', 6, 6),
+                ripple_numbers=151,
+                is_save_figure=True)
+    plot_figure(epoch_key=('Cor', 1, 4),
+                ripple_numbers=84,
+                is_save_figure=True)
+    plot_figure(epoch_key=('bon', 3, 4),
+                ripple_numbers=12,
+                is_save_figure=True)
+    plot_figure(epoch_key=('bon', 3, 6),
+                ripple_numbers=[5, 93],
+                is_save_figure=True)
