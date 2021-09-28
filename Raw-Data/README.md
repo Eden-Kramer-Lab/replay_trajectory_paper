@@ -20,10 +20,10 @@ The data were collected by Dr. Mattias Karlsson (animals Bond, Frank, Conley, Du
 
 Data from Drs. Margaret Carr and Mattias Karlsson was previously posted at CRCNS: http://crcns.org/data-sets/hc/hc-6. Any publications made using that data should cite the data set using the following:
 
-```
-Mattias Karlsson, Margaret Carr, Loren M. Frank (2015). Simultaneous extracellular recordings from hippocampal areas CA1 and CA3 (or MEC and CA1) from rats performing an alternation task in two W-shaped tracks that are geometrically identically but visually distinct.
+
+> Mattias Karlsson, Margaret Carr, Loren M. Frank (2015). Simultaneous extracellular recordings from hippocampal areas CA1 and CA3 (or MEC and CA1) from rats performing an alternation task in two W-shaped tracks that are geometrically identically but visually distinct.
 CRCNS.org. http://dx.doi.org/10.6080/K0NK3BZJ
-```
+
 
 # Format of the data
 
