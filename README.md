@@ -5,9 +5,9 @@ Code for:
 
 ## Installation
 1. `git clone https://github.com/Eden-Kramer-Lab/replay_trajectory_paper.git`
-2. Create conda environment (you'll have to install miniconda or anaconda if you haven't already):
+2. Go into the replay_trajectory_paper folder: `cd replay_trajectory_paper`
+3. Create conda environment (you'll have to install miniconda or anaconda if you haven't already):
 ```conda env create -f environment.yml```
-3. Activate the conda environment `conda activate replay_trajectory_paper`
-4. Go into the replay_trajectory_paper folder: `cd replay_trajectory_paper`
+4. Activate the conda environment `conda activate replay_trajectory_paper`
 5. Make package editable:
 ```pip install --editable .```
